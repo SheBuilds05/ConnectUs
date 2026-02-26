@@ -1,0 +1,20 @@
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true # Helps with live-refresh on Windows
+
+  # This is a placeholder for your Sprint 3 database requirements [cite: 28, 35, 46]
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: galactic_admin
+      POSTGRES_PASSWORD: force_password
+      POSTGRES_DB: smart_booking_db
+    ports:
+      - "5432:5432"
