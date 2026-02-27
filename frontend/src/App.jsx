@@ -25,9 +25,7 @@ function App() {
 
       {/* Logic to swap the page being displayed */}
       <main>
-        {currentPage === 'home' && <Home />}
-        {currentPage === 'profile' && <RunnerProfile />}
-        {currentPage === 'settings' && <Settings />}
+        {currentPage === 'login' && <LoginPage />}
       </main>
     </div>
   );
