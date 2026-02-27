@@ -1,35 +1,47 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useState } from 'react';
+import Home from './pages/Home';
+import Settings from './pages/Settings';
+import RunnerProfile from './pages/RunnerProfile';
+import './App.css';
 
 function App() {
-  const [count, setCount] = useState(0)
+  // This state acts as a temporary navigator until we add React Router
+  const [currentPage, setCurrentPage] = useState('home');
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="App">
+      {/* Temporary Navigation Bar to test your designs */}
+      <nav style={{ 
+        padding: '10px', 
+        backgroundColor: '#213502', 
+        display: 'flex', 
+        gap: '15px',
+        justifyContent: 'center' 
+      }}>
+        <button onClick={() => setCurrentPage('home')} style={navBtnStyle}>Home</button>
+        <button onClick={() => setCurrentPage('profile')} style={navBtnStyle}>Runner Profile</button>
+        <button onClick={() => setCurrentPage('settings')} style={navBtnStyle}>Settings</button>
+      </nav>
+
+      {/* Logic to swap the page being displayed */}
+      <main>
+        {currentPage === 'home' && <Home />}
+        {currentPage === 'profile' && <RunnerProfile />}
+        {currentPage === 'settings' && <Settings />}
+      </main>
+    </div>
+  );
 }
 
-export default App
+// Simple style for your temporary buttons using your brand colors
+const navBtnStyle = {
+  backgroundColor: '#7EA00E',
+  color: 'white',
+  border: 'none',
+  padding: '8px 16px',
+  borderRadius: '4px',
+  cursor: 'pointer',
+  fontWeight: 'bold'
+};
+
+export default App;
