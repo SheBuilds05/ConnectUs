@@ -13,7 +13,7 @@ export const runners = [
     id: 1,
     name: 'Lindiwe M.',
     rating: 4.9,
-    specialties: ['Grocery', 'Beauty'],
+    specialties: ['food', 'Beauty'],
     hourlyRate: 85,
     distance: 1.2,
     verified: true,
@@ -30,7 +30,7 @@ export const runners = [
     id: 2,
     name: 'Sipho K.',
     rating: 4.8,
-    specialties: ['Tech', 'Grocery'],
+    specialties: ['Tech', 'food'],
     hourlyRate: 95,
     distance: 2.5,
     verified: true,
@@ -54,7 +54,6 @@ export const runners = [
     bio: 'Personal stylist and premium shopper. Knowledgeable in high-end fashion brands and luxury beauty products.',
     completed: 312,
     pastProducts: [
-      { id: 1, name: 'Apparel', category: 'Fashion' },
       { id: 2, name: 'Skincare', category: 'Beauty' },
       { id: 3, name: 'Accessories', category: 'Fashion' }
     ],
