@@ -1,19 +1,30 @@
 import React, { useState } from 'react';
-import { Wallet, ArrowUpRight, ArrowDownLeft, CreditCard, History, Gift, X, Landmark } from 'lucide-react';
+import { Wallet, ArrowUpRight, ArrowDownLeft, CreditCard, History, Gift, X, Landmark, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 const WalletPage = () => {
   const [balance, setBalance] = useState(2450.00);
   const [showModal, setShowModal] = useState(false);
+  const [modalStep, setModalStep] = useState(1); // 1: Details, 2: Confirm, 3: Success
+  const [withdrawAmount, setWithdrawAmount] = useState(1000);
   const [bankDetails, setBankDetails] = useState({
     bankName: '',
     accountNumber: '',
     accountType: 'Savings'
   });
 
-  const handleSaveDetails = (e) => {
+  const handleStartWithdrawal = (e) => {
     e.preventDefault();
-    alert("Banking details saved successfully!");
+    setModalStep(2); // Move to Confirmation
+  };
+
+  const handleFinalConfirm = () => {
+    setBalance(prev => prev - withdrawAmount);
+    setModalStep(3); // Move to Success
+  };
+
+  const closeModal = () => {
     setShowModal(false);
+    setModalStep(1);
   };
 
   return (
@@ -37,12 +48,6 @@ const WalletPage = () => {
               >
                 <ArrowUpRight size={20} /> Withdraw to Bank
               </button>
-              <button 
-                onClick={() => setShowModal(true)}
-                className="flex-1 bg-white/10 border border-white/20 text-white font-bold py-4 rounded-2xl hover:bg-white/20 transition-colors"
-              >
-                Payout Settings
-              </button>
             </div>
           </div>
           <div className="absolute -right-10 -top-10 w-48 h-48 bg-white/5 rounded-full" />
@@ -57,12 +62,11 @@ const WalletPage = () => {
             </div>
             <p className="text-xs text-gray-500 mb-4 font-medium">Earn an extra R500 every month for staying active!</p>
             <div className="bg-gray-100 h-3 rounded-full overflow-hidden">
-              <div className="bg-runner-light h-full w-full shadow-[0_0_10px_rgba(74,222,128,0.5)]" />
+              <div className="bg-runner-light h-full w-full" />
             </div>
           </div>
-          <div className="mt-4 p-4 bg-green-50 rounded-2xl border border-green-100">
-            <p className="text-green-700 font-bold text-xs uppercase tracking-wide">Status: Qualified</p>
-            <p className="text-green-600 text-[10px] mt-1 font-medium">R500 scheduled for April 1st, 2026</p>
+          <div className="mt-4 p-4 bg-green-50 rounded-2xl border border-green-100 text-center">
+            <p className="text-green-700 font-bold text-xs">R500 scheduled for April 1st</p>
           </div>
         </div>
       </div>
@@ -74,74 +78,94 @@ const WalletPage = () => {
             <History size={20} className="text-runner-deep" />
             <h3 className="font-bold text-runner-deep">Recent Transactions</h3>
           </div>
-          <button className="text-runner-light text-sm font-bold hover:underline">Download PDF</button>
         </div>
         <div className="divide-y divide-gray-50">
           <TransactionItem type="earnings" title="Grocery Order #2104" date="March 2, 2026" amount="+ R120.00" />
           <TransactionItem type="withdrawal" title="Standard Bank Payout" date="Feb 28, 2026" amount="- R1,500.00" />
-          <TransactionItem type="bonus" title="Feb Monthly Bonus" date="Feb 28, 2026" amount="+ R500.00" />
         </div>
       </div>
 
-      {/* --- PAYOUT SETTINGS MODAL --- */}
+      {/* --- WITHDRAWAL MODAL --- */}
       {showModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-runner-deep/60 backdrop-blur-sm" onClick={() => setShowModal(false)} />
+          <div className="absolute inset-0 bg-runner-deep/60 backdrop-blur-sm" onClick={closeModal} />
           
-          <div className="bg-white w-full max-w-md rounded-[32px] shadow-2xl relative z-10 overflow-hidden transition-all animate-in fade-in zoom-in duration-300">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-              <h3 className="text-xl font-bold text-runner-deep">Payout Details</h3>
-              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                <X size={20} className="text-gray-400" />
-              </button>
-            </div>
+          <div className="bg-white w-full max-w-md rounded-[32px] shadow-2xl relative z-10 overflow-hidden animate-in fade-in zoom-in duration-200">
+            
+            {/* STEP 1: ENTER DETAILS */}
+            {modalStep === 1 && (
+              <div className="p-8 space-y-6">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xl font-bold text-runner-deep">Withdrawal Amount</h3>
+                  <button onClick={closeModal}><X size={20} className="text-gray-400" /></button>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Amount to Withdraw</label>
+                    <div className="flex items-center text-2xl font-bold text-runner-deep">
+                      <span className="mr-2">R</span>
+                      <input 
+                        type="number" 
+                        className="bg-transparent outline-none w-full"
+                        value={withdrawAmount}
+                        onChange={(e) => setWithdrawAmount(e.target.value)}
+                      />
+                    </div>
+                  </div>
 
-            <form onSubmit={handleSaveDetails} className="p-6 space-y-5">
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Bank Name</label>
-                <div className="relative">
-                  <Landmark className="absolute left-4 top-3.5 text-gray-300" size={18} />
-                  <input 
-                    required
-                    className="w-full bg-gray-50 border border-gray-100 p-3 pl-12 rounded-xl focus:ring-2 focus:ring-runner-light outline-none transition-all"
-                    placeholder="e.g. Standard Bank, FNB"
-                    value={bankDetails.bankName}
-                    onChange={(e) => setBankDetails({...bankDetails, bankName: e.target.value})}
-                  />
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Bank Details</label>
+                    <input className="w-full bg-gray-50 border border-gray-100 p-3 rounded-xl outline-none" placeholder="Bank Name" required onChange={(e) => setBankDetails({...bankDetails, bankName: e.target.value})} />
+                    <input className="w-full bg-gray-50 border border-gray-100 p-3 rounded-xl outline-none" placeholder="Account Number" required onChange={(e) => setBankDetails({...bankDetails, accountNumber: e.target.value})} />
+                  </div>
+                </div>
+
+                <button onClick={handleStartWithdrawal} className="w-full bg-runner-deep text-white font-bold py-4 rounded-2xl hover:bg-black transition-all">
+                  Review Withdrawal
+                </button>
+              </div>
+            )}
+
+            {/* STEP 2: CONFIRMATION (The part you requested!) */}
+            {modalStep === 2 && (
+              <div className="p-8 text-center space-y-6">
+                <div className="w-16 h-16 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto">
+                  <AlertCircle size={32} />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-runner-deep">Confirm Withdrawal</h3>
+                  <p className="text-gray-500 text-sm mt-2">Please review the transaction details below.</p>
+                </div>
+
+                <div className="bg-gray-50 rounded-2xl p-6 space-y-3 text-left">
+                  <div className="flex justify-between text-sm"><span className="text-gray-400">Amount:</span> <span className="font-bold">R {withdrawAmount}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-gray-400">Bank:</span> <span className="font-bold">{bankDetails.bankName || 'Not Set'}</span></div>
+                  <div className="h-[1px] bg-gray-200 my-2" />
+                  <div className="flex justify-between text-sm"><span className="text-gray-400">New Balance:</span> <span className="font-bold text-runner-deep">R {balance - withdrawAmount}</span></div>
+                </div>
+
+                <div className="flex gap-3">
+                  <button onClick={() => setModalStep(1)} className="flex-1 py-4 font-bold text-gray-400 hover:text-gray-600">Back</button>
+                  <button onClick={handleFinalConfirm} className="flex-[2] bg-runner-light text-runner-deep font-bold py-4 rounded-2xl shadow-lg">Confirm & Pay</button>
                 </div>
               </div>
+            )}
 
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Account Number</label>
-                <input 
-                  required
-                  type="number"
-                  className="w-full bg-gray-50 border border-gray-100 p-3 rounded-xl focus:ring-2 focus:ring-runner-light outline-none transition-all"
-                  placeholder="10 digits"
-                  value={bankDetails.accountNumber}
-                  onChange={(e) => setBankDetails({...bankDetails, accountNumber: e.target.value})}
-                />
+            {/* STEP 3: SUCCESS */}
+            {modalStep === 3 && (
+              <div className="p-10 text-center space-y-6">
+                <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto animate-bounce">
+                  <CheckCircle2 size={40} />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-runner-deep">Success!</h3>
+                  <p className="text-gray-500 text-sm mt-2">Your funds are being processed and will arrive in 24-48 hours.</p>
+                </div>
+                <button onClick={closeModal} className="w-full bg-runner-deep text-white font-bold py-4 rounded-2xl">Back to Wallet</button>
               </div>
+            )}
 
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Account Type</label>
-                <select 
-                  className="w-full bg-gray-50 border border-gray-100 p-3 rounded-xl focus:ring-2 focus:ring-runner-light outline-none transition-all appearance-none cursor-pointer"
-                  value={bankDetails.accountType}
-                  onChange={(e) => setBankDetails({...bankDetails, accountType: e.target.value})}
-                >
-                  <option>Savings</option>
-                  <option>Cheque / Current</option>
-                </select>
-              </div>
-
-              <button 
-                type="submit"
-                className="w-full bg-runner-deep text-white font-bold py-4 rounded-2xl hover:bg-black transition-colors shadow-lg mt-4"
-              >
-                Save Payout Method
-              </button>
-            </form>
           </div>
         </div>
       )}
@@ -149,20 +173,18 @@ const WalletPage = () => {
   );
 };
 
+// Helper component for transaction rows
 const TransactionItem = ({ type, title, date, amount }) => {
   const isCredit = type === 'earnings' || type === 'bonus';
   return (
-    <div className="flex items-center justify-between p-6 hover:bg-gray-50/80 transition-colors">
+    <div className="flex items-center justify-between p-6 hover:bg-gray-50 transition-colors">
       <div className="flex items-center gap-4">
-        <div className={`p-3 rounded-2xl ${isCredit ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+        <div className={`p-3 rounded-xl ${isCredit ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
           {isCredit ? <ArrowDownLeft size={20} /> : <ArrowUpRight size={20} />}
         </div>
-        <div>
-          <p className="font-bold text-runner-deep">{title}</p>
-          <p className="text-xs text-gray-400 font-medium">{date}</p>
-        </div>
+        <div><p className="font-bold text-gray-900">{title}</p><p className="text-xs text-gray-400">{date}</p></div>
       </div>
-      <p className={`font-bold text-lg ${isCredit ? 'text-green-600' : 'text-runner-deep'}`}>{amount}</p>
+      <p className={`font-bold ${isCredit ? 'text-green-600' : 'text-gray-900'}`}>{amount}</p>
     </div>
   );
 };
