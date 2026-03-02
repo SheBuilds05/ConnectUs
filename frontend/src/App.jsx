@@ -1,33 +1,25 @@
-import React, { useState } from 'react';
-import Home from './pages/Home';
-import Settings from './pages/Settings';
-import RunnerProfile from './pages/RunnerProfile';
-import './App.css';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import AdminLogin from './pages/AdminLogin';
+import AdminRegister from './pages/AdminRegister';
+import Landing from './pages/Landing'; // This is your "Runner-On-Demand" screen
 
 function App() {
   // This state acts as a temporary navigator until we add React Router
   const [currentPage, setCurrentPage] = useState('home');
 
   return (
-    <div className="App">
-      {/* Temporary Navigation Bar to test your designs */}
-      <nav style={{ 
-        padding: '10px', 
-        backgroundColor: '#213502', 
-        display: 'flex', 
-        gap: '15px',
-        justifyContent: 'center' 
-      }}>
-        <button onClick={() => setCurrentPage('home')} style={navBtnStyle}>Home</button>
-        <button onClick={() => setCurrentPage('profile')} style={navBtnStyle}>Runner Profile</button>
-        <button onClick={() => setCurrentPage('settings')} style={navBtnStyle}>Settings</button>
-      </nav>
-
-      {/* Logic to swap the page being displayed */}
-      <main>
-        {currentPage === 'login' && <LoginPage />}
-      </main>
-    </div>
+    <Router>
+      <div className="min-h-screen bg-[#D3D3D3]">
+        <Routes>
+          {/* This is the main page with the buttons */}
+          <Route path="/" element={<Landing />} /> 
+          
+          {/* These are your new pages */}
+          <Route path="/login" element={<AdminLogin />} />
+          <Route path="/register" element={<AdminRegister />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
