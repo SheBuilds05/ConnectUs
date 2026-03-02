@@ -1,47 +1,43 @@
-import React, { useState } from 'react';
-import Home from './pages/Home';
-import Settings from './pages/Settings';
-import RunnerProfile from './pages/RunnerProfile';
-import './App.css';
+import Sidebar from './components/sidebar';
+import "./App.css";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import Dashboard from "./pages/Dashboard";
+import RunnerProfile from "./pages/RunnerProfile";
+import SettingsPage from "./pages/SettingsPage";
+import WalletPage from "./pages/WalletPage";
 
 function App() {
-  // This state acts as a temporary navigator until we add React Router
-  const [currentPage, setCurrentPage] = useState('home');
-
   return (
-    <div className="App">
-      {/* Temporary Navigation Bar to test your designs */}
-      <nav style={{ 
-        padding: '10px', 
-        backgroundColor: '#213502', 
-        display: 'flex', 
-        gap: '15px',
-        justifyContent: 'center' 
-      }}>
-        <button onClick={() => setCurrentPage('home')} style={navBtnStyle}>Home</button>
-        <button onClick={() => setCurrentPage('profile')} style={navBtnStyle}>Runner Profile</button>
-        <button onClick={() => setCurrentPage('settings')} style={navBtnStyle}>Settings</button>
-      </nav>
+    <Router>
+      <div className="flex">
+        {/* 1. Sidebar stays fixed on the left */}
+        <Sidebar />
 
-      {/* Logic to swap the page being displayed */}
-      <main>
-        {currentPage === 'home' && <Home />}
-        {currentPage === 'profile' && <RunnerProfile />}
-        {currentPage === 'settings' && <Settings />}
-      </main>
-    </div>
+        {/* 2. Main Content Area starts here */}
+        <main className="flex-1 ml-64 min-h-screen bg-runner-bg">
+          <Routes>
+            {/* The Home route now points to Dashboard */}
+            <Route path="/" element={<Dashboard />} />
+            
+            {/* The Profile route */}
+            <Route path="/profile" element={<RunnerProfile />} />
+
+            {/* The wallet route */}
+            <Route path="/wallet" element={<WalletPage />} />
+            
+            {/* The Settings route */}
+            <Route path="/settings" element={<SettingsPage />} />
+
+            {/* View Requests Placeholder */}
+            <Route path="/requests" element={<div className="p-8 text-white">Requests Page Coming Soon</div>} />
+            
+            {/* Catch-all route (MUST BE LAST) */}
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </main>
+      </div>
+    </Router>
   );
 }
-
-// Simple style for your temporary buttons using your brand colors
-const navBtnStyle = {
-  backgroundColor: '#7EA00E',
-  color: 'white',
-  border: 'none',
-  padding: '8px 16px',
-  borderRadius: '4px',
-  cursor: 'pointer',
-  fontWeight: 'bold'
-};
 
 export default App;
