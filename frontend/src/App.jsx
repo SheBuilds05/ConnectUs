@@ -1,47 +1,38 @@
 import React, { useState } from 'react';
-import Home from './pages/Home';
-import Settings from './pages/Settings';
-import RunnerProfile from './pages/RunnerProfile';
-import './App.css';
+import UserHomePage from './pages/UserHomePage';
+import { Sidebar } from './components/Sidebar';
 
 function App() {
-  // This state acts as a temporary navigator until we add React Router
-  const [currentPage, setCurrentPage] = useState('home');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="App">
-      {/* Temporary Navigation Bar to test your designs */}
-      <nav style={{ 
-        padding: '10px', 
-        backgroundColor: '#213502', 
-        display: 'flex', 
-        gap: '15px',
-        justifyContent: 'center' 
-      }}>
-        <button onClick={() => setCurrentPage('home')} style={navBtnStyle}>Home</button>
-        <button onClick={() => setCurrentPage('profile')} style={navBtnStyle}>Runner Profile</button>
-        <button onClick={() => setCurrentPage('settings')} style={navBtnStyle}>Settings</button>
-      </nav>
+    // h-screen and overflow-hidden prevent the entire window from scrolling
+    <div className="flex h-screen bg-[#FBFBFA] w-full overflow-hidden">
+      
+      {/* SIDEBAR CONTAINER 
+          This remains static because it doesn't have an overflow property */}
+      <aside className={`
+        bg-white border-r border-gray-100 transition-all duration-500 ease-in-out
+        ${isSidebarOpen ? 'w-72 opacity-100' : 'w-0 opacity-0'}
+        flex-shrink-0 overflow-hidden h-full
+      `}>
+        <div className="w-72 h-full">
+          <Sidebar onClose={() => setIsSidebarOpen(false)} />
+        </div>
+      </aside>
 
-      {/* Logic to swap the page being displayed */}
-      <main>
-        {currentPage === 'home' && <Home />}
-        {currentPage === 'profile' && <RunnerProfile />}
-        {currentPage === 'settings' && <Settings />}
-      </main>
+      {/* MAIN CONTENT AREA 
+          'overflow-y-auto' allows this section—and ONLY this section—to scroll */}
+      <div className="flex-1 flex flex-col min-w-0 h-full transition-all duration-500 ease-in-out">
+        <main className="flex-1 overflow-y-auto">
+          <UserHomePage 
+            onMenuClick={() => setIsSidebarOpen(true)} 
+            isSidebarOpen={isSidebarOpen} 
+          />
+        </main>
+      </div>
     </div>
   );
 }
-
-// Simple style for your temporary buttons using your brand colors
-const navBtnStyle = {
-  backgroundColor: '#7EA00E',
-  color: 'white',
-  border: 'none',
-  padding: '8px 16px',
-  borderRadius: '4px',
-  cursor: 'pointer',
-  fontWeight: 'bold'
-};
 
 export default App;
