@@ -58,7 +58,8 @@ jobs:
         run: npm test
         working-directory: ./backend
         env:
-          DATABASE_URL: postgres://user:password@localhost:5432/booking_db  #replace this with our database url
+        # Replace the placeholder below with your actual database URL in GitHub Secrets later
+          DATABASE_URL: postgres://user:password@localhost:5432/booking_db
 
  mobile-ci:
     runs-on: windows-latest
