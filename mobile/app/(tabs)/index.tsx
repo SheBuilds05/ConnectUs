@@ -1,98 +1,142 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
-
-export default function HomeScreen() {
+export default function DashboardScreen() {
+  
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+      {/* --- TOP NAVIGATION BAR --- */}
+      <View style={styles.topBar}>
+        <View style={styles.userInfo}>
+          <Image 
+            source={{ uri: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=100' }} 
+            style={styles.avatarMini} 
+          />
+          <View>
+            <Text style={styles.welcomeText}>Morning, Sarah</Text>
+            <Text style={styles.statusText}>● Online</Text>
+          </View>
+        </View>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+        <TouchableOpacity style={styles.notificationBtn}>
+          <Ionicons name="notifications-outline" size={24} color="#1a2e1a" />
+          {/* The Red Badge (Unread Notification) */}
+          <View style={styles.badgeDot} />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Welcome Section */}
+        <View style={styles.header}>
+          <Text style={styles.greeting}>Daily Overview</Text>
+          <Text style={styles.subGreeting}>You have 5 new requests nearby</Text>
+        </View>
+
+        {/* Stats Grid */}
+        <View style={styles.statsGrid}>
+          <View style={[styles.statCard, { backgroundColor: '#1a2e1a' }]}>
+            <Ionicons name="cart" size={24} color="#4ade80" />
+            <Text style={styles.statValue}>156</Text>
+            <Text style={styles.statLabel}>Jobs Done</Text>
+          </View>
+          <View style={[styles.statCard, { backgroundColor: '#4ade80' }]}>
+            <Ionicons name="star" size={24} color="#1a2e1a" />
+            <Text style={[styles.statValue, { color: '#1a2e1a' }]}>4.9</Text>
+            <Text style={[styles.statLabel, { color: '#1a2e1a' }]}>Rating</Text>
+          </View>
+        </View>
+
+        {/* Earnings Preview */}
+        <View style={styles.earningsCard}>
+          <View>
+            <Text style={styles.earningsLabel}>This Week</Text>
+            <Text style={styles.earningsAmount}>R 1,250.00</Text>
+          </View>
+          <TouchableOpacity style={styles.viewWalletBtn}>
+            <Text style={styles.viewWalletText}>Wallet</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Available Errand Section */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Available Errands</Text>
+          <TouchableOpacity><Text style={styles.seeAll}>See All</Text></TouchableOpacity>
+        </View>
+
+        {/* Errand Item */}
+        <View style={styles.errandItem}>
+          <View style={styles.errandIcon}>
+            <Ionicons name="fast-food" size={24} color="#1a2e1a" />
+          </View>
+          <View style={{ flex: 1, marginLeft: 12 }}>
+            <Text style={styles.errandTitle}>Dinner Delivery</Text>
+            <Text style={styles.errandDetail}>2.5km • McDonald's</Text>
+          </View>
+          <Text style={styles.errandPrice}>R 45.00</Text>
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  // New Top Bar Styles
+  topBar: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
+    paddingHorizontal: 20,
+    paddingTop: 60, // Space for the phone's status bar
+    paddingBottom: 20,
+    backgroundColor: '#ffffff',
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  userInfo: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  avatarMini: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#eee' },
+  welcomeText: { fontSize: 16, fontWeight: 'bold', color: '#1a2e1a' },
+  statusText: { fontSize: 12, color: '#4ade80', fontWeight: '600' },
+  notificationBtn: { 
+    width: 45, 
+    height: 45, 
+    backgroundColor: '#f3f4f6', 
+    borderRadius: 15, 
+    alignItems: 'center', 
+    justifyContent: 'center',
+    position: 'relative'
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  badgeDot: { 
+    position: 'absolute', 
+    top: 12, 
+    right: 12, 
+    width: 10, 
+    height: 10, 
+    backgroundColor: '#ef4444', 
+    borderRadius: 5, 
+    borderWidth: 2, 
+    borderColor: '#f3f4f6' 
   },
+
+  // Existing Dashboard Styles
+  content: { flex: 1, padding: 20 },
+  header: { marginBottom: 25 },
+  greeting: { fontSize: 24, fontWeight: 'bold', color: '#1a2e1a' },
+  subGreeting: { color: '#6b7280', fontSize: 14, marginTop: 4 },
+  statsGrid: { flexDirection: 'row', gap: 15, marginBottom: 20 },
+  statCard: { flex: 1, padding: 20, borderRadius: 24 },
+  statValue: { color: 'white', fontSize: 22, fontWeight: 'bold', marginTop: 10 },
+  statLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 12 },
+  earningsCard: { backgroundColor: 'white', padding: 20, borderRadius: 24, borderWeight: 1, borderColor: '#f3f4f6', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  earningsLabel: { color: '#9ca3af', fontSize: 12, fontWeight: '600' },
+  earningsAmount: { fontSize: 20, fontWeight: 'bold', color: '#1a2e1a' },
+  viewWalletBtn: { backgroundColor: '#f3f4f6', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 12 },
+  viewWalletText: { fontSize: 12, fontWeight: 'bold', color: '#1a2e1a' },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 30, marginBottom: 15 },
+  sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#1a2e1a' },
+  seeAll: { color: '#4ade80', fontWeight: 'bold' },
+  errandItem: { backgroundColor: 'white', padding: 15, borderRadius: 20, flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  errandIcon: { backgroundColor: '#f3f4f6', padding: 10, borderRadius: 15 },
+  errandTitle: { fontWeight: 'bold', color: '#1a2e1a' },
+  errandDetail: { fontSize: 12, color: '#9ca3af' },
+  errandPrice: { fontWeight: 'bold', color: '#1a2e1a', fontSize: 16 }
 });

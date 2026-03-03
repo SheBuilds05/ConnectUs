@@ -1,69 +1,60 @@
-import React, { useState } from 'react';
-import { Sidebar } from './components/SideBar';
-
-// 1. Import all your new pages
-import UserHomePage from './pages/UserHomePage';
-import BookingsPage from './pages/BookingsPage';
-import MessagesPage from './pages/MessagesPage';
-import FavoritesPage from './pages/FavoritesPage';
-import AccountPage from './pages/AccountPage';
+import Sidebar from './components/sidebar';
+import "./App.css";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import Dashboard from "./pages/Dashboard";
+import RunnerProfile from "./pages/RunnerProfile";
+import SettingsPage from "./pages/SettingsPage";
+import WalletPage from "./pages/WalletPage";
+import LoginPage from "./pages/LoginPage";
+import Register from "./pages/Register";
+import LandingPage from "./pages/LandingPage";
+import AdminDashboard from "./pages/AdminDashboard";
 
 function App() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  
-  // 2. State to track the current active page
-  const [currentPage, setCurrentPage] = useState('dashboard');
-
-  // 3. Helper function to render the correct page based on state
-  const renderPage = () => {
-    switch (currentPage) {
-      case 'dashboard':
-        return (
-          <UserHomePage 
-            onMenuClick={() => setIsSidebarOpen(true)} 
-            isSidebarOpen={isSidebarOpen} 
-          />
-        );
-      case 'bookings':
-        return <BookingsPage />;
-      case 'messages':
-        return <MessagesPage />;
-      case 'favorites':
-        return <FavoritesPage />;
-      case 'account':
-        return <AccountPage />;
-      default:
-        return <UserHomePage onMenuClick={() => setIsSidebarOpen(true)} />;
-    }
-  };
-
   return (
-    <div className="flex h-screen bg-[#FBFBFA] w-full overflow-hidden">
-      
-      {/* SIDEBAR CONTAINER */}
-      <aside className={`
-        bg-white border-r border-gray-100 transition-all duration-500 ease-in-out
-        ${isSidebarOpen ? 'w-72 opacity-100' : 'w-0 opacity-0'}
-        shrink-0 overflow-hidden h-full
-      `}>
-        <div className="w-72 h-full">
-          {/* 4. Pass navigation props to Sidebar */}
-          <Sidebar 
-            currentPage={currentPage}
-            onNavigate={(page) => setCurrentPage(page)}
-            onClose={() => setIsSidebarOpen(false)} 
-          />
-        </div>
-      </aside>
+    <Router>
+      <div className="flex">
+        {/* 1. Sidebar stays fixed on the left */}
+        <Sidebar />
 
-      {/* MAIN CONTENT AREA */}
-      <div className="flex-1 flex flex-col min-w-0 h-full transition-all duration-500 ease-in-out">
-        <main className="flex-1 overflow-y-auto">
-          {/* 5. Call the render function here */}
-          {renderPage()}
+        {/* 2. Main Content Area starts here */}
+        <main className="flex-1 ml-64 min-h-screen bg-runner-bg">
+          <Routes>
+            {/* The Home route now points to Dashboard */}
+            <Route path="/" element={<Dashboard />} />
+            
+            {/* The Profile route */}
+            <Route path="/profile" element={<RunnerProfile />} />
+
+            {/* The wallet route */}
+            <Route path="/wallet" element={<WalletPage />} />
+            
+            {/* The Settings route */}
+            <Route path="/settings" element={<SettingsPage />} />
+
+            {/* View Requests Placeholder */}
+            <Route path="/requests" element={<div className="p-8 text-white">Requests Page Coming Soon</div>} />
+            
+            {/* Catch-all route (MUST BE LAST) */}
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
         </main>
+        </div>
+      <div className="min-h-screen bg-[#D3D3D3]">
+        <Routes>
+          {/* Main Routes */}
+          <Route path="/" element={<LandingPage />} />
+          
+          {/* Authentication Pages */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<Register />} />
+
+          {/* Admin Routes */}
+          <Route path="/dashboard" element={<AdminDashboard />} />
+          
+        </Routes>
       </div>
-    </div>
+    </Router>
   );
 }
 
