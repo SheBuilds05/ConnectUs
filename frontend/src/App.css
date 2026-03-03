@@ -39,4 +39,44 @@
 
 .read-the-docs {
   color: #888;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global Reset and Smooth Scrolling */
+html, body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+  /* Ensures the background color matches the design even if the content is short */
+  background-color: #D3D3D3; 
+}
+
+/* Custom Scrollbar for the Green Theme */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #D3D3D3;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #477023; /* runner-medium */
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2D531A; /* runner-dark */
+}
+
+/* Smooth transitions for all hover effects */
+* {
+  transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+}
+
+/* Optional: Subtle card lift effect for the profile sections */
+.profile-card-hover:hover {
+  transform: translateY(-4px);
 }
