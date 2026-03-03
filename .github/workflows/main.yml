@@ -34,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # REPLACEMENT FOR SERVICES: This works on Windows (the last code only works in ubuntu)
+      # REPLACEMENT FOR SERVICES: This works on Windows
       - name: Setup PostgreSQL
         uses: ikalnytskyi/action-setup-postgres@v8
         with:
@@ -58,10 +58,9 @@ jobs:
         run: npm test
         working-directory: ./backend
         env:
-        # Replace the placeholder below with your actual database URL in GitHub Secrets later
           DATABASE_URL: postgres://user:password@localhost:5432/booking_db
 
- mobile-ci:
+  mobile-ci:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -81,7 +80,6 @@ jobs:
         run: npm run lint
         working-directory: ./mobile
 
-      
       - name: Build Android Debug (Check for errors)
         run: |
           cd android
