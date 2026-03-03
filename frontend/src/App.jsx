@@ -2,7 +2,6 @@ import Sidebar from './components/sidebar';
 import "./App.css";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 
-// Existing Imports
 import Dashboard from "./pages/Dashboard";
 import RunnerProfile from "./pages/RunnerProfile";
 import SettingsPage from "./pages/SettingsPage";
@@ -11,8 +10,6 @@ import LoginPage from "./pages/LoginPage";
 import Register from "./pages/Register";
 import LandingPage from "./pages/LandingPage";
 import AdminDashboard from "./pages/AdminDashboard";
-
-// NEW Imports from your updated file tree
 import AccountPage from "./pages/AccountPage";
 import BookingsPage from "./pages/BookingsPage";
 import FavoritesPage from "./pages/FavoritesPage";
@@ -22,7 +19,6 @@ import UserHomePage from "./pages/UserHomePage";
 const LayoutWrapper = ({ children }) => {
   const location = useLocation();
   
-  // Public pages that do NOT show the Sidebar
   const authPaths = ["/", "/login", "/register"];
   const isAuthPage = authPaths.includes(location.pathname);
 
@@ -30,7 +26,6 @@ const LayoutWrapper = ({ children }) => {
     return <div className="min-h-screen bg-[#D3D3D3]">{children}</div>;
   }
 
-  // Private/App pages that DO show the Sidebar
   return (
     <div className="flex">
       <Sidebar />
