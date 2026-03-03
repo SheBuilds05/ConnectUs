@@ -1,6 +1,6 @@
 import Sidebar from './components/sidebar';
 import "./App.css";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import RunnerProfile from "./pages/RunnerProfile";
 import SettingsPage from "./pages/SettingsPage";
@@ -10,50 +10,54 @@ import Register from "./pages/Register";
 import LandingPage from "./pages/LandingPage";
 import AdminDashboard from "./pages/AdminDashboard";
 
+// This helper component decides whether to show the Sidebar layout or the Auth layout
+const LayoutWrapper = ({ children }) => {
+  const location = useLocation();
+  
+  // Define paths where we DON'T want the sidebar (Landing, Login, Register)
+  const authPaths = ["/", "/login", "/register"];
+  const isAuthPage = authPaths.includes(location.pathname);
+
+  if (isAuthPage) {
+    // Full screen layout for Landing/Auth
+    return <div className="min-h-screen bg-[#D3D3D3]">{children}</div>;
+  }
+
+  // Dashboard layout with Sidebar
+  return (
+    <div className="flex">
+      <Sidebar />
+      <main className="flex-1 ml-64 min-h-screen bg-runner-bg">
+        {children}
+      </main>
+    </div>
+  );
+};
+
 function App() {
   return (
     <Router>
-      <div className="flex">
-        {/* 1. Sidebar stays fixed on the left */}
-        <Sidebar />
-
-        {/* 2. Main Content Area starts here */}
-        <main className="flex-1 ml-64 min-h-screen bg-runner-bg">
-          <Routes>
-            {/* The Home route now points to Dashboard */}
-            <Route path="/" element={<Dashboard />} />
-            
-            {/* The Profile route */}
-            <Route path="/profile" element={<RunnerProfile />} />
-
-            {/* The wallet route */}
-            <Route path="/wallet" element={<WalletPage />} />
-            
-            {/* The Settings route */}
-            <Route path="/settings" element={<SettingsPage />} />
-
-            {/* View Requests Placeholder */}
-            <Route path="/requests" element={<div className="p-8 text-white">Requests Page Coming Soon</div>} />
-            
-            {/* Catch-all route (MUST BE LAST) */}
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
-        </main>
-        </div>
-      <div className="min-h-screen bg-[#D3D3D3]">
+      <LayoutWrapper>
         <Routes>
-          {/* Main Routes */}
+          {/* 1. Public Entry Pages */}
           <Route path="/" element={<LandingPage />} />
-          
-          {/* Authentication Pages */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<Register />} />
 
-          {/* Admin Routes */}
-          <Route path="/dashboard" element={<AdminDashboard />} />
+          {/* 2. Authenticated User Pages (Sidebar will show) */}
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/profile" element={<RunnerProfile />} />
+          <Route path="/wallet" element={<WalletPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/requests" element={<div className="p-8 text-white">Requests Page Coming Soon</div>} />
           
+          {/* 3. Admin Routes */}
+          <Route path="/admin" element={<AdminDashboard />} />
+
+          {/* Catch-all redirect */}
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
-      </div>
+      </LayoutWrapper>
     </Router>
   );
 }
