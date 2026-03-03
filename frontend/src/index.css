@@ -13,3 +13,12 @@
 body {
   @apply bg-runner-bg font-sans antialiased;
 }
+/* Remove Tailwind imports, just keep your custom styles */
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+/* Any additional custom styles can go here */
