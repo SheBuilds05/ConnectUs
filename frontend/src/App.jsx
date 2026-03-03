@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sidebar } from './components/Sidebar';
+import { Sidebar } from './components/SideBar';
 
 // 1. Import all your new pages
 import UserHomePage from './pages/UserHomePage';
@@ -44,7 +44,7 @@ function App() {
       <aside className={`
         bg-white border-r border-gray-100 transition-all duration-500 ease-in-out
         ${isSidebarOpen ? 'w-72 opacity-100' : 'w-0 opacity-0'}
-        flex-shrink-0 overflow-hidden h-full
+        shrink-0 overflow-hidden h-full
       `}>
         <div className="w-72 h-full">
           {/* 4. Pass navigation props to Sidebar */}

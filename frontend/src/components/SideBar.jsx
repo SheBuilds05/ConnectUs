@@ -1,9 +1,11 @@
 // src/components/Sidebar.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import { 
-  LayoutDashboard, Calendar, ShoppingBag, MessageCircle, 
-  Heart, User, ShieldCheck, X, LogOut 
+  LayoutDashboard, Calendar, MessageCircle, 
+  Heart, User, ShieldCheck, X, LogOut, Home
 } from 'lucide-react';
+import { PlaceholderIcon } from './PlaceholderIcon';
+import logo from '../assets/images/logo.png';
 
 const SidebarLink = ({ icon, label, active = false, badge, onClick }) => (
   <button 
@@ -31,18 +33,27 @@ const SidebarLink = ({ icon, label, active = false, badge, onClick }) => (
 );
 
 export const Sidebar = ({ onClose, currentPage, onNavigate }) => {
+  const [logoError, setLogoError] = useState(false);
   
   const handleNavigation = (page) => {
     if (onNavigate) {
       onNavigate(page);
     }
     if (onClose) {
-      onClose(); // Auto-close on mobile/tablet view
+      onClose();
+    }
+  };
+
+  const handleCloseAndGoHome = () => {
+    if (onNavigate) {
+      onNavigate('dashboard');
+    }
+    if (onClose) {
+      onClose();
     }
   };
 
   const handleLogout = () => {
-    // Simple logout simulation
     console.log("Logging out...");
     window.location.reload(); 
   };
@@ -52,20 +63,40 @@ export const Sidebar = ({ onClose, currentPage, onNavigate }) => {
       {/* Brand Logo Section */}
       <div className="flex items-center justify-between mb-10">
         <div className="flex items-center gap-3">
-          <div className="bg-[#487313] p-2 rounded-xl shadow-sm">
-            <ShoppingBag className="text-[#DAF59A]" size={24} />
+          {/* Round Logo Image with local asset */}
+          <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[#2D531A] shadow-md flex items-center justify-center bg-white">
+            {logoError ? (
+              <PlaceholderIcon text="C" size={48} />
+            ) : (
+              <img 
+                src={logo} 
+                alt="ConnectUs Logo" 
+                className="w-full h-full object-cover"
+                onError={() => setLogoError(true)}
+              />
+            )}
           </div>
           <h1 className="text-2xl font-black text-[#0D330E] tracking-tighter">ConnectUs</h1>
         </div>
         
-        {/* Close button for mobile */}
+        {/* Close button with Home navigation */}
         <button 
-          onClick={onClose} 
-          className="p-2 text-gray-400 hover:bg-gray-100 hover:text-red-500 rounded-lg transition-colors lg:hidden"
+          onClick={handleCloseAndGoHome}
+          className="p-2 text-gray-400 hover:bg-gray-100 hover:text-red-500 rounded-lg transition-colors"
+          title="Close and go to Home"
         >
           <X size={24} />
         </button>
       </div>
+
+      {/* Quick Home Button */}
+      <button
+        onClick={() => handleNavigation('dashboard')}
+        className="flex items-center gap-3 px-4 py-3 mb-4 text-sm font-bold text-[#2D531A] bg-green-50 rounded-xl hover:bg-green-100 transition-colors"
+      >
+        <Home size={18} />
+        <span>Back to Home</span>
+      </button>
 
       {/* Navigation Links */}
       <nav className="flex-1 space-y-2 overflow-y-auto pr-2 custom-scrollbar">
