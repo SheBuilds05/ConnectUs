@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom'; // Added useNavigate
 import { 
   LayoutDashboard, 
   Wallet, 
@@ -12,16 +12,25 @@ import {
 
 const Sidebar = () => {
   const location = useLocation();
-  // State to handle opening/closing if you want to use it for mobile later
+  const navigate = useNavigate(); // Initialize navigation
   const [isOpen, setIsOpen] = useState(true);
 
+  // Updated path to /dashboard to match our new App.jsx routing
   const menuItems = [
-    { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/' }, // Changed to '/'
+    { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/dashboard' }, 
     { name: 'Profile', icon: <User size={20} />, path: '/profile' },
     { name: 'Wallet', icon: <Wallet size={20} />, path: '/wallet' },
     { name: 'View Requests', icon: <ClipboardList size={20} />, path: '/requests' },
     { name: 'Settings', icon: <Settings size={20} />, path: '/settings' },
   ];
+
+  const handleLogout = () => {
+    // 1. Add any logout logic here (e.g., localStorage.clear() or auth.logout())
+    console.log("Logging out...");
+    
+    // 2. Redirect to the login page
+    navigate('/login');
+  };
 
   return (
     <div className={`h-screen w-64 bg-runner-deep flex flex-col fixed left-0 top-0 shadow-2xl transition-all duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
@@ -72,7 +81,11 @@ const Sidebar = () => {
           </div>
         </div>
         
-        <button className="w-full flex items-center gap-4 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-2xl transition-colors">
+        {/* Updated Button with onClick handler */}
+        <button 
+          onClick={handleLogout}
+          className="w-full flex items-center gap-4 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-2xl transition-colors cursor-pointer"
+        >
           <LogOut size={20} />
           <span className="font-medium">Logout</span>
         </button>
