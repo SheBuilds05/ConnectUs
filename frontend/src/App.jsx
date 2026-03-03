@@ -39,6 +39,7 @@ function App() {
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>
+        </div>
       <div className="min-h-screen bg-[#D3D3D3]">
         <Routes>
           {/* Main Routes */}
