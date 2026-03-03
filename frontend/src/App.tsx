@@ -50,14 +50,14 @@ function App() {
         } />
 
         {/* USER ROUTES */}
-        <Route path="/user/*" element={
-          <Routes>
-              <Route path="/" element={<UserBookings/>} />
-              <Route path="track" element={<UserTrackOrder />} />
-              <Route path="settings" element={<UserSettings />} />
-              <Route path="best-runners" element={<div className="p-10 text-center">Best Runners Content</div>} />
-          </Routes>
-        } />
+<Route path="/user/*" element={<MainLayout />}>
+  {/* The index route (path="/user") will now show UserBookings inside the layout */}
+  <Route index element={<UserBookings />} />
+  <Route path="bookings" element={<UserBookings />} />
+  <Route path="track" element={<UserTrackOrder />} />
+  <Route path="settings" element={<UserSettings />} />
+  <Route path="best-runners" element={<div className="p-10 text-center">Best Runners Content</div>} />
+</Route>
 
         {/* Catch-all redirect to Landing */}
         <Route path="*" element={<Navigate to="/" />} />
