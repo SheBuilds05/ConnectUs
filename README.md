@@ -1,5 +1,4 @@
 # ConnectUs - Smart Services Booking Platform
-![Feature Branch CI](https://github.com/khensani1/ConnectUs/actions/workflows/feature-ci.yml/badge.svg)
 
 A dual-platform (Web + Mobile) marketplace connecting customers with trusted local runners who can shop for them. Users can book runners, upload product photos, make secure payments, track bookings, and leave reviews.
 
