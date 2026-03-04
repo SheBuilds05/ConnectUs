@@ -91,3 +91,138 @@ graph TD
     style F fill:#6E8649,stroke:#2D531A,color:#fff
     style L fill:#C5A059,stroke:#1A1A1A,color:#fff
     style Q fill:#C5A059,stroke:#1A1A1A,color:#fff
+```
+
+---
+
+# ⚙️ Installation Guide
+
+## ✅ Prerequisites
+
+Ensure you have the following installed:
+
+- Node.js (v18 or later recommended)
+- npm or yarn
+- Git
+- PostgreSQL (for backend integration when implemented)
+
+Check installed versions:
+
+```bash
+node -v
+npm -v
+git --version
+```
+
+---
+
+## 📥 Clone the Repository
+
+```bash
+git clone https://github.com/your-username/ConnectUs.git
+cd ConnectUs
+```
+
+---
+
+## 📦 Install Dependencies
+
+### Web Application
+
+```bash
+cd frontend
+npm install
+```
+
+### Mobile Application
+
+```bash
+cd mobile
+npm install
+```
+
+---
+
+## ▶️ Run the Web App
+
+```bash
+npm run dev
+```
+
+The development server will run at:
+
+```
+http://localhost:5173
+```
+
+---
+
+## 📱 Run the Mobile App (Expo)
+
+```bash
+npx expo start
+```
+
+Then scan the QR code using:
+- Expo Go (Android)
+- Camera App (iOS)
+
+---
+
+# 📦 Dependencies
+
+### Core Frontend Dependencies
+- react
+- react-dom
+- react-router-dom
+- framer-motion
+- tailwindcss
+- vite
+
+### Mobile Dependencies
+- react-native
+- expo
+
+### Backend Dependencies (Planned)
+- express
+- pg
+- dotenv
+- jsonwebtoken
+- bcrypt
+
+Install all dependencies using:
+
+```bash
+npm install
+```
+
+---
+
+# 📁 Project Structure
+
+```
+ConnectUs/
+│
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── layouts/
+│   │   ├── assets/
+│   │   └── App.jsx
+│   │
+│   └── package.json
+│
+├── mobile/
+│   ├── screens/
+│   ├── components/
+│   └── App.js
+│
+├── backend/ (planned)
+│   ├── routes/
+│   ├── controllers/
+│   ├── models/
+│   └── server.js
+│
+└── README.md
+```
