@@ -12,52 +12,26 @@ A dual-platform (Web + Mobile) marketplace connecting customers with trusted loc
 
 ## ✨ **Features**
 
-### 👤 **For Customers**
-- 📸 **Photo-based product requests** - Upload exactly what you want
-- 🔍 **Runner discovery** - Find runners by category or specialty
-- 📅 **Calendar booking** - Schedule shopping slots
-- 💳 **Secure payments** - Escrow system for safety
-- ⭐ **Reviews & ratings** - Build trust in the community
-
-### 🏃 **For Runners**
-- 📊 **Earnings dashboard** - Track income and completed jobs
-- 📅 **Availability management** - Set working hours and days
-- 📦 **Job notifications** - Get alerted to new booking requests
-- ⭐ **Rating system** - Build reputation with customer reviews
-- 🚚 **Delivery options** - Choose walk or courier delivery
-
-### 👑 **For Admins**
-- 👥 **User management** - Approve/verify runners, handle disputes
-- 📊 **Platform analytics** - Track bookings, revenue, and growth
-- ⚖️ **Dispute resolution** - Mediate customer-runner conflicts
-- 🛡️ **Safety monitoring** - Review reported issues and fraud detection
+**Customers** — Photo requests · Runner discovery · Calendar booking · Secure payments · Reviews & ratings  
+**Runners** — Earnings dashboard · Availability management · Job notifications · Rating system · Delivery options  
+**Admins** — User management · Platform analytics · Dispute resolution · Safety monitoring · Runner verification
 
 ---
 
 ## 🛠️ **Tech Stack**
 
-### 💻 **Development Technologies**
 <div align="center">
   <img src="https://skillicons.dev/icons?i=react,vite,tailwind,nodejs,express,postgres,git,github" alt="Development Technologies" />
 </div>
 
-### 🎨 **Frontend**
 <div align="center">
   <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
   <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
   <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind" />
   <img src="https://img.shields.io/badge/React_Router-CA4245?style=for-the-badge&logo=react-router&logoColor=white" alt="React Router" />
   <img src="https://img.shields.io/badge/Framer_Motion-0055FF?style=for-the-badge&logo=framer&logoColor=white" alt="Framer Motion" />
-</div>
-
-### 📱 **Mobile**
-<div align="center">
   <img src="https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React Native" />
   <img src="https://img.shields.io/badge/Expo-000020?style=for-the-badge&logo=expo&logoColor=white" alt="Expo" />
-</div>
-
-### 🖥️ **Backend** (Planned)
-<div align="center">
   <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js" />
   <img src="https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express" />
   <img src="https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL" />
@@ -67,38 +41,42 @@ A dual-platform (Web + Mobile) marketplace connecting customers with trusted loc
 
 ## 🏗 **System Architecture**
 
-### Application Flow Diagram
-The application uses React Router v6 within `App.jsx` to handle seamless transitions between public pages, customer app, runner dashboard, and admin panel.
-
+### Application Flow
 ```mermaid
 graph TD
-    A[App.jsx - Router] --> B{Route Type}
-    
-    B -->|Public Routes| C[LandingPage /]
-    B -->|Public Routes| D[LoginPage /login]
-    B -->|Public Routes| E[RegisterPage /register]
-    
-    B -->|Customer Routes| F[MainLayout with Sidebar]
-    F --> G[UserHomePage /home]
-    F --> H[BookingsPage /bookings]
-    F --> I[MessagesPage /messages]
-    F --> J[FavoritesPage /favorites]
-    F --> K[AccountPage /account]
-    
-    B -->|Runner Routes| L[RunnerLayout]
-    L --> M[RunnerDashboard /runner/dashboard]
-    L --> N[EarningsPage /runner/earnings]
-    L --> O[AvailabilityPage /runner/availability]
-    L --> P[JobHistoryPage /runner/jobs]
-    
-    B -->|Admin Routes| Q[AdminLayout]
-    Q --> R[AdminDashboard /admin]
-    Q --> S[UserManagement /admin/users]
-    Q --> T[DisputeResolution /admin/disputes]
-    Q --> U[AnalyticsPage /admin/analytics]
+    A[App Router] --> B{User Role}
+    B -->|Public| C[Landing · Login · Register]
+    B -->|Customer| D[Home · Bookings · Messages · Favorites · Account]
+    B -->|Runner| E[Runner Dashboard · Earnings · Availability · Jobs]
+    B -->|Admin| F[Admin Dashboard · Users · Disputes · Analytics]
     
     style A fill:#2D531A,stroke:#0D330E,color:#fff
     style B fill:#477023,stroke:#2D531A,color:#fff
-    style F fill:#6E8649,stroke:#2D531A,color:#fff
-    style L fill:#C5A059,stroke:#1A1A1A,color:#fff
-    style Q fill:#C5A059,stroke:#1A1A1A,color:#fff
+
+## **Navigation Flow**
+graph LR
+    A[Login] --> B{Customer}
+    A --> C{Runner}
+    A --> D{Admin}
+    
+    B --> E[Browse → Book → Track → Review]
+    C --> F[Accept → Shop → Deliver → Get Paid]
+    D --> G[Verify → Monitor → Resolve → Analyze]
+    
+    style A fill:#2D531A,stroke:#0D330E,color:#fff
+
+## **Installation & Setup**
+1.Clone Repo
+git clone https://github.com/your-username/ConnectUs.git
+cd ConnectUs
+
+2.Install Dependencies
+cd frontend
+npm install
+cd mobile
+npm install
+
+3. Run
+cd frontend
+npm run dev
+# http://localhost:5173
