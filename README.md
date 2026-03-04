@@ -41,14 +41,17 @@ A dual-platform (Web + Mobile) marketplace connecting customers with trusted loc
 
 ## 🏗 **System Architecture**
 
-### Application Flow
+## 🏗 **System Architecture**
+
+### Application Flow Diagram
 ```mermaid
 graph TD
-    A[App Router] --> B{User Role}
-    B -->|Public| C[Landing · Login · Register]
-    B -->|Customer| D[Home · Bookings · Messages · Favorites · Account]
-    B -->|Runner| E[Runner Dashboard · Earnings · Availability · Jobs]
-    B -->|Admin| F[Admin Dashboard · Users · Disputes · Analytics]
+    A[App.jsx - Router] --> B{Route Type}
+    
+    B -->|Public| C[Landing / Login / Register]
+    B -->|Customer| D[Home / Bookings / Messages / Favorites / Account]
+    B -->|Runner| E[Runner Dashboard / Earnings / Availability / Jobs]
+    B -->|Admin| F[Admin Dashboard / Users / Disputes / Analytics]
     
     style A fill:#2D531A,stroke:#0D330E,color:#fff
     style B fill:#477023,stroke:#2D531A,color:#fff
