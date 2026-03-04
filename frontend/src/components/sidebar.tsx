@@ -10,7 +10,7 @@ import {
   ShoppingCart 
 } from 'lucide-react';
 
-const Sidebar = () => {
+const sidebar = () => {
   const location = useLocation();
   // State to handle opening/closing if you want to use it for mobile later
   const [isOpen, setIsOpen] = useState(true);
@@ -81,4 +81,4 @@ const Sidebar = () => {
   );
 };
 
-export default Sidebar;
+export default sidebar;

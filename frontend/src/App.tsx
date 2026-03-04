@@ -2,10 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from "react-router-dom";
 
 // Components & Layouts
-import Sidebar from './components/sidebar';
 import MainLayout from './layout/MainLayout'; 
-
-// Pages (Note: Dashboard import has been removed)
 import RunnerProfile from "./pages/RunnerProfile";
 import SettingsPage from "./pages/SettingsPage";
 import WalletPage from "./pages/WalletPage";
@@ -27,7 +24,6 @@ import "./App.css";
 const RunnerLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="flex">
-      <Sidebar />
       <main className="flex-1 ml-64 min-h-screen bg-runner-bg">
         {children}
       </main>
@@ -63,8 +59,8 @@ function App() {
 
         {/* --- USER ROUTES --- */}
         <Route path="/user" element={<MainLayout />}>
-          <Route index element={<UserHomePage />} />
-          <Route path="bookings" element={<UserBookings />} />
+          <Route path="UserHomePage"  element={<UserHomePage onMenuClick={() => {}} isSidebarOpen={false} />} />
+          <Route path="bookings"  element={<UserBookings />} />
           <Route path="track" element={<UserTrackOrder />} />
           <Route path="settings" element={<UserSettings />} />
           <Route path="favorites" element={<FavoritesPage />} />
