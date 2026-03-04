@@ -25,12 +25,12 @@ A dual-platform (Web + Mobile) marketplace connecting customers with trusted loc
 
 ## 🛠️ **Tech Stack**
 
-### 💻 **Development Technologies**
+### Development Technologies
 <div align="center">
   <img src="https://skillicons.dev/icons?i=react,vite,tailwind,nodejs,express,postgres,git,github" alt="Development Technologies" />
 </div>
 
-### 🎨 **Frontend**
+### Frontend
 <div align="center">
   <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
   <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
@@ -39,13 +39,13 @@ A dual-platform (Web + Mobile) marketplace connecting customers with trusted loc
   <img src="https://img.shields.io/badge/Framer_Motion-0055FF?style=for-the-badge&logo=framer&logoColor=white" alt="Framer Motion" />
 </div>
 
-### 📱 **Mobile**
+### Mobile
 <div align="center">
   <img src="https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React Native" />
   <img src="https://img.shields.io/badge/Expo-000020?style=for-the-badge&logo=expo&logoColor=white" alt="Expo" />
 </div>
 
-### 🖥️ **Backend** (Planned)
+### Backend (Planned)
 <div align="center">
   <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js" />
   <img src="https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express" />
