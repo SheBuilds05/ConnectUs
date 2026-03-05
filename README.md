@@ -2,12 +2,6 @@
 
 A dual-platform (Web + Mobile) marketplace connecting customers with trusted local runners who can shop for them. Users can book runners, upload product photos, make secure payments, track bookings, and leave reviews.
 
-<div align="center">
-  <img src="https://img.shields.io/badge/version-1.0.0-green.svg" alt="Version 1.0.0" />
-  <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License" />
-  <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome" />
-</div>
-
 ---
 
 ## ✨ **Features**
