@@ -119,7 +119,7 @@ git --version
 ## 📥 Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/ConnectUs.git
+git clone https://github.com/SheBuilds05/ConnectUs
 cd ConnectUs
 ```
 
