@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom'; // Added useNavigate
 import { 
   LayoutDashboard, 
   PlusCircle, 
@@ -17,14 +17,28 @@ interface UserSidebarProps {
 
 const UserSidebar = ({ isOpen, onClose }: UserSidebarProps) => {
   const location = useLocation();
+  const navigate = useNavigate(); // Initialize navigate
 
   const menuItems = [
-  { name: 'Dashboard', path: '/user', icon: LayoutDashboard }, // Matches index
-  { name: 'Best Runners', path: '/user/best-runners', icon: Trophy },
-  { name: 'Create Booking', path: '/user/bookings', icon: PlusCircle },
-  { name: 'Track Order', path: '/user/track', icon: MapPin },
-  { name: 'Settings', path: '/user/settings', icon: Settings },
-];
+    { name: 'Dashboard', path: '/user', icon: LayoutDashboard },
+    { name: 'Best Runners', path: '/user/best-runners', icon: Trophy },
+    { name: 'Create Booking', path: '/user/bookings', icon: PlusCircle },
+    { name: 'Track Order', path: '/user/track', icon: MapPin },
+    { name: 'Settings', path: '/user/settings', icon: Settings },
+  ];
+
+  // --- LOGOUT LOGIC ---
+  const handleLogout = () => {
+    // 1. Clear the storage
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
+    // 2. Close the sidebar (for mobile users)
+    onClose();
+    
+    // 3. Redirect to login
+    navigate('/login');
+  };
 
   return (
     <aside 
@@ -69,7 +83,10 @@ const UserSidebar = ({ isOpen, onClose }: UserSidebarProps) => {
 
         {/* Footer Area */}
         <div className="mt-auto pt-6 border-t border-white/10">
-          <button className="flex items-center gap-3 px-4 py-3 w-full text-red-300 hover:text-red-100 hover:bg-red-500/10 rounded-2xl transition-all font-bold">
+          <button 
+            onClick={handleLogout} // Attached the logic here
+            className="flex items-center gap-3 px-4 py-3 w-full text-red-300 hover:text-red-100 hover:bg-red-500/10 rounded-2xl transition-all font-bold"
+          >
             <LogOut size={20} />
             <span>Logout</span>
           </button>

@@ -1,9 +1,66 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const RegisterPage = () => {
+  // 1. Added id_num to state because Supabase requires it
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    id_num: '', // Added this
+    vehicleNumber: ''
+  });
+  
   const [isRunner, setIsRunner] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const inputStyle = "w-full px-4 py-3 rounded-lg border border-[#6E8649] focus:ring-2 focus:ring-[#477023] outline-none";
+  const navigate = useNavigate();
+
+  const inputStyle = "w-full px-4 py-3 rounded-lg border border-[#6E8649] focus:ring-2 focus:ring-[#477023] outline-none transition-all";
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  // 2. Updated Submission Logic
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    const role = isRunner ? 'Runner' : 'User';
+
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          password: formData.password,
+          id_num: formData.id_num, // Sending the required ID number
+          role: role,
+          vehicleNumber: isRunner ? formData.vehicleNumber : null 
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        navigate('/login');
+      } else {
+        // If backend sends an error, show it here
+        setError(data.message || data.error || 'Registration failed');
+      }
+    } catch (err) {
+      setError('Connection error. Ensure your Docker backend is running.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#D3D3D3] flex items-center justify-center p-6">
@@ -25,43 +82,105 @@ const RegisterPage = () => {
               <span className="text-xs font-bold text-[#2D531A]">Runner Mode</span>
               <input 
                 type="checkbox" 
+                checked={isRunner}
                 onChange={() => setIsRunner(!isRunner)}
-                className="w-4 h-4 accent-[#477023]" 
+                className="w-4 h-4 accent-[#477023] cursor-pointer" 
               />
             </div>
           </div>
 
-          <form className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 border-l-4 border-red-500 text-red-700 text-xs">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleRegister} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="col-span-1">
               <label className="text-xs font-bold text-[#6E8649] uppercase">First Name</label>
-              <input type="text" className={inputStyle} placeholder="John" />
+              <input 
+                name="firstName"
+                type="text" 
+                required
+                className={inputStyle} 
+                placeholder="John" 
+                onChange={handleChange}
+              />
             </div>
             <div className="col-span-1">
               <label className="text-xs font-bold text-[#6E8649] uppercase">Last Name</label>
-              <input type="text" className={inputStyle} placeholder="Doe" />
-            </div>
-            <div className="col-span-2">
-              <label className="text-xs font-bold text-[#6E8649] uppercase">Email Address</label>
-              <input type="email" className={inputStyle} placeholder="john@example.com" />
+              <input 
+                name="lastName"
+                type="text" 
+                required
+                className={inputStyle} 
+                placeholder="Doe" 
+                onChange={handleChange}
+              />
             </div>
 
-            {/* Dynamic Runner Field */}
+            {/* Added ID Number Input (Required by your Supabase Schema) */}
+            <div className="col-span-2">
+              <label className="text-xs font-bold text-[#6E8649] uppercase">ID Number</label>
+              <input 
+                name="id_num"
+                type="text" 
+                required
+                className={inputStyle} 
+                placeholder="Identity Number" 
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="col-span-2">
+              <label className="text-xs font-bold text-[#6E8649] uppercase">Email Address</label>
+              <input 
+                name="email"
+                type="email" 
+                required
+                className={inputStyle} 
+                placeholder="john@example.com" 
+                onChange={handleChange}
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="text-xs font-bold text-[#6E8649] uppercase">Password</label>
+              <input 
+                name="password"
+                type="password" 
+                required
+                className={inputStyle} 
+                placeholder="••••••••" 
+                onChange={handleChange}
+              />
+            </div>
+
             {isRunner && (
               <div className="col-span-2 animate-fadeIn">
                 <label className="text-xs font-bold text-[#6E8649] uppercase">Vehicle / License Number</label>
-                <input type="text" className={inputStyle} placeholder="ABC-1234" />
+                <input 
+                  name="vehicleNumber"
+                  type="text" 
+                  className={inputStyle} 
+                  placeholder="ABC-1234" 
+                  onChange={handleChange}
+                />
               </div>
             )}
 
             <div className="col-span-2 pt-4">
-              <button className="w-full bg-[#477023] hover:bg-[#2D531A] text-white py-4 rounded-xl font-bold text-lg shadow-md transition-all">
-                {isRunner ? 'Register as Runner' : 'Create Account'}
+              <button 
+                type="submit"
+                disabled={loading}
+                className={`w-full bg-[#477023] hover:bg-[#2D531A] text-white py-4 rounded-xl font-bold text-lg shadow-md transition-all ${loading ? 'opacity-50' : ''}`}
+              >
+                {loading ? 'Processing...' : (isRunner ? 'Register as Runner' : 'Create Account')}
               </button>
             </div>
           </form>
 
           <p className="mt-6 text-center text-sm text-[#2D531A]">
-            Already have an account? <a href="/login" className="font-bold text-[#477023]">Sign In</a>
+            Already have an account? <a href="/login" className="font-bold text-[#477023] hover:underline">Sign In</a>
           </p>
         </div>
       </div>

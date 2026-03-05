@@ -1,11 +1,11 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, Link } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 // Components & Layouts
 import Sidebar from './components/sidebar';
 import MainLayout from './layout/MainLayout'; 
 
-// Pages (Note: Dashboard import has been removed)
+// Pages
 import RunnerProfile from "./pages/RunnerProfile";
 import SettingsPage from "./pages/SettingsPage";
 import WalletPage from "./pages/WalletPage";
@@ -23,6 +23,27 @@ import UserSettings from "./pages/UserSettings";
 
 import "./App.css";
 
+// --- 1. Fixed Protected Route Helper ---
+const ProtectedRoute = ({ children, allowedRole }: { children: React.ReactNode, allowedRole: string }) => {
+  const token = localStorage.getItem('token');
+  const userData = localStorage.getItem('user');
+  
+  // If no token, they aren't logged in at all
+  if (!token || !userData) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const user = JSON.parse(userData);
+
+  // If the role doesn't match, send them to the landing page
+  if (user.role !== allowedRole) {
+    console.warn(`Access denied: User role is ${user.role}, but ${allowedRole} is required.`);
+    return <Navigate to="/" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
 // --- Runner Layout Wrapper ---
 const RunnerLayout = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -37,20 +58,19 @@ const RunnerLayout = ({ children }: { children: React.ReactNode }) => {
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        {/* --- PUBLIC ROUTES --- */}
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<Register />} />
+    <Routes>
+      {/* --- PUBLIC ROUTES --- */}
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<Register />} />
 
-        {/* --- RUNNER ROUTES (Dashboard removed) --- */}
-        <Route
-          path="/runner/*"
-          element={
+      {/* --- RUNNER ROUTES --- */}
+      <Route
+        path="/runner/*"
+        element={
+          <ProtectedRoute allowedRole="Runner">
             <RunnerLayout>
               <Routes>
-                {/* We now default the index route to Profile since Dashboard is gone */}
                 <Route index element={<RunnerProfile />} />
                 <Route path="profile" element={<RunnerProfile />} />
                 <Route path="wallet" element={<WalletPage />} />
@@ -58,27 +78,42 @@ function App() {
                 <Route path="requests" element={<div className="p-8 text-white">Requests Page Coming Soon</div>} />
               </Routes>
             </RunnerLayout>
-          }
-        />
+          </ProtectedRoute>
+        }
+      />
 
-        {/* --- USER ROUTES --- */}
-        <Route path="/user" element={<MainLayout />}>
-          <Route index element={<UserHomePage />} />
-          <Route path="bookings" element={<UserBookings />} />
-          <Route path="track" element={<UserTrackOrder />} />
-          <Route path="settings" element={<UserSettings />} />
-          <Route path="favorites" element={<FavoritesPage />} />
-          <Route path="messages" element={<MessagesPage />} />
-          <Route path="account" element={<AccountPage />} />
-          <Route path="best-runners" element={<div className="p-10 text-center font-bold text-[#0D330E]">Top Runners Leaderboard</div>} />
-        </Route>
+      {/* --- USER ROUTES --- */}
+      <Route 
+        path="/user" 
+        element={
+          <ProtectedRoute allowedRole="User">
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<UserHomePage />} />
+        <Route path="bookings" element={<UserBookings />} />
+        <Route path="track" element={<UserTrackOrder />} />
+        <Route path="settings" element={<UserSettings />} />
+        <Route path="favorites" element={<FavoritesPage />} />
+        <Route path="messages" element={<MessagesPage />} />
+        <Route path="account" element={<AccountPage />} />
+        <Route path="best-runners" element={<div className="p-10 text-center font-bold text-[#0D330E]">Top Runners Leaderboard</div>} />
+      </Route>
 
-        {/* --- ADMIN --- */}
-        <Route path="/admin" element={<AdminDashboard />} />
+      {/* --- ADMIN ROUTES --- */}
+      <Route 
+        path="/admin" 
+        element={
+          <ProtectedRoute allowedRole="Admin">
+            <AdminDashboard />
+          </ProtectedRoute>
+        } 
+      />
 
-       
-      </Routes>
-    </Router>
+      {/* Final Catch-all (This was bouncing you back) */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 
