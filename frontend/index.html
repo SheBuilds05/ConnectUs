@@ -4,7 +4,34 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <title>Runner-On-Demand</title>
+    <!-- Add Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Add your custom colors -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              forest: '#0D330E',
+              leaf: '#2D531A', 
+              moss: '#477023',
+              sage: '#6E8649',
+              canvas: '#D3D3D3',
+            }
+          }
+        }
+      }
+    </script>
+    <!-- Your custom CSS (if any) -->
+    <style>
+      #root {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 2rem;
+        text-align: center;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
