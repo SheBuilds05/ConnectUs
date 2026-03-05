@@ -163,27 +163,6 @@ Then scan the QR code using:
 
 ---
 
-# 📦 Dependencies
-
-### Core Frontend Dependencies
-- react
-- react-dom
-- react-router-dom
-- framer-motion
-- tailwindcss
-- vite
-
-### Mobile Dependencies
-- react-native
-- expo
-
-### Backend Dependencies (Planned)
-- express
-- pg
-- dotenv
-- jsonwebtoken
-- bcrypt
-
 Install all dependencies using:
 
 ```bash
