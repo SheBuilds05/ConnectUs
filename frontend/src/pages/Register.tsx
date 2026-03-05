@@ -1,191 +1,540 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
-const RegisterPage = () => {
-  // 1. Added id_num to state because Supabase requires it
+const Register = () => {
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    fullName: '',
     email: '',
     password: '',
-    id_num: '', // Added this
-    vehicleNumber: ''
+    confirmPassword: '',
+    accountType: '' // Empty initially to force selection
   });
-  
-  const [isRunner, setIsRunner] = useState(false);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
 
-  const navigate = useNavigate();
+  const [selectedType, setSelectedType] = useState(null);
 
-  const inputStyle = "w-full px-4 py-3 rounded-lg border border-[#6E8649] focus:ring-2 focus:ring-[#477023] outline-none transition-all";
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  // Your exact color palette
+  const colors = {
+    forest: '#0D330E',    // Pakistan Green
+    leaf: '#2D531A',      // Dark Moss
+    moss: '#477023',      // Fern Green
+    sage: '#6E8649',      // Reseda Green
+    canvas: '#D3D3D3',    // Gray background
+    white: '#FFFFFF',
+    text: '#1F2E2A'
   };
 
-  // 2. Updated Submission Logic
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    const role = isRunner ? 'Runner' : 'User';
-
-    try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          password: formData.password,
-          id_num: formData.id_num, // Sending the required ID number
-          role: role,
-          vehicleNumber: isRunner ? formData.vehicleNumber : null 
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        navigate('/login');
-      } else {
-        // If backend sends an error, show it here
-        setError(data.message || data.error || 'Registration failed');
-      }
-    } catch (err) {
-      setError('Connection error. Ensure your Docker backend is running.');
-    } finally {
-      setLoading(false);
+    if (!formData.accountType) {
+      alert('Please select whether you want to register as a Customer or a Runner');
+      return;
     }
+    console.log('Register:', formData);
   };
+
+  const selectAccountType = (type) => {
+    setFormData({...formData, accountType: type});
+    setSelectedType(type);
+  };
+
+  // Professional SVG Icons (matching landing page)
+  const CustomerIcon = () => (
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="8" r="4" stroke={selectedType === 'customer' ? colors.moss : colors.forest} strokeWidth="1.5"/>
+      <path d="M5 18V17C5 14.2386 7.23858 12 10 12H14C16.7614 12 19 14.2386 19 17V18" stroke={selectedType === 'customer' ? colors.moss : colors.forest} strokeWidth="1.5" strokeLinecap="round"/>
+      <path d="M15 9L18 6M18 6L21 9M18 6L18 12" stroke={colors.sage} strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+  );
+
+  const RunnerIcon = () => (
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="8" r="3" stroke={selectedType === 'runner' ? colors.moss : colors.forest} strokeWidth="1.5"/>
+      <path d="M5 18L7 15L10 18L14 13L17 16L19 14" stroke={selectedType === 'runner' ? colors.moss : colors.forest} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M18 21L15 18L12 20L9 18L6 21" stroke={colors.sage} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
 
   return (
-    <div className="min-h-screen bg-[#D3D3D3] flex items-center justify-center p-6">
-      <div className="max-w-2xl w-full bg-white rounded-3xl shadow-2xl flex flex-col md:flex-row overflow-hidden">
-        
-        {/* Left Visual Panel */}
-        <div className="md:w-1/3 bg-[#0D330E] p-8 text-white flex flex-col justify-center">
-          <h2 className="text-3xl font-bold mb-4">Join Us.</h2>
-          <p className="text-[#6E8649] text-sm leading-relaxed">
-            Create an account to start booking services or become a runner and earn.
+    <div style={{ 
+      backgroundColor: colors.canvas, 
+      minHeight: '100vh',
+      width: '100%',
+      margin: 0,
+      padding: 0,
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      overflow: 'auto'
+    }}>
+      {/* Background Decorative Elements */}
+      <div style={{
+        position: 'absolute',
+        top: '-10%',
+        right: '-5%',
+        width: '400px',
+        height: '400px',
+        borderRadius: '50%',
+        background: `linear-gradient(135deg, ${colors.moss}20, ${colors.sage}20)`,
+        zIndex: 0
+      }} />
+      <div style={{
+        position: 'absolute',
+        bottom: '-10%',
+        left: '-5%',
+        width: '400px',
+        height: '400px',
+        borderRadius: '50%',
+        background: `linear-gradient(135deg, ${colors.forest}20, ${colors.leaf}20)`,
+        zIndex: 0
+      }} />
+
+      {/* Register Card */}
+      <div style={{ 
+        backgroundColor: colors.white,
+        borderRadius: '24px',
+        padding: '3rem',
+        maxWidth: '500px',
+        width: '90%',
+        position: 'relative',
+        zIndex: 1,
+        boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
+        margin: '2rem auto'
+      }}>
+        {/* Logo Section */}
+        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+          <div style={{ 
+            backgroundColor: colors.forest, 
+            width: '64px', 
+            height: '64px', 
+            borderRadius: '16px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            margin: '0 auto 1.5rem',
+            boxShadow: `0 10px 20px ${colors.forest}30`
+          }}>
+            <span style={{ color: colors.white, fontSize: '2rem', fontWeight: '600' }}>C</span>
+          </div>
+          <h2 style={{ 
+            color: colors.forest, 
+            fontSize: '2rem', 
+            fontWeight: '700',
+            marginBottom: '0.5rem',
+            letterSpacing: '-0.5px'
+          }}>
+            Create Account
+          </h2>
+          <p style={{ 
+            color: colors.leaf, 
+            fontSize: '1rem',
+            opacity: 0.9
+          }}>
+            Join ConnectUs and start your journey
           </p>
         </div>
 
-        {/* Right Form Panel */}
-        <div className="md:w-2/3 p-8 md:p-12">
-          <div className="flex justify-between items-center mb-8">
-            <h3 className="text-2xl font-bold text-[#0D330E]">Create Account</h3>
-            <div className="flex items-center space-x-2">
-              <span className="text-xs font-bold text-[#2D531A]">Runner Mode</span>
-              <input 
-                type="checkbox" 
-                checked={isRunner}
-                onChange={() => setIsRunner(!isRunner)}
-                className="w-4 h-4 accent-[#477023] cursor-pointer" 
-              />
+        {/* Account Type Selection */}
+        <div style={{ marginBottom: '2.5rem' }}>
+          <label style={{ 
+            color: colors.forest, 
+            display: 'block', 
+            marginBottom: '1rem', 
+            fontWeight: '600', 
+            fontSize: '1rem' 
+          }}>
+            I want to register as:
+          </label>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+            {/* Customer Card */}
+            <div
+              onClick={() => selectAccountType('customer')}
+              style={{
+                padding: '2rem 1rem',
+                borderRadius: '16px',
+                border: `2px solid ${selectedType === 'customer' ? colors.moss : `${colors.sage}30`}`,
+                backgroundColor: selectedType === 'customer' ? `${colors.moss}08` : colors.white,
+                cursor: 'pointer',
+                textAlign: 'center',
+                transition: 'all 0.2s',
+                boxShadow: selectedType === 'customer' ? `0 8px 20px ${colors.moss}20` : 'none'
+              }}
+              onMouseEnter={(e) => {
+                if (selectedType !== 'customer') {
+                  e.currentTarget.style.borderColor = colors.moss;
+                  e.currentTarget.style.backgroundColor = `${colors.moss}05`;
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (selectedType !== 'customer') {
+                  e.currentTarget.style.borderColor = `${colors.sage}30`;
+                  e.currentTarget.style.backgroundColor = colors.white;
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }
+              }}
+            >
+              <div style={{ marginBottom: '1rem' }}>
+                <CustomerIcon />
+              </div>
+              <h3 style={{ 
+                color: selectedType === 'customer' ? colors.moss : colors.forest, 
+                marginBottom: '0.5rem',
+                fontWeight: '600',
+                fontSize: '1.2rem'
+              }}>
+                Customer
+              </h3>
+              <p style={{ 
+                color: colors.leaf, 
+                fontSize: '0.85rem',
+                lineHeight: '1.5'
+              }}>
+                I need items delivered to me
+              </p>
+              {selectedType === 'customer' && (
+                <div style={{ 
+                  color: colors.moss, 
+                  fontSize: '1rem', 
+                  marginTop: '1rem',
+                  fontWeight: '500'
+                }}>
+                  Selected ✓
+                </div>
+              )}
+            </div>
+
+            {/* Runner Card */}
+            <div
+              onClick={() => selectAccountType('runner')}
+              style={{
+                padding: '2rem 1rem',
+                borderRadius: '16px',
+                border: `2px solid ${selectedType === 'runner' ? colors.moss : `${colors.sage}30`}`,
+                backgroundColor: selectedType === 'runner' ? `${colors.moss}08` : colors.white,
+                cursor: 'pointer',
+                textAlign: 'center',
+                transition: 'all 0.2s',
+                boxShadow: selectedType === 'runner' ? `0 8px 20px ${colors.moss}20` : 'none'
+              }}
+              onMouseEnter={(e) => {
+                if (selectedType !== 'runner') {
+                  e.currentTarget.style.borderColor = colors.moss;
+                  e.currentTarget.style.backgroundColor = `${colors.moss}05`;
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (selectedType !== 'runner') {
+                  e.currentTarget.style.borderColor = `${colors.sage}30`;
+                  e.currentTarget.style.backgroundColor = colors.white;
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }
+              }}
+            >
+              <div style={{ marginBottom: '1rem' }}>
+                <RunnerIcon />
+              </div>
+              <h3 style={{ 
+                color: selectedType === 'runner' ? colors.moss : colors.forest, 
+                marginBottom: '0.5rem',
+                fontWeight: '600',
+                fontSize: '1.2rem'
+              }}>
+                Runner
+              </h3>
+              <p style={{ 
+                color: colors.leaf, 
+                fontSize: '0.85rem',
+                lineHeight: '1.5'
+              }}>
+                I want to deliver items to others
+              </p>
+              {selectedType === 'runner' && (
+                <div style={{ 
+                  color: colors.moss, 
+                  fontSize: '1rem', 
+                  marginTop: '1rem',
+                  fontWeight: '500'
+                }}>
+                  Selected ✓
+                </div>
+              )}
             </div>
           </div>
-
-          {error && (
-            <div className="mb-4 p-3 bg-red-100 border-l-4 border-red-500 text-red-700 text-xs">
-              {error}
-            </div>
+          
+          {!formData.accountType && (
+            <p style={{ 
+              color: '#e53e3e', 
+              fontSize: '0.85rem', 
+              marginTop: '1rem', 
+              textAlign: 'center' 
+            }}>
+              Please select an account type to continue
+            </p>
           )}
+        </div>
 
-          <form onSubmit={handleRegister} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="col-span-1">
-              <label className="text-xs font-bold text-[#6E8649] uppercase">First Name</label>
-              <input 
-                name="firstName"
-                type="text" 
+        {/* Form - Only shown after account type selection */}
+        {formData.accountType && (
+          <form onSubmit={handleSubmit}>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ 
+                color: colors.forest, 
+                display: 'block', 
+                marginBottom: '0.5rem',
+                fontWeight: '500',
+                fontSize: '0.95rem'
+              }}>
+                Full Name
+              </label>
+              <input
+                type="text"
+                value={formData.fullName}
+                onChange={(e) => setFormData({...formData, fullName: e.target.value})}
+                style={{ 
+                  width: '100%', 
+                  padding: '1rem', 
+                  borderRadius: '12px', 
+                  border: `1px solid ${colors.sage}30`,
+                  outline: 'none',
+                  fontSize: '1rem',
+                  transition: 'all 0.2s',
+                  boxSizing: 'border-box'
+                }}
+                placeholder="Enter your full name"
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = colors.moss;
+                  e.currentTarget.style.boxShadow = `0 0 0 3px ${colors.moss}20`;
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = `${colors.sage}30`;
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
                 required
-                className={inputStyle} 
-                placeholder="John" 
-                onChange={handleChange}
-              />
-            </div>
-            <div className="col-span-1">
-              <label className="text-xs font-bold text-[#6E8649] uppercase">Last Name</label>
-              <input 
-                name="lastName"
-                type="text" 
-                required
-                className={inputStyle} 
-                placeholder="Doe" 
-                onChange={handleChange}
-              />
-            </div>
-
-            {/* Added ID Number Input (Required by your Supabase Schema) */}
-            <div className="col-span-2">
-              <label className="text-xs font-bold text-[#6E8649] uppercase">ID Number</label>
-              <input 
-                name="id_num"
-                type="text" 
-                required
-                className={inputStyle} 
-                placeholder="Identity Number" 
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="col-span-2">
-              <label className="text-xs font-bold text-[#6E8649] uppercase">Email Address</label>
-              <input 
-                name="email"
-                type="email" 
-                required
-                className={inputStyle} 
-                placeholder="john@example.com" 
-                onChange={handleChange}
-              />
-            </div>
-            <div className="col-span-2">
-              <label className="text-xs font-bold text-[#6E8649] uppercase">Password</label>
-              <input 
-                name="password"
-                type="password" 
-                required
-                className={inputStyle} 
-                placeholder="••••••••" 
-                onChange={handleChange}
               />
             </div>
 
-            {isRunner && (
-              <div className="col-span-2 animate-fadeIn">
-                <label className="text-xs font-bold text-[#6E8649] uppercase">Vehicle / License Number</label>
-                <input 
-                  name="vehicleNumber"
-                  type="text" 
-                  className={inputStyle} 
-                  placeholder="ABC-1234" 
-                  onChange={handleChange}
-                />
-              </div>
-            )}
-
-            <div className="col-span-2 pt-4">
-              <button 
-                type="submit"
-                disabled={loading}
-                className={`w-full bg-[#477023] hover:bg-[#2D531A] text-white py-4 rounded-xl font-bold text-lg shadow-md transition-all ${loading ? 'opacity-50' : ''}`}
-              >
-                {loading ? 'Processing...' : (isRunner ? 'Register as Runner' : 'Create Account')}
-              </button>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ 
+                color: colors.forest, 
+                display: 'block', 
+                marginBottom: '0.5rem',
+                fontWeight: '500',
+                fontSize: '0.95rem'
+              }}>
+                Email Address
+              </label>
+              <input
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                style={{ 
+                  width: '100%', 
+                  padding: '1rem', 
+                  borderRadius: '12px', 
+                  border: `1px solid ${colors.sage}30`,
+                  outline: 'none',
+                  fontSize: '1rem',
+                  transition: 'all 0.2s',
+                  boxSizing: 'border-box'
+                }}
+                placeholder="Enter your email"
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = colors.moss;
+                  e.currentTarget.style.boxShadow = `0 0 0 3px ${colors.moss}20`;
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = `${colors.sage}30`;
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+                required
+              />
             </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ 
+                color: colors.forest, 
+                display: 'block', 
+                marginBottom: '0.5rem',
+                fontWeight: '500',
+                fontSize: '0.95rem'
+              }}>
+                Password
+              </label>
+              <input
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormData({...formData, password: e.target.value})}
+                style={{ 
+                  width: '100%', 
+                  padding: '1rem', 
+                  borderRadius: '12px', 
+                  border: `1px solid ${colors.sage}30`,
+                  outline: 'none',
+                  fontSize: '1rem',
+                  transition: 'all 0.2s',
+                  boxSizing: 'border-box'
+                }}
+                placeholder="Create a password"
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = colors.moss;
+                  e.currentTarget.style.boxShadow = `0 0 0 3px ${colors.moss}20`;
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = `${colors.sage}30`;
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+                required
+              />
+            </div>
+
+            <div style={{ marginBottom: '2rem' }}>
+              <label style={{ 
+                color: colors.forest, 
+                display: 'block', 
+                marginBottom: '0.5rem',
+                fontWeight: '500',
+                fontSize: '0.95rem'
+              }}>
+                Confirm Password
+              </label>
+              <input
+                type="password"
+                value={formData.confirmPassword}
+                onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+                style={{ 
+                  width: '100%', 
+                  padding: '1rem', 
+                  borderRadius: '12px', 
+                  border: `1px solid ${colors.sage}30`,
+                  outline: 'none',
+                  fontSize: '1rem',
+                  transition: 'all 0.2s',
+                  boxSizing: 'border-box'
+                }}
+                placeholder="Confirm your password"
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = colors.moss;
+                  e.currentTarget.style.boxShadow = `0 0 0 3px ${colors.moss}20`;
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = `${colors.sage}30`;
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+                required
+              />
+            </div>
+
+            <button 
+              type="submit" 
+              style={{ 
+                backgroundColor: colors.forest, 
+                color: colors.white, 
+                width: '100%', 
+                padding: '1rem', 
+                borderRadius: '50px', 
+                border: 'none', 
+                cursor: 'pointer', 
+                fontWeight: '600',
+                fontSize: '1rem',
+                marginBottom: '1.5rem',
+                transition: 'all 0.2s',
+                boxShadow: `0 4px 12px ${colors.forest}40`
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = colors.moss;
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = `0 6px 16px ${colors.forest}60`;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = colors.forest;
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = `0 4px 12px ${colors.forest}40`;
+              }}
+            >
+              Create {formData.accountType === 'customer' ? 'Customer' : 'Runner'} Account
+            </button>
           </form>
+        )}
 
-          <p className="mt-6 text-center text-sm text-[#2D531A]">
-            Already have an account? <a href="/login" className="font-bold text-[#477023] hover:underline">Sign In</a>
-          </p>
+        {/* Change selection link */}
+        {formData.accountType && (
+          <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+            <button
+              onClick={() => {
+                setFormData({...formData, accountType: ''});
+                setSelectedType(null);
+              }}
+              style={{ 
+                color: colors.moss, 
+                background: 'none', 
+                border: 'none', 
+                cursor: 'pointer',
+                fontSize: '0.9rem',
+                fontWeight: '500',
+                transition: 'color 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.color = colors.forest}
+              onMouseLeave={(e) => e.currentTarget.style.color = colors.moss}
+            >
+              ← Change account type
+            </button>
+          </div>
+        )}
+
+        {/* Sign In Link */}
+        <p style={{ 
+          textAlign: 'center', 
+          color: colors.leaf,
+          fontSize: '0.95rem'
+        }}>
+          Already have an account?{' '}
+          <Link 
+            to="/login" 
+            style={{ 
+              color: colors.moss, 
+              textDecoration: 'none',
+              fontWeight: '600',
+              transition: 'color 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.color = colors.forest}
+            onMouseLeave={(e) => e.currentTarget.style.color = colors.moss}
+          >
+            Sign in
+          </Link>
+        </p>
+
+        {/* Admin Link */}
+        <div style={{ 
+          textAlign: 'center', 
+          marginTop: '1.5rem',
+          paddingTop: '1.5rem',
+          borderTop: `1px solid ${colors.sage}30`
+        }}>
+          <Link 
+            to="/admin" 
+            style={{ 
+              color: colors.sage, 
+              textDecoration: 'none',
+              fontSize: '0.9rem',
+              fontWeight: '500',
+              transition: 'color 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.color = colors.moss}
+            onMouseLeave={(e) => e.currentTarget.style.color = colors.sage}
+          >
+            Admin Access →
+          </Link>
         </div>
       </div>
     </div>
   );
 };
 
-export default RegisterPage;
+export default Register;
