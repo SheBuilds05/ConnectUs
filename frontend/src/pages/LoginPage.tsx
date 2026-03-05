@@ -1,133 +1,373 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 const LoginPage = () => {
-  // 1. State Management
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState('User'); // Default role
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  
-  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    rememberMe: false
+  });
 
-  // 2. Login Logic
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, role }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        // --- IMPORTANT FIXES HERE ---
-        
-        // 1. Save the token
-        localStorage.setItem('token', data.token);
-        
-        // 2. Attach the role to the user object before saving 
-        // This ensures ProtectedRoute in App.tsx knows who you are
-        const userWithRole = { 
-          ...data.user, 
-          role: role // Use the role selected in the UI
-        };
-        localStorage.setItem('user', JSON.stringify(userWithRole));
-        
-        // 3. Conditional Navigation (Matches your App.tsx routes)
-        if (role === 'Admin') {
-          navigate('/admin');
-        } else if (role === 'Runner') {
-          navigate('/runner'); // Changed from /dashboard to /runner
-        } else {
-          navigate('/user'); // Changed from /home to /user
-        }
-      } else {
-        setError(data.message || 'Login failed. Please check your credentials.');
-      }
-    } catch (err) {
-      setError('Cannot connect to server. Is the backend running?');
-    } finally {
-      setLoading(false);
-    }
+  // Your exact color palette
+  const colors = {
+    forest: '#0D330E',    // Pakistan Green
+    leaf: '#2D531A',      // Dark Moss
+    moss: '#477023',      // Fern Green
+    sage: '#6E8649',      // Reseda Green
+    canvas: '#D3D3D3',    // Gray background
+    white: '#FFFFFF',
+    text: '#1F2E2A'
   };
 
-  const inputStyle = "w-full px-4 py-3 rounded-lg border border-[#6E8649] bg-white focus:outline-none focus:ring-2 focus:ring-[#477023] transition-all";
-  
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log('Login:', formData);
+  };
+
   return (
-    <div className="min-h-screen bg-[#D3D3D3] flex items-center justify-center font-sans p-4">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden border-b-8 border-[#0D330E]">
-        <div className="p-8">
-          <h2 className="text-3xl font-bold text-[#0D330E] mb-2 text-center">Welcome Back</h2>
-          <p className="text-[#6E8649] text-center mb-8">Please enter your details to sign in</p>
-          
-          {/* Role Switcher */}
-          <div className="flex bg-[#D3D3D3] rounded-lg p-1 mb-6">
-            {['User', 'Runner', 'Admin'].map((r) => (
-              <button
-                key={r}
-                type="button"
-                onClick={() => setRole(r)}
-                className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${
-                  role === r ? 'bg-[#477023] text-white shadow' : 'text-[#2D531A] hover:bg-gray-200'
-                }`}
-              >
-                {r}
-              </button>
-            ))}
+    <div style={{ 
+      backgroundColor: colors.canvas, 
+      minHeight: '100vh',
+      width: '100%',
+      margin: 0,
+      padding: 0,
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}>
+      {/* Background Decorative Elements */}
+      <div style={{
+        position: 'absolute',
+        top: '-10%',
+        right: '-5%',
+        width: '400px',
+        height: '400px',
+        borderRadius: '50%',
+        background: `linear-gradient(135deg, ${colors.moss}20, ${colors.sage}20)`,
+        zIndex: 0
+      }} />
+      <div style={{
+        position: 'absolute',
+        bottom: '-10%',
+        left: '-5%',
+        width: '400px',
+        height: '400px',
+        borderRadius: '50%',
+        background: `linear-gradient(135deg, ${colors.forest}20, ${colors.leaf}20)`,
+        zIndex: 0
+      }} />
+
+      {/* Login Card */}
+      <div style={{ 
+        backgroundColor: colors.white,
+        borderRadius: '24px',
+        padding: '3rem',
+        maxWidth: '450px',
+        width: '90%',
+        position: 'relative',
+        zIndex: 1,
+        boxShadow: '0 20px 40px rgba(0,0,0,0.1)'
+      }}>
+        {/* Logo Section */}
+        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+          <div style={{ 
+            backgroundColor: colors.forest, 
+            width: '64px', 
+            height: '64px', 
+            borderRadius: '16px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            margin: '0 auto 1.5rem',
+            boxShadow: `0 10px 20px ${colors.forest}30`
+          }}>
+            <span style={{ color: colors.white, fontSize: '2rem', fontWeight: '600' }}>C</span>
+          </div>
+          <h2 style={{ 
+            color: colors.forest, 
+            fontSize: '2rem', 
+            fontWeight: '700',
+            marginBottom: '0.5rem',
+            letterSpacing: '-0.5px'
+          }}>
+            Welcome Back
+          </h2>
+          <p style={{ 
+            color: colors.leaf, 
+            fontSize: '1rem',
+            opacity: 0.9
+          }}>
+            Sign in to continue to ConnectUs
+          </p>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ 
+              color: colors.forest, 
+              display: 'block', 
+              marginBottom: '0.5rem',
+              fontWeight: '500',
+              fontSize: '0.95rem'
+            }}>
+              Email Address
+            </label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              style={{ 
+                width: '100%', 
+                padding: '1rem', 
+                borderRadius: '12px', 
+                border: `1px solid ${colors.sage}30`,
+                outline: 'none',
+                fontSize: '1rem',
+                transition: 'all 0.2s',
+                boxSizing: 'border-box'
+              }}
+              placeholder="Enter your email"
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = colors.moss;
+                e.currentTarget.style.boxShadow = `0 0 0 3px ${colors.moss}20`;
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = `${colors.sage}30`;
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+              required
+            />
           </div>
 
-          {/* Error Message Display */}
-          {error && (
-            <div className="mb-4 p-3 bg-red-100 border-l-4 border-red-500 text-red-700 text-sm text-center">
-              {error}
-            </div>
-          )}
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ 
+              color: colors.forest, 
+              display: 'block', 
+              marginBottom: '0.5rem',
+              fontWeight: '500',
+              fontSize: '0.95rem'
+            }}>
+              Password
+            </label>
+            <input
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData({...formData, password: e.target.value})}
+              style={{ 
+                width: '100%', 
+                padding: '1rem', 
+                borderRadius: '12px', 
+                border: `1px solid ${colors.sage}30`,
+                outline: 'none',
+                fontSize: '1rem',
+                transition: 'all 0.2s',
+                boxSizing: 'border-box'
+              }}
+              placeholder="Enter your password"
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = colors.moss;
+                e.currentTarget.style.boxShadow = `0 0 0 3px ${colors.moss}20`;
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = `${colors.sage}30`;
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+              required
+            />
+          </div>
 
-          <form onSubmit={handleLogin} className="space-y-5">
-            <div>
-              <label className="block text-sm font-semibold text-[#0D330E] mb-1 text-left">Email Address</label>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            marginBottom: '2rem' 
+          }}>
+            <label style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '0.5rem',
+              cursor: 'pointer'
+            }}>
               <input 
-                type="email" 
-                placeholder="name@company.com" 
-                className={inputStyle}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required 
+                type="checkbox" 
+                checked={formData.rememberMe} 
+                onChange={(e) => setFormData({...formData, rememberMe: e.target.checked})}
+                style={{ 
+                  width: '18px', 
+                  height: '18px',
+                  cursor: 'pointer',
+                  accentColor: colors.moss
+                }} 
               />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-[#0D330E] mb-1 text-left">Password</label>
-              <input 
-                type="password" 
-                placeholder="••••••••" 
-                className={inputStyle}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required 
-              />
-            </div>
-            
-            <button 
-              type="submit"
-              disabled={loading}
-              className={`w-full bg-[#477023] hover:bg-[#2D531A] text-white font-bold py-3 rounded-lg shadow-lg transition-colors ${
-                loading ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
+              <span style={{ color: colors.leaf, fontSize: '0.95rem' }}>Remember me</span>
+            </label>
+            <Link 
+              to="/forgot-password" 
+              style={{ 
+                color: colors.moss, 
+                textDecoration: 'none',
+                fontSize: '0.95rem',
+                fontWeight: '500',
+                transition: 'color 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.color = colors.forest}
+              onMouseLeave={(e) => e.currentTarget.style.color = colors.moss}
             >
-              {loading ? 'Signing in...' : `Login as ${role}`}
-            </button>
-          </form>
-          
-          <p className="mt-8 text-center text-sm text-[#2D531A]">
-            Don't have an account? <a href="/register" className="font-bold text-[#477023] hover:underline">Register here</a>
-          </p>
+              Forgot Password?
+            </Link>
+          </div>
+
+          <button 
+            type="submit" 
+            style={{ 
+              backgroundColor: colors.forest, 
+              color: colors.white, 
+              width: '100%', 
+              padding: '1rem', 
+              borderRadius: '50px', 
+              border: 'none', 
+              cursor: 'pointer', 
+              fontWeight: '600',
+              fontSize: '1rem',
+              marginBottom: '1.5rem',
+              transition: 'all 0.2s',
+              boxShadow: `0 4px 12px ${colors.forest}40`
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = colors.moss;
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = `0 6px 16px ${colors.forest}60`;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = colors.forest;
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = `0 4px 12px ${colors.forest}40`;
+            }}
+          >
+            Sign In
+          </button>
+        </form>
+
+        {/* Divider */}
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '1rem',
+          marginBottom: '1.5rem'
+        }}>
+          <div style={{ flex: 1, height: '1px', backgroundColor: `${colors.sage}30` }} />
+          <span style={{ color: colors.leaf, fontSize: '0.9rem' }}>or</span>
+          <div style={{ flex: 1, height: '1px', backgroundColor: `${colors.sage}30` }} />
+        </div>
+
+        {/* Social Login */}
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: '1fr 1fr', 
+          gap: '1rem',
+          marginBottom: '2rem'
+        }}>
+          <button
+            style={{ 
+              padding: '0.8rem',
+              borderRadius: '50px',
+              border: `1px solid ${colors.sage}30`,
+              backgroundColor: colors.white,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = colors.canvas;
+              e.currentTarget.style.borderColor = colors.moss;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = colors.white;
+              e.currentTarget.style.borderColor = `${colors.sage}30`;
+            }}
+          >
+            <span style={{ fontSize: '1.2rem' }}>📧</span>
+            <span style={{ color: colors.forest }}>Email</span>
+          </button>
+          <button
+            style={{ 
+              padding: '0.8rem',
+              borderRadius: '50px',
+              border: `1px solid ${colors.sage}30`,
+              backgroundColor: colors.white,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = colors.canvas;
+              e.currentTarget.style.borderColor = colors.moss;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = colors.white;
+              e.currentTarget.style.borderColor = `${colors.sage}30`;
+            }}
+          >
+            <span style={{ fontSize: '1.2rem' }}>📱</span>
+            <span style={{ color: colors.forest }}>Phone</span>
+          </button>
+        </div>
+
+        {/* Register Link */}
+        <p style={{ 
+          textAlign: 'center', 
+          color: colors.leaf,
+          fontSize: '0.95rem'
+        }}>
+          Don't have an account?{' '}
+          <Link 
+            to="/register" 
+            style={{ 
+              color: colors.moss, 
+              textDecoration: 'none',
+              fontWeight: '600',
+              transition: 'color 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.color = colors.forest}
+            onMouseLeave={(e) => e.currentTarget.style.color = colors.moss}
+          >
+            Register here
+          </Link>
+        </p>
+
+        {/* Admin Link */}
+        <div style={{ 
+          textAlign: 'center', 
+          marginTop: '1.5rem',
+          paddingTop: '1.5rem',
+          borderTop: `1px solid ${colors.sage}30`
+        }}>
+          <Link 
+            to="/admin" 
+            style={{ 
+              color: colors.sage, 
+              textDecoration: 'none',
+              fontSize: '0.9rem',
+              fontWeight: '500',
+              transition: 'color 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.color = colors.moss}
+            onMouseLeave={(e) => e.currentTarget.style.color = colors.sage}
+          >
+            Admin Login →
+          </Link>
         </div>
       </div>
     </div>
