@@ -1,11 +1,8 @@
 import React from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
 
-// Components & Layouts
 import Sidebar from './components/sidebar';
 import MainLayout from './layout/MainLayout'; 
-
-// Pages
 import RunnerProfile from "./pages/RunnerProfile";
 import SettingsPage from "./pages/SettingsPage";
 import WalletPage from "./pages/WalletPage";
