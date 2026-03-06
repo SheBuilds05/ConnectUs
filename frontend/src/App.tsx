@@ -1,7 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
 
-import Sidebar from './components/sidebar';
+import Sidebar from './components/SideBar';
 import MainLayout from './layout/MainLayout'; 
 import RunnerProfile from "./pages/RunnerProfile";
 import SettingsPage from "./pages/SettingsPage";
@@ -45,7 +45,7 @@ const ProtectedRoute = ({ children, allowedRole }: { children: React.ReactNode, 
 const RunnerLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="flex">
-      <Sidebar />
+      <Sidebar onClose={undefined} currentPage={undefined} onNavigate={undefined} />
       <main className="flex-1 ml-64 min-h-screen bg-runner-bg">
         {children}
       </main>

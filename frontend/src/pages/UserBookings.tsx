@@ -124,12 +124,12 @@ const UserBookings = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="max-w-3xl mx-auto relative z-10 px-4 py-8"
+      className="max-w-6xl mx-auto relative z-10 px-5 py-7"
     >
       {/* Header */}
-      <div className="mb-6 text-center sm:text-left">
+      <div className="mb-8 text-center sm:text-left">
         <motion.h2 className="text-4xl sm:text-5xl font-black text-[#0D330E] mb-2">Create Booking</motion.h2>
-        <motion.p className="text-[#6E8649] text-lg font-medium drop-shadow-md">Fill in the details to get your items delivered.</motion.p>
+        <motion.p className="text-[#0D330E] text-lg font-medium drop-shadow-md">Fill in the details to get your items delivered.</motion.p>
       </div>
 
       {/* Step Progress */}
@@ -169,7 +169,7 @@ const UserBookings = () => {
       </div>
 
       {/* Main Form Card */}
-      <motion.div layout className="bg-white/95 backdrop-blur-sm rounded-[28px] p-6 sm:p-7 shadow-2xl border border-white/40 max-w-2xl mx-auto sm:mx-0">
+      <motion.div layout className="bg-white/95 backdrop-blur-sm rounded-[28px] p-6 sm:p-7 shadow-2xl border border-white/40 [95%] max-w-7xl mx-auto sm:mx-0">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
