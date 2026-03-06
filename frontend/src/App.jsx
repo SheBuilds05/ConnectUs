@@ -1,4 +1,3 @@
-import { Sidebar } from './components/Sidebar'; 
 import "./App.css";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 
@@ -30,11 +29,10 @@ const LayoutWrapper = ({ children }) => {
     return <div className="min-h-screen bg-[#D3D3D3]">{children}</div>;
   }
 
-  // Private/App pages that DO show the Sidebar
+  // Private/App pages - now WITHOUT Sidebar
   return (
-    <div className="flex">
-      <Sidebar />
-      <main className="flex-1 ml-64 min-h-screen bg-runner-bg">
+    <div className="min-h-screen bg-[#D3D3D3]">
+      <main className="flex-1">
         {children}
       </main>
     </div>
@@ -51,7 +49,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<Register />} />
 
-          {/* --- PRIVATE USER ROUTES (With Sidebar) --- */}
+          {/* --- PRIVATE USER ROUTES (No Sidebar) --- */}
           <Route path="/home" element={<UserHomePage />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/profile" element={<RunnerProfile />} />
