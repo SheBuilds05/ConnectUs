@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 import UserSidebar from '../components/UserSidebar';
 
 const MainLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const location = useLocation();
+  
+  // Check if current route is settings
+  const isSettingsPage = location.pathname.includes('/user/settings');
 
   return (
     <div className="min-h-screen flex bg-[#F0F2ED]">
@@ -24,7 +28,7 @@ const MainLayout = () => {
 
       {/* Content Main Container */}
       <main className="flex-1 lg:ml-64 flex flex-col min-h-screen">
-        {/* Mobile Header (Only visible on small/medium screens) */}
+        {/* Mobile Header */}
         <header className="lg:hidden flex items-center justify-between p-4 bg-white border-b border-black/5">
           <button 
             onClick={() => setIsSidebarOpen(true)}
@@ -32,13 +36,15 @@ const MainLayout = () => {
           >
             <Menu size={24} />
           </button>
-          <span className="font-black text-[#0D330E] text-sm tracking-widest uppercase">Runner</span>
-          <div className="w-10" /> {/* Balance spacer */}
+          <span className="font-black text-[#0D330E] text-sm tracking-widest uppercase">
+            {isSettingsPage ? 'Settings' : 'Runner'}
+          </span>
+          <div className="w-10" />
         </header>
 
-        {/* Page Viewport */}
+        {/* Page Viewport - Conditional max-width */}
         <div className="p-4 md:p-8 lg:p-12">
-          <div className="max-w-5xl mx-auto">
+          <div className={!isSettingsPage ? "max-w-5xl mx-auto" : ""}>
             <Outlet />
           </div>
         </div>
