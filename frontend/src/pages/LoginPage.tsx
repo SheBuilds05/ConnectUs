@@ -1,27 +1,72 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { loginUser } from '../services/api';
 
 const LoginPage = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     rememberMe: false
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  // Your exact color palette
   const colors = {
-    forest: '#0D330E',    // Pakistan Green
-    leaf: '#2D531A',      // Dark Moss
-    moss: '#477023',      // Fern Green
-    sage: '#6E8649',      // Reseda Green
-    canvas: '#D3D3D3',    // Gray background
+    forest: '#0D330E',
+    leaf: '#2D531A',
+    moss: '#477023',
+    sage: '#6E8649',
+    canvas: '#D3D3D3',
     white: '#FFFFFF',
     text: '#1F2E2A'
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Login:', formData);
+    setLoading(true);
+    setError('');
+
+    // Validation
+    if (!formData.email || !formData.password) {
+      setError('Please enter both email and password');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      console.log('Attempting login with:', { email: formData.email });
+      
+      const response = await loginUser({
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password,
+        rememberMe: formData.rememberMe
+      });
+      
+      console.log('Login successful:', response);
+      console.log('User role:', response.user.role);
+      
+      // Redirect based on user role
+      if (response.user.role === 'runner') {
+        console.log('Redirecting to runner dashboard');
+        navigate('/runner');
+      } else if (response.user.role === 'customer') {
+        console.log('Redirecting to user dashboard');
+        navigate('/user');
+      } else if (response.user.role === 'admin') {
+        console.log('Redirecting to admin dashboard');
+        navigate('/admin');
+      } else {
+        console.log('Unknown role, defaulting to user');
+        navigate('/user');
+      }
+      
+    } catch (err: any) {
+      console.error('Login error:', err);
+      setError(err.message || 'Login failed. Please check your credentials and try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -106,6 +151,22 @@ const LoginPage = () => {
           </p>
         </div>
 
+        {/* Error Message */}
+        {error && (
+          <div style={{
+            backgroundColor: '#fee',
+            color: '#c33',
+            padding: '1rem',
+            borderRadius: '8px',
+            marginBottom: '1.5rem',
+            textAlign: 'center',
+            border: '1px solid #fcc',
+            fontSize: '0.95rem'
+          }}>
+            {error}
+          </div>
+        )}
+
         {/* Form */}
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '1.5rem' }}>
@@ -142,6 +203,7 @@ const LoginPage = () => {
                 e.currentTarget.style.boxShadow = 'none';
               }}
               required
+              disabled={loading}
             />
           </div>
 
@@ -179,6 +241,7 @@ const LoginPage = () => {
                 e.currentTarget.style.boxShadow = 'none';
               }}
               required
+              disabled={loading}
             />
           </div>
 
@@ -204,6 +267,7 @@ const LoginPage = () => {
                   cursor: 'pointer',
                   accentColor: colors.moss
                 }} 
+                disabled={loading}
               />
               <span style={{ color: colors.leaf, fontSize: '0.95rem' }}>Remember me</span>
             </label>
@@ -232,25 +296,31 @@ const LoginPage = () => {
               padding: '1rem', 
               borderRadius: '50px', 
               border: 'none', 
-              cursor: 'pointer', 
+              cursor: loading ? 'not-allowed' : 'pointer', 
               fontWeight: '600',
               fontSize: '1rem',
               marginBottom: '1.5rem',
               transition: 'all 0.2s',
-              boxShadow: `0 4px 12px ${colors.forest}40`
+              boxShadow: `0 4px 12px ${colors.forest}40`,
+              opacity: loading ? 0.7 : 1
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = colors.moss;
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = `0 6px 16px ${colors.forest}60`;
+              if (!loading) {
+                e.currentTarget.style.backgroundColor = colors.moss;
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = `0 6px 16px ${colors.forest}60`;
+              }
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = colors.forest;
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = `0 4px 12px ${colors.forest}40`;
+              if (!loading) {
+                e.currentTarget.style.backgroundColor = colors.forest;
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = `0 4px 12px ${colors.forest}40`;
+              }
             }}
+            disabled={loading}
           >
-            Sign In
+            {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 
@@ -274,6 +344,7 @@ const LoginPage = () => {
           marginBottom: '2rem'
         }}>
           <button
+            type="button"
             style={{ 
               padding: '0.8rem',
               borderRadius: '50px',
@@ -294,11 +365,14 @@ const LoginPage = () => {
               e.currentTarget.style.backgroundColor = colors.white;
               e.currentTarget.style.borderColor = `${colors.sage}30`;
             }}
+            onClick={() => alert('Google login coming soon!')}
+            disabled={loading}
           >
-            <span style={{ fontSize: '1.2rem' }}>📧</span>
-            <span style={{ color: colors.forest }}>Email</span>
+            <span style={{ fontSize: '1.2rem' }}>G</span>
+            <span style={{ color: colors.forest }}>Google</span>
           </button>
           <button
+            type="button"
             style={{ 
               padding: '0.8rem',
               borderRadius: '50px',
@@ -319,9 +393,11 @@ const LoginPage = () => {
               e.currentTarget.style.backgroundColor = colors.white;
               e.currentTarget.style.borderColor = `${colors.sage}30`;
             }}
+            onClick={() => alert('Apple login coming soon!')}
+            disabled={loading}
           >
-            <span style={{ fontSize: '1.2rem' }}>📱</span>
-            <span style={{ color: colors.forest }}>Phone</span>
+            <span style={{ fontSize: '1.2rem' }}></span>
+            <span style={{ color: colors.forest }}>Apple</span>
           </button>
         </div>
 

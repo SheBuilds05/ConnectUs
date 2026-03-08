@@ -1,43 +1,185 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { registerCustomer, registerRunner } from '../services/api';
 
 const Register = () => {
-  const [formData, setFormData] = useState({
-    fullName: '',
+  const navigate = useNavigate();
+  const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  // Customer form state
+  const [customerData, setCustomerData] = useState({
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     confirmPassword: '',
-    accountType: '' // Empty initially to force selection
+    idNumber: ''
   });
 
-  const [selectedType, setSelectedType] = useState(null);
+  // Runner form state
+  const [runnerData, setRunnerData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    phone: '',
+    address: '',
+    city: '',
+    postalCode: '',
+    idNumber: '',
+    bio: ''
+  });
 
-  // Your exact color palette
   const colors = {
-    forest: '#0D330E',    // Pakistan Green
-    leaf: '#2D531A',      // Dark Moss
-    moss: '#477023',      // Fern Green
-    sage: '#6E8649',      // Reseda Green
-    canvas: '#D3D3D3',    // Gray background
+    forest: '#0D330E',
+    leaf: '#2D531A',
+    moss: '#477023',
+    sage: '#6E8649',
+    canvas: '#D3D3D3',
     white: '#FFFFFF',
     text: '#1F2E2A'
   };
 
-  const handleSubmit = (e) => {
+  // Validate SA ID number (13 digits)
+  const validateSAID = (id: string) => {
+    const saIDRegex = /^\d{13}$/;
+    return saIDRegex.test(id);
+  };
+
+  const handleCustomerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.accountType) {
-      alert('Please select whether you want to register as a Customer or a Runner');
+    
+    // Validation
+    if (customerData.password !== customerData.confirmPassword) {
+      setError('Passwords do not match');
       return;
     }
-    console.log('Register:', formData);
+
+    if (customerData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+
+    if (!customerData.firstName || !customerData.lastName) {
+      setError('Please enter your full name');
+      return;
+    }
+
+    if (!validateSAID(customerData.idNumber)) {
+      setError('Please enter a valid 13-digit SA ID number');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const userData = {
+        firstName: customerData.firstName.trim(),
+        lastName: customerData.lastName.trim(),
+        email: customerData.email.trim().toLowerCase(),
+        password: customerData.password,
+        id_num: customerData.idNumber
+      };
+
+      console.log('Sending customer registration data:', userData);
+      
+      const response = await registerCustomer(userData);
+      
+      console.log('Customer registration successful:', response);
+      setSuccess('Registration successful! Redirecting to login...');
+      
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
+      
+    } catch (err: any) {
+      console.error('Registration error:', err);
+      setError(err.message || 'Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const selectAccountType = (type) => {
-    setFormData({...formData, accountType: type});
+  const handleRunnerSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validation
+    if (runnerData.password !== runnerData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (runnerData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+
+    if (!runnerData.username) {
+      setError('Username is required');
+      return;
+    }
+
+    if (!validateSAID(runnerData.idNumber)) {
+      setError('Please enter a valid 13-digit SA ID number');
+      return;
+    }
+
+    if (!runnerData.phone) {
+      setError('Phone number is required');
+      return;
+    }
+
+    if (!runnerData.address || !runnerData.city) {
+      setError('Address and city are required');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const userData = {
+        username: runnerData.username.trim(),
+        email: runnerData.email.trim().toLowerCase(),
+        password: runnerData.password,
+        phone: runnerData.phone,
+        address: runnerData.address,
+        city: runnerData.city,
+        postalCode: runnerData.postalCode,
+        id_number: runnerData.idNumber,
+        bio: runnerData.bio
+      };
+
+      console.log('Sending runner registration data:', userData);
+      
+      const response = await registerRunner(userData);
+      
+      console.log('Runner registration successful:', response);
+      setSuccess('Runner registration successful! Your profile is pending verification. You will be notified once verified.');
+      
+      setTimeout(() => {
+        navigate('/login');
+      }, 3000);
+      
+    } catch (err: any) {
+      console.error('Registration error:', err);
+      setError(err.message || 'Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const selectAccountType = (type: string) => {
     setSelectedType(type);
+    setError('');
   };
 
-  // Professional SVG Icons (matching landing page)
   const CustomerIcon = () => (
     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle cx="12" cy="8" r="4" stroke={selectedType === 'customer' ? colors.moss : colors.forest} strokeWidth="1.5"/>
@@ -98,12 +240,14 @@ const Register = () => {
         backgroundColor: colors.white,
         borderRadius: '24px',
         padding: '3rem',
-        maxWidth: '500px',
+        maxWidth: selectedType ? '600px' : '500px',
         width: '90%',
         position: 'relative',
         zIndex: 1,
         boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
-        margin: '2rem auto'
+        margin: '2rem auto',
+        maxHeight: '90vh',
+        overflowY: 'auto'
       }}>
         {/* Logo Section */}
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
@@ -127,307 +271,257 @@ const Register = () => {
             marginBottom: '0.5rem',
             letterSpacing: '-0.5px'
           }}>
-            Create Account
+            {selectedType === 'customer' ? 'Create Customer Account' : 
+             selectedType === 'runner' ? 'Become a Runner' : 
+             'Create Account'}
           </h2>
           <p style={{ 
             color: colors.leaf, 
             fontSize: '1rem',
             opacity: 0.9
           }}>
-            Join ConnectUs and start your journey
+            {selectedType === 'customer' ? 'Join as a customer and start ordering' : 
+             selectedType === 'runner' ? 'Start earning by delivering items' : 
+             'Join ConnectUs and start your journey'}
           </p>
         </div>
 
-        {/* Account Type Selection */}
-        <div style={{ marginBottom: '2.5rem' }}>
-          <label style={{ 
-            color: colors.forest, 
-            display: 'block', 
-            marginBottom: '1rem', 
-            fontWeight: '600', 
-            fontSize: '1rem' 
+        {/* Error Message */}
+        {error && (
+          <div style={{
+            backgroundColor: '#fee',
+            color: '#c33',
+            padding: '1rem',
+            borderRadius: '8px',
+            marginBottom: '1.5rem',
+            textAlign: 'center',
+            border: '1px solid #fcc'
           }}>
-            I want to register as:
-          </label>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-            {/* Customer Card */}
-            <div
-              onClick={() => selectAccountType('customer')}
-              style={{
-                padding: '2rem 1rem',
-                borderRadius: '16px',
-                border: `2px solid ${selectedType === 'customer' ? colors.moss : `${colors.sage}30`}`,
-                backgroundColor: selectedType === 'customer' ? `${colors.moss}08` : colors.white,
-                cursor: 'pointer',
-                textAlign: 'center',
-                transition: 'all 0.2s',
-                boxShadow: selectedType === 'customer' ? `0 8px 20px ${colors.moss}20` : 'none'
-              }}
-              onMouseEnter={(e) => {
-                if (selectedType !== 'customer') {
-                  e.currentTarget.style.borderColor = colors.moss;
-                  e.currentTarget.style.backgroundColor = `${colors.moss}05`;
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (selectedType !== 'customer') {
-                  e.currentTarget.style.borderColor = `${colors.sage}30`;
-                  e.currentTarget.style.backgroundColor = colors.white;
-                  e.currentTarget.style.transform = 'translateY(0)';
-                }
-              }}
-            >
-              <div style={{ marginBottom: '1rem' }}>
-                <CustomerIcon />
-              </div>
-              <h3 style={{ 
-                color: selectedType === 'customer' ? colors.moss : colors.forest, 
-                marginBottom: '0.5rem',
-                fontWeight: '600',
-                fontSize: '1.2rem'
-              }}>
-                Customer
-              </h3>
-              <p style={{ 
-                color: colors.leaf, 
-                fontSize: '0.85rem',
-                lineHeight: '1.5'
-              }}>
-                I need items delivered to me
-              </p>
-              {selectedType === 'customer' && (
-                <div style={{ 
-                  color: colors.moss, 
-                  fontSize: '1rem', 
-                  marginTop: '1rem',
-                  fontWeight: '500'
-                }}>
-                  Selected ✓
-                </div>
-              )}
-            </div>
+            {error}
+          </div>
+        )}
 
-            {/* Runner Card */}
-            <div
-              onClick={() => selectAccountType('runner')}
-              style={{
-                padding: '2rem 1rem',
-                borderRadius: '16px',
-                border: `2px solid ${selectedType === 'runner' ? colors.moss : `${colors.sage}30`}`,
-                backgroundColor: selectedType === 'runner' ? `${colors.moss}08` : colors.white,
-                cursor: 'pointer',
-                textAlign: 'center',
-                transition: 'all 0.2s',
-                boxShadow: selectedType === 'runner' ? `0 8px 20px ${colors.moss}20` : 'none'
-              }}
-              onMouseEnter={(e) => {
-                if (selectedType !== 'runner') {
-                  e.currentTarget.style.borderColor = colors.moss;
-                  e.currentTarget.style.backgroundColor = `${colors.moss}05`;
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (selectedType !== 'runner') {
-                  e.currentTarget.style.borderColor = `${colors.sage}30`;
-                  e.currentTarget.style.backgroundColor = colors.white;
-                  e.currentTarget.style.transform = 'translateY(0)';
-                }
-              }}
-            >
-              <div style={{ marginBottom: '1rem' }}>
-                <RunnerIcon />
-              </div>
-              <h3 style={{ 
-                color: selectedType === 'runner' ? colors.moss : colors.forest, 
-                marginBottom: '0.5rem',
-                fontWeight: '600',
-                fontSize: '1.2rem'
-              }}>
-                Runner
-              </h3>
-              <p style={{ 
-                color: colors.leaf, 
-                fontSize: '0.85rem',
-                lineHeight: '1.5'
-              }}>
-                I want to deliver items to others
-              </p>
-              {selectedType === 'runner' && (
-                <div style={{ 
-                  color: colors.moss, 
-                  fontSize: '1rem', 
-                  marginTop: '1rem',
-                  fontWeight: '500'
-                }}>
-                  Selected ✓
+        {/* Success Message */}
+        {success && (
+          <div style={{
+            backgroundColor: '#e6ffe6',
+            color: '#2d531a',
+            padding: '1rem',
+            borderRadius: '8px',
+            marginBottom: '1.5rem',
+            textAlign: 'center',
+            border: '1px solid #b3ffb3'
+          }}>
+            {success}
+          </div>
+        )}
+
+        {/* Account Type Selection - Only show if no type selected */}
+        {!selectedType && (
+          <div style={{ marginBottom: '2.5rem' }}>
+            <label style={{ 
+              color: colors.forest, 
+              display: 'block', 
+              marginBottom: '1rem', 
+              fontWeight: '600', 
+              fontSize: '1rem' 
+            }}>
+              I want to register as:
+            </label>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+              {/* Customer Card */}
+              <div
+                onClick={() => !loading && selectAccountType('customer')}
+                style={{
+                  padding: '2rem 1rem',
+                  borderRadius: '16px',
+                  border: `2px solid ${colors.sage}30`,
+                  backgroundColor: colors.white,
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  textAlign: 'center',
+                  transition: 'all 0.2s',
+                  opacity: loading ? 0.6 : 1
+                }}
+                onMouseEnter={(e) => {
+                  if (!loading) {
+                    e.currentTarget.style.borderColor = colors.moss;
+                    e.currentTarget.style.backgroundColor = `${colors.moss}05`;
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!loading) {
+                    e.currentTarget.style.borderColor = `${colors.sage}30`;
+                    e.currentTarget.style.backgroundColor = colors.white;
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }
+                }}
+              >
+                <div style={{ marginBottom: '1rem' }}>
+                  <CustomerIcon />
                 </div>
-              )}
+                <h3 style={{ 
+                  color: colors.forest, 
+                  marginBottom: '0.5rem',
+                  fontWeight: '600',
+                  fontSize: '1.2rem'
+                }}>
+                  Customer
+                </h3>
+                <p style={{ 
+                  color: colors.leaf, 
+                  fontSize: '0.85rem',
+                  lineHeight: '1.5'
+                }}>
+                  I need items delivered to me
+                </p>
+              </div>
+
+              {/* Runner Card */}
+              <div
+                onClick={() => !loading && selectAccountType('runner')}
+                style={{
+                  padding: '2rem 1rem',
+                  borderRadius: '16px',
+                  border: `2px solid ${colors.sage}30`,
+                  backgroundColor: colors.white,
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  textAlign: 'center',
+                  transition: 'all 0.2s',
+                  opacity: loading ? 0.6 : 1
+                }}
+                onMouseEnter={(e) => {
+                  if (!loading) {
+                    e.currentTarget.style.borderColor = colors.moss;
+                    e.currentTarget.style.backgroundColor = `${colors.moss}05`;
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!loading) {
+                    e.currentTarget.style.borderColor = `${colors.sage}30`;
+                    e.currentTarget.style.backgroundColor = colors.white;
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }
+                }}
+              >
+                <div style={{ marginBottom: '1rem' }}>
+                  <RunnerIcon />
+                </div>
+                <h3 style={{ 
+                  color: colors.forest, 
+                  marginBottom: '0.5rem',
+                  fontWeight: '600',
+                  fontSize: '1.2rem'
+                }}>
+                  Runner
+                </h3>
+                <p style={{ 
+                  color: colors.leaf, 
+                  fontSize: '0.85rem',
+                  lineHeight: '1.5'
+                }}>
+                  I want to deliver items to others
+                </p>
+              </div>
             </div>
           </div>
-          
-          {!formData.accountType && (
-            <p style={{ 
-              color: '#e53e3e', 
-              fontSize: '0.85rem', 
-              marginTop: '1rem', 
-              textAlign: 'center' 
-            }}>
-              Please select an account type to continue
-            </p>
-          )}
-        </div>
+        )}
 
-        {/* Form - Only shown after account type selection */}
-        {formData.accountType && (
-          <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ 
-                color: colors.forest, 
-                display: 'block', 
-                marginBottom: '0.5rem',
-                fontWeight: '500',
-                fontSize: '0.95rem'
-              }}>
-                Full Name
-              </label>
-              <input
-                type="text"
-                value={formData.fullName}
-                onChange={(e) => setFormData({...formData, fullName: e.target.value})}
-                style={{ 
-                  width: '100%', 
-                  padding: '1rem', 
-                  borderRadius: '12px', 
-                  border: `1px solid ${colors.sage}30`,
-                  outline: 'none',
-                  fontSize: '1rem',
-                  transition: 'all 0.2s',
-                  boxSizing: 'border-box'
-                }}
-                placeholder="Enter your full name"
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = colors.moss;
-                  e.currentTarget.style.boxShadow = `0 0 0 3px ${colors.moss}20`;
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = `${colors.sage}30`;
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-                required
-              />
+        {/* Customer Registration Form */}
+        {selectedType === 'customer' && (
+          <form onSubmit={handleCustomerSubmit}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+              <div>
+                <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>
+                  First Name
+                </label>
+                <input
+                  type="text"
+                  value={customerData.firstName}
+                  onChange={(e) => setCustomerData({...customerData, firstName: e.target.value})}
+                  style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
+                  placeholder="First name"
+                  required
+                  disabled={loading}
+                />
+              </div>
+              <div>
+                <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>
+                  Last Name
+                </label>
+                <input
+                  type="text"
+                  value={customerData.lastName}
+                  onChange={(e) => setCustomerData({...customerData, lastName: e.target.value})}
+                  style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
+                  placeholder="Last name"
+                  required
+                  disabled={loading}
+                />
+              </div>
             </div>
 
             <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ 
-                color: colors.forest, 
-                display: 'block', 
-                marginBottom: '0.5rem',
-                fontWeight: '500',
-                fontSize: '0.95rem'
-              }}>
+              <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>
                 Email Address
               </label>
               <input
                 type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
-                style={{ 
-                  width: '100%', 
-                  padding: '1rem', 
-                  borderRadius: '12px', 
-                  border: `1px solid ${colors.sage}30`,
-                  outline: 'none',
-                  fontSize: '1rem',
-                  transition: 'all 0.2s',
-                  boxSizing: 'border-box'
-                }}
+                value={customerData.email}
+                onChange={(e) => setCustomerData({...customerData, email: e.target.value})}
+                style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
                 placeholder="Enter your email"
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = colors.moss;
-                  e.currentTarget.style.boxShadow = `0 0 0 3px ${colors.moss}20`;
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = `${colors.sage}30`;
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
                 required
+                disabled={loading}
               />
             </div>
 
             <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ 
-                color: colors.forest, 
-                display: 'block', 
-                marginBottom: '0.5rem',
-                fontWeight: '500',
-                fontSize: '0.95rem'
-              }}>
+              <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>
+                SA ID Number
+              </label>
+              <input
+                type="text"
+                value={customerData.idNumber}
+                onChange={(e) => setCustomerData({...customerData, idNumber: e.target.value.replace(/\D/g, '').slice(0, 13)})}
+                style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
+                placeholder="13-digit SA ID number"
+                required
+                disabled={loading}
+                maxLength={13}
+              />
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>
                 Password
               </label>
               <input
                 type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({...formData, password: e.target.value})}
-                style={{ 
-                  width: '100%', 
-                  padding: '1rem', 
-                  borderRadius: '12px', 
-                  border: `1px solid ${colors.sage}30`,
-                  outline: 'none',
-                  fontSize: '1rem',
-                  transition: 'all 0.2s',
-                  boxSizing: 'border-box'
-                }}
-                placeholder="Create a password"
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = colors.moss;
-                  e.currentTarget.style.boxShadow = `0 0 0 3px ${colors.moss}20`;
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = `${colors.sage}30`;
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
+                value={customerData.password}
+                onChange={(e) => setCustomerData({...customerData, password: e.target.value})}
+                style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
+                placeholder="Create a password (min. 6 characters)"
                 required
+                disabled={loading}
+                minLength={6}
               />
             </div>
 
             <div style={{ marginBottom: '2rem' }}>
-              <label style={{ 
-                color: colors.forest, 
-                display: 'block', 
-                marginBottom: '0.5rem',
-                fontWeight: '500',
-                fontSize: '0.95rem'
-              }}>
+              <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>
                 Confirm Password
               </label>
               <input
                 type="password"
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
-                style={{ 
-                  width: '100%', 
-                  padding: '1rem', 
-                  borderRadius: '12px', 
-                  border: `1px solid ${colors.sage}30`,
-                  outline: 'none',
-                  fontSize: '1rem',
-                  transition: 'all 0.2s',
-                  boxSizing: 'border-box'
-                }}
+                value={customerData.confirmPassword}
+                onChange={(e) => setCustomerData({...customerData, confirmPassword: e.target.value})}
+                style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
                 placeholder="Confirm your password"
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = colors.moss;
-                  e.currentTarget.style.boxShadow = `0 0 0 3px ${colors.moss}20`;
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = `${colors.sage}30`;
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
                 required
+                disabled={loading}
               />
             </div>
 
@@ -440,36 +534,205 @@ const Register = () => {
                 padding: '1rem', 
                 borderRadius: '50px', 
                 border: 'none', 
-                cursor: 'pointer', 
+                cursor: loading ? 'not-allowed' : 'pointer', 
                 fontWeight: '600',
                 fontSize: '1rem',
                 marginBottom: '1.5rem',
                 transition: 'all 0.2s',
-                boxShadow: `0 4px 12px ${colors.forest}40`
+                boxShadow: `0 4px 12px ${colors.forest}40`,
+                opacity: loading ? 0.7 : 1
               }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = colors.moss;
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = `0 6px 16px ${colors.forest}60`;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = colors.forest;
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = `0 4px 12px ${colors.forest}40`;
-              }}
+              disabled={loading}
             >
-              Create {formData.accountType === 'customer' ? 'Customer' : 'Runner'} Account
+              {loading ? 'Creating Account...' : 'Create Customer Account'}
             </button>
           </form>
         )}
 
-        {/* Change selection link */}
-        {formData.accountType && (
+        {/* Runner Registration Form */}
+        {selectedType === 'runner' && (
+          <form onSubmit={handleRunnerSubmit}>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>
+                Username
+              </label>
+              <input
+                type="text"
+                value={runnerData.username}
+                onChange={(e) => setRunnerData({...runnerData, username: e.target.value})}
+                style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
+                placeholder="Choose a username"
+                required
+                disabled={loading}
+              />
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>
+                Email Address
+              </label>
+              <input
+                type="email"
+                value={runnerData.email}
+                onChange={(e) => setRunnerData({...runnerData, email: e.target.value})}
+                style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
+                placeholder="Enter your email"
+                required
+                disabled={loading}
+              />
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                value={runnerData.phone}
+                onChange={(e) => setRunnerData({...runnerData, phone: e.target.value})}
+                style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
+                placeholder="+27 XX XXX XXXX"
+                required
+                disabled={loading}
+              />
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>
+                SA ID Number
+              </label>
+              <input
+                type="text"
+                value={runnerData.idNumber}
+                onChange={(e) => setRunnerData({...runnerData, idNumber: e.target.value.replace(/\D/g, '').slice(0, 13)})}
+                style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
+                placeholder="13-digit SA ID number"
+                required
+                disabled={loading}
+                maxLength={13}
+              />
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>
+                Address
+              </label>
+              <input
+                type="text"
+                value={runnerData.address}
+                onChange={(e) => setRunnerData({...runnerData, address: e.target.value})}
+                style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
+                placeholder="Street address"
+                required
+                disabled={loading}
+              />
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+              <div>
+                <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>
+                  City
+                </label>
+                <input
+                  type="text"
+                  value={runnerData.city}
+                  onChange={(e) => setRunnerData({...runnerData, city: e.target.value})}
+                  style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
+                  placeholder="City"
+                  required
+                  disabled={loading}
+                />
+              </div>
+              <div>
+                <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>
+                  Postal Code
+                </label>
+                <input
+                  type="text"
+                  value={runnerData.postalCode}
+                  onChange={(e) => setRunnerData({...runnerData, postalCode: e.target.value})}
+                  style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
+                  placeholder="Postal code"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>
+                Bio (Optional)
+              </label>
+              <textarea
+                value={runnerData.bio}
+                onChange={(e) => setRunnerData({...runnerData, bio: e.target.value})}
+                style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box', minHeight: '100px', resize: 'vertical' }}
+                placeholder="Tell us a bit about yourself and your experience..."
+                disabled={loading}
+              />
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>
+                Password
+              </label>
+              <input
+                type="password"
+                value={runnerData.password}
+                onChange={(e) => setRunnerData({...runnerData, password: e.target.value})}
+                style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
+                placeholder="Create a password (min. 6 characters)"
+                required
+                disabled={loading}
+                minLength={6}
+              />
+            </div>
+
+            <div style={{ marginBottom: '2rem' }}>
+              <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>
+                Confirm Password
+              </label>
+              <input
+                type="password"
+                value={runnerData.confirmPassword}
+                onChange={(e) => setRunnerData({...runnerData, confirmPassword: e.target.value})}
+                style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
+                placeholder="Confirm your password"
+                required
+                disabled={loading}
+              />
+            </div>
+
+            <button 
+              type="submit" 
+              style={{ 
+                backgroundColor: colors.forest, 
+                color: colors.white, 
+                width: '100%', 
+                padding: '1rem', 
+                borderRadius: '50px', 
+                border: 'none', 
+                cursor: loading ? 'not-allowed' : 'pointer', 
+                fontWeight: '600',
+                fontSize: '1rem',
+                marginBottom: '1.5rem',
+                transition: 'all 0.2s',
+                boxShadow: `0 4px 12px ${colors.forest}40`,
+                opacity: loading ? 0.7 : 1
+              }}
+              disabled={loading}
+            >
+              {loading ? 'Creating Account...' : 'Become a Runner'}
+            </button>
+          </form>
+        )}
+
+        {/* Back to type selection */}
+        {selectedType && !loading && (
           <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
             <button
               onClick={() => {
-                setFormData({...formData, accountType: ''});
                 setSelectedType(null);
+                setError('');
               }}
               style={{ 
                 color: colors.moss, 
@@ -483,7 +746,7 @@ const Register = () => {
               onMouseEnter={(e) => e.currentTarget.style.color = colors.forest}
               onMouseLeave={(e) => e.currentTarget.style.color = colors.moss}
             >
-              ← Change account type
+              ← Choose different account type
             </button>
           </div>
         )}

@@ -1,115 +1,124 @@
 import React from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
+import { isAuthenticated, getUserRole } from "./services/api";
 
-import Sidebar from './components/SideBar';
-import MainLayout from './layout/MainLayout'; 
-import RunnerProfile from "./pages/RunnerProfile";
-import SettingsPage from "./pages/SettingsPage";
-import WalletPage from "./pages/WalletPage";
+// Pages
+import Register from "./pages/Register"; // Single register page that handles both roles
 import LoginPage from "./pages/LoginPage";
-import Register from "./pages/Register";
 import LandingPage from "./pages/LandingPage";
-import AdminDashboard from "./pages/AdminDashboard";
-import AccountPage from "./pages/AccountPage";
-import FavoritesPage from "./pages/FavoritesPage";
-import MessagesPage from "./pages/MessagesPage";
 import UserHomePage from "./pages/UserHomePage";
+import RunnerDashboard from "./pages/Runnerdashboard";
 import UserBookings from "./pages/UserBookings";
 import UserTrackOrder from './pages/UserTrackOrder';
 import UserSettings from "./pages/UserSettings";
+import FavoritesPage from "./pages/FavoritesPage";
+import MessagesPage from "./pages/MessagesPage";
+import AccountPage from "./pages/AccountPage";
 
 import "./App.css";
 
-// --- 1. Fixed Protected Route Helper ---
-const ProtectedRoute = ({ children, allowedRole }: { children: React.ReactNode, allowedRole: string }) => {
-  const token = localStorage.getItem('token');
-  const userData = localStorage.getItem('user');
-  
-  // If no token, they aren't logged in at all
-  if (!token || !userData) {
+// Protected Route Component
+const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode, allowedRoles: string[] }) => {
+  const authenticated = isAuthenticated();
+  const userRole = getUserRole();
+
+  if (!authenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  const user = JSON.parse(userData);
-
-  // If the role doesn't match, send them to the landing page
-  if (user.role !== allowedRole) {
-    console.warn(`Access denied: User role is ${user.role}, but ${allowedRole} is required.`);
-    return <Navigate to="/" replace />;
+  if (!allowedRoles.includes(userRole)) {
+    // Redirect to appropriate dashboard based on role
+    if (userRole === 'runner') {
+      return <Navigate to="/runner" replace />;
+    } else if (userRole === 'customer') {
+      return <Navigate to="/user" replace />;
+    } else {
+      return <Navigate to="/login" replace />;
+    }
   }
-  
+
   return <>{children}</>;
 };
 
-// --- Runner Layout Wrapper ---
-const RunnerLayout = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <div className="flex">
-      <Sidebar onClose={undefined} currentPage={undefined} onNavigate={undefined} />
-      <main className="flex-1 ml-64 min-h-screen bg-runner-bg">
-        {children}
-      </main>
-    </div>
-  );
+// Role-based redirect for root path
+const RoleBasedRedirect = () => {
+  const authenticated = isAuthenticated();
+  const role = getUserRole();
+  
+  if (!authenticated) {
+    return <Navigate to="/landing" replace />;
+  }
+  
+  // Redirect based on user role
+  switch(role) {
+    case 'runner':
+      return <Navigate to="/runner" replace />;
+    case 'customer':
+      return <Navigate to="/user" replace />;
+    default:
+      return <Navigate to="/landing" replace />;
+  }
 };
 
 function App() {
   return (
     <Routes>
-      {/* --- PUBLIC ROUTES --- */}
-      <Route path="/" element={<LandingPage />} />
+      {/* Public Routes */}
+      <Route path="/" element={<RoleBasedRedirect />} />
+      <Route path="/landing" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<Register />} />
+      <Route path="/register" element={<Register />} /> {/* Single register route */}
 
-      {/* --- RUNNER ROUTES --- */}
+      {/* Customer Routes */}
+      <Route
+        path="/user/*"
+        element={
+          <ProtectedRoute allowedRoles={['customer']}>
+            <Routes>
+              <Route index element={<UserHomePage />} />
+              <Route path="bookings" element={<UserBookings />} />
+              <Route path="track" element={<UserTrackOrder />} />
+              <Route path="settings" element={<UserSettings />} />
+              <Route path="favorites" element={<FavoritesPage />} />
+              <Route path="messages" element={<MessagesPage />} />
+              <Route path="account" element={<AccountPage />} />
+              {/* Catch all for /user/* - redirect to user home */}
+              <Route path="*" element={<Navigate to="/user" replace />} />
+            </Routes>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Runner Routes */}
       <Route
         path="/runner/*"
         element={
-          <ProtectedRoute allowedRole="Runner">
-            <RunnerLayout>
-              <Routes>
-                <Route index element={<RunnerProfile />} />
-                <Route path="profile" element={<RunnerProfile />} />
-                <Route path="wallet" element={<WalletPage />} />
-                <Route path="settings" element={<SettingsPage />} />
-                <Route path="requests" element={<div className="p-8 text-white">Requests Page Coming Soon</div>} />
-              </Routes>
-            </RunnerLayout>
+          <ProtectedRoute allowedRoles={['runner']}>
+            <Routes>
+              <Route index element={<RunnerDashboard />} />
+              <Route path="dashboard" element={<RunnerDashboard />} />
+              <Route path="profile" element={<div className="p-8 text-white">Runner Profile Coming Soon</div>} />
+              <Route path="earnings" element={<div className="p-8 text-white">Earnings Page Coming Soon</div>} />
+              <Route path="settings" element={<div className="p-8 text-white">Runner Settings Coming Soon</div>} />
+              {/* Catch all for /runner/* - redirect to runner dashboard */}
+              <Route path="*" element={<Navigate to="/runner" replace />} />
+            </Routes>
           </ProtectedRoute>
         }
       />
 
-      {/* --- USER ROUTES --- */}
-      <Route 
-        path="/user" 
+      {/* Admin Routes (if needed) */}
+      <Route
+        path="/admin/*"
         element={
-          <ProtectedRoute allowedRole="User">
-            <MainLayout />
+          <ProtectedRoute allowedRoles={['admin']}>
+            <div className="p-8 text-white">Admin Dashboard Coming Soon</div>
           </ProtectedRoute>
         }
-      >
-        <Route index element={<UserHomePage />} />
-        <Route path="bookings" element={<UserBookings />} />
-        <Route path="track" element={<UserTrackOrder />} />
-        <Route path="settings" element={<UserSettings />} />
-        <Route path="favorites" element={<FavoritesPage />} />
-        <Route path="messages" element={<MessagesPage />} />
-        <Route path="account" element={<AccountPage />} />
-        <Route path="best-runners" element={<div className="p-10 text-center font-bold text-[#0D330E]">Top Runners Leaderboard</div>} />
-      </Route>
-
-      {/* --- ADMIN ROUTES --- */}
-      <Route 
-        path="/admin" 
-        element={
-          <ProtectedRoute allowedRole="Admin">
-            <AdminDashboard />
-          </ProtectedRoute>
-        } 
       />
 
-      {/* Final Catch-all (This was bouncing you back) */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* Catch all - redirect to landing */}
+      <Route path="*" element={<Navigate to="/landing" replace />} />
     </Routes>
   );
 }

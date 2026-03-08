@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -11,15 +11,48 @@ import {
   User,
   Bell
 } from 'lucide-react';
+import { getCurrentUser, getUserName, getUserEmail, logoutUser } from '../services/api';
 
 interface UserSidebarProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+interface UserData {
+  initials: string;
+  name: string;
+  email: string;
+}
+
 const UserSidebar = ({ isOpen, onClose }: UserSidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [userData, setUserData] = useState<UserData>({
+    initials: 'JD',
+    name: 'Loading...',
+    email: 'loading@example.com'
+  });
+
+  useEffect(() => {
+    // Load user data from localStorage
+    const user = getCurrentUser();
+    const name = getUserName();
+    const email = getUserEmail();
+    
+    // Generate initials from name
+    const initials = name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+    
+    setUserData({
+      initials: initials || 'U',
+      name: name,
+      email: email
+    });
+  }, []);
 
   const menuItems = [
     { name: 'Home', path: '/user', icon: LayoutDashboard },
@@ -28,16 +61,8 @@ const UserSidebar = ({ isOpen, onClose }: UserSidebarProps) => {
     { name: 'Settings', path: '/user/settings', icon: Settings },
   ];
 
-  // Mock user data - replace with actual user data from auth context
-  const user = {
-    initials: 'JD',
-    name: 'John Doe',
-    email: 'john@example.com'
-  };
-
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    logoutUser(); // Using the API service function
     onClose();
     navigate('/login');
   };
@@ -78,13 +103,13 @@ const UserSidebar = ({ isOpen, onClose }: UserSidebarProps) => {
           <div className="flex items-center gap-4">
             {/* User Initials Circle */}
             <div className="w-14 h-14 rounded-full bg-[#A3B18A] flex items-center justify-center text-[#2D531A] font-bold text-xl border-2 border-white/30 shadow-lg">
-              {user.initials}
+              {userData.initials}
             </div>
             
             {/* User Info */}
-            <div className="flex-1">
-              <h3 className="font-bold text-sm">{user.name}</h3>
-              <p className="text-xs text-white/60 mt-1">{user.email}</p>
+            <div className="flex-1 min-w-0"> {/* Added min-w-0 for text truncation */}
+              <h3 className="font-bold text-sm truncate">{userData.name}</h3>
+              <p className="text-xs text-white/60 mt-1 truncate">{userData.email}</p>
               
               {/* Notification indicator */}
               <div className="flex items-center gap-2 mt-2">
