@@ -37,14 +37,21 @@ interface RunnerRegisterData {
   bio: string;
 }
 
-interface User {
+export interface User {
   id: number;
   name: string;
   email: string;
-  role: 'customer' | 'runner';
+  role: 'customer' | 'runner' | 'admin';
   verification_status?: string;
   city?: string;
   profile_photo?: string;
+  avatar_url?: string;
+  rating?: number;
+  total_trips?: number;
+  total_earnings?: number;
+  bio?: string;
+  phone?: string;
+  created_at?: string;
 }
 
 // Request interceptor
@@ -72,7 +79,7 @@ api.interceptors.response.use(
   }
 );
 
-// Auth functions
+// ========== AUTH FUNCTIONS ==========
 export const registerCustomer = async (userData: CustomerRegisterData) => {
   try {
     const response = await api.post('/auth/register/customer', userData);
@@ -89,12 +96,14 @@ export const registerCustomer = async (userData: CustomerRegisterData) => {
 export const registerRunner = async (userData: RunnerRegisterData) => {
   try {
     const response = await api.post('/auth/register/runner', userData);
+    
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
     }
     return response.data;
   } catch (error: any) {
+    console.error('Runner registration error:', error);
     throw new Error(error.response?.data?.message || 'Runner registration failed');
   }
 };
@@ -119,6 +128,7 @@ export const logoutUser = () => {
   localStorage.removeItem('user');
 };
 
+// ========== USER PROFILE FUNCTIONS ==========
 export const getCurrentUser = (): User | null => {
   const userStr = localStorage.getItem('user');
   if (userStr) {
@@ -131,6 +141,77 @@ export const getCurrentUser = (): User | null => {
   return null;
 };
 
+// 🔥 ADD THIS MISSING FUNCTION - Get user profile from API
+export const getUserProfile = async (): Promise<{ data: User }> => {
+  const response = await api.get('/users/profile');
+  return response.data;
+};
+
+// 🔥 ADD THIS MISSING FUNCTION - Update user profile
+export const updateUserProfile = async (profileData: Partial<User>): Promise<{ data: User }> => {
+  const response = await api.put('/users/profile', profileData);
+  // Update localStorage with new data
+  if (response.data.data) {
+    localStorage.setItem('user', JSON.stringify(response.data.data));
+  }
+  return response.data;
+};
+
+// 🔥 ADD THIS MISSING FUNCTION - Get user stats
+export const getUserStats = async (): Promise<{ data: any }> => {
+  const response = await api.get('/users/stats');
+  return response.data;
+};
+
+// 🔥 ADD THIS MISSING FUNCTION - Get user reviews
+export const getUserReviews = async (): Promise<{ data: any[] }> => {
+  const response = await api.get('/users/reviews');
+  return response.data;
+};
+
+// ========== ORDER FUNCTIONS ==========
+export const getAvailableOrders = async () => {
+  const response = await api.get('/orders/available');
+  return response.data;
+};
+
+export const getActiveOrders = async () => {
+  const response = await api.get('/orders/active');
+  return response.data;
+};
+
+export const getCompletedOrders = async () => {
+  const response = await api.get('/orders/completed');
+  return response.data;
+};
+
+export const acceptOrder = async (orderId: number) => {
+  const response = await api.post(`/orders/${orderId}/accept`);
+  return response.data;
+};
+
+export const updateOrderStatus = async (orderId: number, status: string) => {
+  const response = await api.patch(`/orders/${orderId}/status`, { status });
+  return response.data;
+};
+
+export const getOrderById = async (orderId: number) => {
+  const response = await api.get(`/orders/${orderId}`);
+  return response.data;
+};
+
+// ========== EARNINGS FUNCTIONS ==========
+export const getEarnings = async () => {
+  const response = await api.get('/earnings');
+  return response.data;
+};
+
+export const getEarningsHistory = async (period: string = 'month') => {
+  const response = await api.get(`/earnings/history?period=${period}`);
+  return response.data;
+};
+
+// ========== HELPER FUNCTIONS ==========
 export const getUserRole = (): string => {
   const user = getCurrentUser();
   return user?.role || 'customer';
@@ -141,24 +222,20 @@ export const getUserName = (): string => {
   return user?.name || 'User';
 };
 
-// ✅ Add this function - Get User Email
 export const getUserEmail = (): string => {
   const user = getCurrentUser();
   return user?.email || '';
 };
 
-// ✅ Add this function - Get User ID
 export const getUserId = (): number | null => {
   const user = getCurrentUser();
   return user?.id || null;
 };
 
-// ✅ Add this function - Check if user is authenticated
 export const isAuthenticated = (): boolean => {
   return !!localStorage.getItem('token');
 };
 
-// ✅ Add this function - Check if user is verified (for runners)
 export const isVerified = (): boolean => {
   const user = getCurrentUser();
   return user?.verification_status === 'VERIFIED' || false;

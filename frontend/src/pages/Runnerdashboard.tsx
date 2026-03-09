@@ -1,528 +1,765 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  LayoutDashboard, 
-  Wallet, 
-  User, 
-  ClipboardList, 
-  Settings, 
-  LogOut, 
-  ShoppingCart,
   DollarSign, 
   Clock, 
   Bike, 
   Star, 
-  TrendingUp,
   Bell,
-  Award,
-  Calendar,
-  ChevronRight,
-  ChevronLeft,
+  User,
+  Settings,
+  LogOut,
   Menu,
-  X
+  X,
+  Home,
+  Wallet,
+  Award,
+  ChevronRight,
+  MapPin,
+  Package,
+  Search,
+  Phone,
+  MessageCircle,
+  Navigation,
+  Zap,
+  CheckCircle,
+  Filter,
+  ChevronLeft,
+  MessageSquare,
+  ShoppingCart,
+  LayoutDashboard,
+  Download,
+  ThumbsUp,
+  Calendar,
+  Gift
 } from 'lucide-react';
-import "./Runnerdashboard.css";
+import './Runnerdashboard.css';
 
 const Runnerdashboard = () => {
-  const [isOpen, setIsOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isOnline, setIsOnline] = useState(true);
   const [activePage, setActivePage] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('available');
+  const [user, setUser] = useState<any>(null);
 
-  const menuItems = [
-    { name: 'Dashboard', icon: <LayoutDashboard size={20} />, id: 'dashboard' },
-    { name: 'Profile', icon: <User size={20} />, id: 'profile' },
-    { name: 'Wallet', icon: <Wallet size={20} />, id: 'wallet' },
-    { name: 'View Requests', icon: <ClipboardList size={20} />, id: 'requests' },
-    { name: 'Settings', icon: <Settings size={20} />, id: 'settings' },
+  // Load user data from localStorage on component mount
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const userData = JSON.parse(userStr);
+        console.log('Dashboard user data:', userData);
+        setUser(userData);
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+      }
+    }
+  }, []);
+
+  // Stats data - you can replace these with API calls later
+  const stats = [
+    { label: 'Total Earnings', value: '$4,892', icon: <DollarSign size={24} />, change: '+12%' },
+    { label: 'Completed Trips', value: '156', icon: <Bike size={24} />, change: '+23' },
+    { label: 'Rating', value: '4.92', icon: <Star size={24} />, change: 'Top 5%' },
+    { label: 'Online Time', value: '128h', icon: <Clock size={24} />, change: 'This month' },
   ];
 
+  // Available orders
+  const availableOrders = [
+    {
+      id: '#ORD-7890',
+      restaurant: 'Momofuku Ko',
+      items: 'Spicy Ramen • Gyoza',
+      customer: 'Michael C.',
+      distance: '1.2 km',
+      time: '15 min',
+      payout: 12.50,
+    },
+    {
+      id: '#ORD-7891',
+      restaurant: 'Oceana Grill',
+      items: 'Grilled Salmon • Salad',
+      customer: 'Sarah J.',
+      distance: '2.5 km',
+      time: '20 min',
+      payout: 15.75,
+    },
+    {
+      id: '#ORD-7892',
+      restaurant: 'Bubba Gump',
+      items: 'Shrimp Platter • Fries',
+      customer: 'David L.',
+      distance: '3.1 km',
+      time: '25 min',
+      payout: 18.20,
+    },
+  ];
+
+  // Active orders
+  const activeOrders = [
+    {
+      id: '#ORD-7885',
+      restaurant: 'Chipotle',
+      customer: 'Robert Taylor',
+      timeRemaining: '8 min',
+      payout: 12.50,
+      address: '456 Park Ave, Apt 2B',
+    }
+  ];
+
+  // Completed orders
+  const completedOrders = [
+    {
+      id: '#ORD-7870',
+      restaurant: 'Starbucks',
+      customer: 'Amanda Wilson',
+      date: 'Today, 10:30 AM',
+      payout: 8.75,
+      rating: 5
+    },
+    {
+      id: '#ORD-7865',
+      restaurant: 'Dunkin\'',
+      customer: 'James Brown',
+      date: 'Today, 9:15 AM',
+      payout: 7.50,
+      rating: 5
+    },
+  ];
+
+  // Reviews data
+  const reviews = [
+    {
+      id: 1,
+      name: 'John D.',
+      rating: 5,
+      comment: 'Fast delivery, very professional! Food was still hot.',
+      date: '2 hours ago',
+      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=50'
+    },
+    {
+      id: 2,
+      name: 'Sarah M.',
+      rating: 5,
+      comment: 'Excellent service! Would definitely recommend.',
+      date: 'Yesterday',
+      avatar: 'https://images.unsplash.com/photo-1494790108777-2f3bdbce8c3b?w=50'
+    },
+    {
+      id: 3,
+      name: 'Mike R.',
+      rating: 4,
+      comment: 'Friendly runner, order was accurate and on time.',
+      date: '2 days ago',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50'
+    },
+  ];
+
+  // All orders data
+  const allOrders = [
+    { id: '#ORD-7890', restaurant: 'Momofuku Ko', date: 'Today, 11:20 AM', status: 'Delivered', payout: 12.50 },
+    { id: '#ORD-7891', restaurant: 'Oceana Grill', date: 'Today, 10:30 AM', status: 'Delivered', payout: 15.75 },
+    { id: '#ORD-7892', restaurant: 'Bubba Gump', date: 'Today, 9:23 AM', status: 'Delivered', payout: 18.20 },
+    { id: '#ORD-7885', restaurant: 'Chipotle', date: 'Today, 8:15 AM', status: 'In Progress', payout: 12.50 },
+  ];
+
+  // Earnings data
+  const earningsData = {
+    today: 48.50,
+    week: 324.75,
+    month: 1482.50,
+    total: 4892.25,
+    transactions: [
+      { id: 1, order: '#ORD-7890', amount: 12.50, date: 'Today, 11:20 AM' },
+      { id: 2, order: '#ORD-7891', amount: 15.75, date: 'Today, 10:30 AM' },
+      { id: 3, order: '#ORD-7892', amount: 18.20, date: 'Today, 9:23 AM' },
+      { id: 4, order: '#ORD-7885', amount: 12.50, date: 'Today, 8:15 AM' },
+    ]
+  };
+
+  // Recent trips
   const recentTrips = [
-    { id: 1, restaurant: "Momofuku Ko", time: "11:20 PM", earnings: 12.50, address: "162 2nd Ave, New York, NY" },
-    { id: 2, restaurant: "Oceana Grill", time: "10:30 PM", earnings: 15.75, address: "456 Oak Ave, New York, NY" },
-    { id: 3, restaurant: "Bubba Gump Shrimp Co.", time: "9:23 PM", earnings: 18.20, address: "789 Pine Rd, New York, NY" },
-    { id: 4, restaurant: "Gabriel Kreuther", time: "8:10 PM", earnings: 22.30, address: "321 Elm St, New York, NY" }
+    { id: 1, restaurant: "Momofuku Ko", time: "11:20 PM", earnings: 12.50, address: "162 2nd Ave", rating: 4.8 },
+    { id: 2, restaurant: "Oceana Grill", time: "10:30 PM", earnings: 15.75, address: "456 Oak Ave", rating: 4.9 },
+    { id: 3, restaurant: "Bubba Gump", time: "9:23 PM", earnings: 18.20, address: "789 Pine Rd", rating: 4.7 },
   ];
 
-  const handleNavigation = (pageId) => {
-    setActivePage(pageId);
+  // ===== HANDLERS =====
+  const handleLogout = () => {
+    alert('👋 Logged out successfully');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
   };
 
-  const handleOnlineToggle = () => {
+  const handleToggleOnline = () => {
     setIsOnline(!isOnline);
+    alert(`You are now ${!isOnline ? 'online' : 'offline'}`);
   };
 
-  // Render different content based on active page
+  const handleNotifications = () => {
+    alert('🔔 You have 3 new notifications');
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    alert('🔍 Searching...');
+  };
+
+  const handleDashboardClick = () => {
+    setActivePage('dashboard');
+  };
+
+  const handleOrdersClick = () => {
+    setActivePage('orders');
+  };
+
+  const handleEarningsClick = () => {
+    setActivePage('earnings');
+  };
+
+  const handleReviewsClick = () => {
+    setActivePage('reviews');
+  };
+
+  const handleProfileClick = () => {
+    setActivePage('profile');
+  };
+
+  const handleSettingsClick = () => {
+    setActivePage('settings');
+  };
+
+  const handleAcceptOrder = (orderId: string) => {
+    alert(`✅ Order ${orderId} accepted!`);
+    setActiveTab('active');
+  };
+
+  const handleUpdateStatus = (orderId: string) => {
+    alert(`✅ Order ${orderId} marked as delivered!`);
+    setActiveTab('completed');
+  };
+
+  const handleSupport = () => alert('📞 Contacting support...');
+  const handleMessages = () => alert('💬 Opening messages...');
+  const handleNavigate = () => alert('🗺️ Opening navigation...');
+  const handleFilter = () => alert('🔍 Filter options');
+  const handleViewAllTrips = () => setActivePage('orders');
+  const handleTabChange = (tab: string) => setActiveTab(tab);
+  const handleWithdraw = () => alert('💰 Withdrawal requested');
+
+  // Get user's first name for welcome message
+  const getFirstName = () => {
+    if (user?.name) {
+      return user.name.split(' ')[0];
+    }
+    return 'Runner';
+  };
+
+  // Render different pages
   const renderContent = () => {
     switch(activePage) {
       case 'dashboard':
         return (
           <>
-            {/* Stats Grid */}
             <div className="stats-grid">
-              <div className="stat-card">
-                <div className="stat-icon earnings">
-                  <DollarSign size={24} />
+              {stats.map((stat, index) => (
+                <div key={index} className="stat-card">
+                  <div className="stat-icon" style={{ backgroundColor: '#6E8649' }}>
+                    {stat.icon}
+                  </div>
+                  <div className="stat-content">
+                    <h3>{stat.value}</h3>
+                    <p>{stat.label}</p>
+                    <span className="stat-change">{stat.change}</span>
+                  </div>
                 </div>
-                <div className="stat-details">
-                  <span className="stat-label">Today's Earnings</span>
-                  <span className="stat-value">$220.00</span>
-                  <span className="stat-trend positive">+12% from yesterday</span>
-                </div>
+              ))}
+            </div>
+
+            <div className="orders-section">
+              <div className="section-header">
+                <h2>Active Orders</h2>
+                <button className="view-all-btn" onClick={() => setActivePage('orders')}>
+                  View All <ChevronRight size={16} />
+                </button>
               </div>
 
-              <div className="stat-card">
-                <div className="stat-icon time">
-                  <Clock size={24} />
-                </div>
-                <div className="stat-details">
-                  <span className="stat-label">Active Time</span>
-                  <span className="stat-value">5h 40m</span>
-                  <span className="stat-trend">Online now</span>
-                </div>
+              <div className="tabs-container">
+                <button
+                  className={`tab ${activeTab === 'available' ? 'active' : ''}`}
+                  onClick={() => handleTabChange('available')}
+                >
+                  Available ({availableOrders.length})
+                </button>
+                <button
+                  className={`tab ${activeTab === 'active' ? 'active' : ''}`}
+                  onClick={() => handleTabChange('active')}
+                >
+                  Active ({activeOrders.length})
+                </button>
+                <button
+                  className={`tab ${activeTab === 'completed' ? 'active' : ''}`}
+                  onClick={() => handleTabChange('completed')}
+                >
+                  Completed ({completedOrders.length})
+                </button>
               </div>
 
-              <div className="stat-card">
-                <div className="stat-icon trips">
-                  <Bike size={24} />
-                </div>
-                <div className="stat-details">
-                  <span className="stat-label">Trips Today</span>
-                  <span className="stat-value">12</span>
-                  <span className="stat-trend">4 pending</span>
-                </div>
-              </div>
+              <div className="orders-grid">
+                {activeTab === 'available' && availableOrders.map((order) => (
+                  <div key={order.id} className="order-card">
+                    <div className="order-header">
+                      <div>
+                        <span className="order-id">{order.id}</span>
+                        <h3>{order.restaurant}</h3>
+                      </div>
+                      <span className="order-payout">${order.payout}</span>
+                    </div>
+                    <p className="order-items">{order.items}</p>
+                    <div className="order-customer">
+                      <User size={14} color="#6E8649" />
+                      <span>{order.customer}</span>
+                    </div>
+                    <div className="order-details">
+                      <span><MapPin size={14} /> {order.distance}</span>
+                      <span><Clock size={14} /> {order.time}</span>
+                    </div>
+                    <button className="accept-btn" onClick={() => handleAcceptOrder(order.id)}>
+                      Accept Order <ChevronRight size={16} />
+                    </button>
+                  </div>
+                ))}
 
-              <div className="stat-card">
-                <div className="stat-icon rating">
-                  <Star size={24} />
-                </div>
-                <div className="stat-details">
-                  <span className="stat-label">Rating</span>
-                  <span className="stat-value">4.92</span>
-                  <span className="stat-trend positive">Top 10%</span>
-                </div>
+                {activeTab === 'active' && activeOrders.map((order) => (
+                  <div key={order.id} className="order-card active">
+                    <div className="order-header">
+                      <div>
+                        <span className="order-id">{order.id}</span>
+                        <h3>{order.restaurant}</h3>
+                      </div>
+                      <span className="status-badge">In Progress</span>
+                    </div>
+                    <p className="order-customer-name">{order.customer}</p>
+                    <p className="order-address">{order.address}</p>
+                    <div className="timer">{order.timeRemaining} remaining</div>
+                    <div className="action-buttons">
+                      <button className="action-btn" onClick={handleSupport}><Phone size={14} /> Call</button>
+                      <button className="action-btn" onClick={handleMessages}><MessageCircle size={14} /> Message</button>
+                      <button className="action-btn" onClick={handleNavigate}><Navigation size={14} /> Navigate</button>
+                    </div>
+                    <button className="complete-btn" onClick={() => handleUpdateStatus(order.id)}>
+                      Mark as Delivered
+                    </button>
+                  </div>
+                ))}
+
+                {activeTab === 'completed' && completedOrders.map((order) => (
+                  <div key={order.id} className="order-card completed">
+                    <div className="order-header">
+                      <div>
+                        <span className="order-id">{order.id}</span>
+                        <h3>{order.restaurant}</h3>
+                      </div>
+                      <span className="completed-badge">Delivered</span>
+                    </div>
+                    <p className="order-customer-name">{order.customer}</p>
+                    <div className="order-footer">
+                      <span className="order-date">{order.date}</span>
+                      <span className="order-payout">${order.payout}</span>
+                    </div>
+                    <div className="rating">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} size={12} fill={i < order.rating ? '#F59E0B' : 'none'} color="#F59E0B" />
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
-            {/* Main Dashboard Grid */}
-            <div className="dashboard-grid">
-              {/* Left Column - Current Delivery & Bonus */}
-              <div className="grid-left">
-                {/* Current Delivery Card */}
-                <div className="card current-delivery-card">
-                  <div className="card-header">
-                    <h3>Current Delivery</h3>
-                    <span className="badge active">In Progress</span>
-                  </div>
-
-                  <div className="delivery-timeline">
-                    <div className="timeline-item pickup">
-                      <div className="timeline-dot"></div>
-                      <div className="timeline-content">
-                        <span className="timeline-label">Pickup</span>
-                        <h4>Momofuku Ko</h4>
-                        <p className="timeline-address">162 2nd Ave, New York, NY</p>
-                        <span className="timeline-time">Ready in 5 min</span>
-                      </div>
-                    </div>
-
-                    <div className="timeline-line"></div>
-
-                    <div className="timeline-item dropoff">
-                      <div className="timeline-dot dropoff"></div>
-                      <div className="timeline-content">
-                        <span className="timeline-label">Dropoff</span>
-                        <h4>123 Main Street</h4>
-                        <p className="timeline-address">Apt 4B, New York, NY</p>
-                        <span className="timeline-time">2.4 km • 35 min</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="delivery-actions">
-                    <button className="btn-primary" onClick={() => alert('Starting delivery...')}>
-                      Start Delivery
-                      <ChevronRight size={18} />
-                    </button>
-                    <button className="btn-secondary" onClick={() => alert('Contacting customer...')}>
-                      Contact Customer
-                    </button>
-                  </div>
-                </div>
-
-                {/* Bonus Progress Card */}
-                <div className="card bonus-card">
-                  <div className="card-header">
-                    <h3>Today's Bonus Progress</h3>
-                    <span className="badge">12am - 11:59pm</span>
-                  </div>
-
-                  <div className="bonus-table">
-                    <div className="bonus-row header">
-                      <span>Bonus</span>
-                      <span>$10</span>
-                      <span>$30</span>
-                      <span>$60</span>
-                      <span>$100</span>
-                    </div>
-                    <div className="bonus-row">
-                      <span>Orders</span>
-                      <span>$100</span>
-                      <span>$140</span>
-                      <span>$230</span>
-                      <span>$340+</span>
-                    </div>
-                  </div>
-
-                  <div className="progress-section">
-                    <div className="progress-header">
-                      <span>Progress to next bonus</span>
-                      <span className="progress-value">$220 / $340</span>
-                    </div>
-                    <div className="progress-bar">
-                      <div className="progress-fill" style={{ width: '65%' }}></div>
-                    </div>
-                    <p className="progress-note">Need $120 more to unlock $60 bonus</p>
-                  </div>
-                </div>
+            <div className="recent-trips">
+              <div className="section-header">
+                <h3>Recent Trips</h3>
+                <button className="view-all-btn" onClick={() => setActivePage('orders')}>
+                  View All <ChevronRight size={16} />
+                </button>
               </div>
-
-              {/* Right Column - Recent Trips */}
-              <div className="grid-right">
-                <div className="card trips-card">
-                  <div className="card-header">
-                    <h3>Recent Trips</h3>
-                    <span className="badge">Last 4 deliveries</span>
-                  </div>
-
-                  <div className="trips-list">
-                    {recentTrips.map((trip) => (
-                      <div key={trip.id} className="trip-item">
-                        <div className="trip-main">
-                          <div className="trip-icon">
-                            <Bike size={16} />
-                          </div>
-                          <div className="trip-details">
-                            <h4>{trip.restaurant}</h4>
-                            <p className="trip-address">{trip.address}</p>
-                            <span className="trip-time">{trip.time}</span>
-                          </div>
-                        </div>
-                        <div className="trip-earnings">
-                          <span className="earnings-amount">${trip.earnings}</span>
-                          <span className="trip-status">Delivered</span>
-                        </div>
+              <div className="trips-list">
+                {recentTrips.map((trip) => (
+                  <div key={trip.id} className="trip-item">
+                    <div className="trip-info">
+                      <Bike size={16} />
+                      <div>
+                        <h4>{trip.restaurant}</h4>
+                        <p>{trip.address} · {trip.time}</p>
                       </div>
-                    ))}
+                    </div>
+                    <div className="trip-meta">
+                      <span className="earnings">${trip.earnings}</span>
+                      <span className="rating">
+                        <Star size={10} fill="#F59E0B" color="#F59E0B" /> {trip.rating}
+                      </span>
+                    </div>
                   </div>
-
-                  <button className="view-all-btn" onClick={() => setActivePage('trips')}>
-                    View All Trips
-                    <ChevronRight size={16} />
-                  </button>
-                </div>
-
-                {/* Quick Stats */}
-                <div className="quick-stats-grid">
-                  <div className="quick-stat">
-                    <span className="quick-stat-label">Acceptance Rate</span>
-                    <span className="quick-stat-value">98%</span>
-                  </div>
-                  <div className="quick-stat">
-                    <span className="quick-stat-label">On-Time</span>
-                    <span className="quick-stat-value">96%</span>
-                  </div>
-                  <div className="quick-stat">
-                    <span className="quick-stat-label">This Week</span>
-                    <span className="quick-stat-value">$1,247</span>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           </>
         );
 
-      case 'profile':
+      case 'orders':
         return (
           <div className="page-content">
-            <h2 className="page-title">Profile</h2>
-            <div className="profile-card">
-              <div className="profile-header">
-                <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200" alt="Profile" />
-                <h3>Sarah Johnson</h3>
-                <p>Verified Runner · ID: #RN2473</p>
-              </div>
-              <div className="profile-stats">
-                <div className="profile-stat">
-                  <span>Rating</span>
-                  <strong>4.92 ⭐</strong>
-                </div>
-                <div className="profile-stat">
-                  <span>Total Trips</span>
-                  <strong>1,247</strong>
-                </div>
-                <div className="profile-stat">
-                  <span>Member Since</span>
-                  <strong>2023</strong>
-                </div>
-              </div>
+            <h2 className="page-title">All Orders</h2>
+            <div className="orders-table-container">
+              <table className="orders-table">
+                <thead>
+                  <tr>
+                    <th>Order ID</th>
+                    <th>Restaurant</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Payout</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {allOrders.map((order) => (
+                    <tr key={order.id}>
+                      <td className="order-id">{order.id}</td>
+                      <td>{order.restaurant}</td>
+                      <td>{order.date}</td>
+                      <td>
+                        <span className={`status-badge ${order.status === 'Delivered' ? 'delivered' : 'progress'}`}>
+                          {order.status}
+                        </span>
+                      </td>
+                      <td className="payout">${order.payout}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
+            <button className="back-to-dashboard" onClick={() => setActivePage('dashboard')}>
+              Back to Dashboard
+            </button>
           </div>
         );
 
-      case 'wallet':
+      case 'earnings':
         return (
           <div className="page-content">
-            <h2 className="page-title">Wallet</h2>
-            <div className="earnings-summary">
-              <div className="earnings-total-card">
-                <h3>Total Balance</h3>
-                <p className="earnings-amount-large">$4,892</p>
-                <span className="earnings-period">Available for withdrawal</span>
+            <h2 className="page-title">Earnings</h2>
+            <div className="earnings-cards">
+              <div className="earnings-card total">
+                <span className="earnings-label">Total Balance</span>
+                <span className="earnings-amount">${earningsData.total}</span>
+                <button className="withdraw-btn" onClick={handleWithdraw}>
+                  <Download size={14} /> Withdraw
+                </button>
               </div>
-              <div className="earnings-stats-grid">
-                <div className="earnings-stat-item">
-                  <span>This Week</span>
-                  <strong>$1,247</strong>
-                </div>
-                <div className="earnings-stat-item">
-                  <span>Last Week</span>
-                  <strong>$1,102</strong>
-                </div>
-                <div className="earnings-stat-item">
-                  <span>Pending</span>
-                  <strong>$350</strong>
-                </div>
+              <div className="earnings-card">
+                <span className="earnings-label">Today</span>
+                <span className="earnings-value">${earningsData.today}</span>
+              </div>
+              <div className="earnings-card">
+                <span className="earnings-label">This Week</span>
+                <span className="earnings-value">${earningsData.week}</span>
+              </div>
+              <div className="earnings-card">
+                <span className="earnings-label">This Month</span>
+                <span className="earnings-value">${earningsData.month}</span>
               </div>
             </div>
-          </div>
-        );
-
-      case 'requests':
-        return (
-          <div className="page-content">
-            <h2 className="page-title">View Requests</h2>
-            <div className="requests-list">
-              <div className="request-card">
-                <div className="request-header">
-                  <h3>Chipotle Mexican Grill</h3>
-                  <span className="badge active">2.5 km away</span>
-                </div>
-                <p className="request-address">123 Broadway, New York, NY</p>
-                <div className="request-footer">
-                  <span className="request-payout">$12.50</span>
-                  <button className="btn-primary small" onClick={() => alert('Request accepted!')}>Accept</button>
-                </div>
-              </div>
-              <div className="request-card">
-                <div className="request-header">
-                  <h3>Starbucks</h3>
-                  <span className="badge active">1.8 km away</span>
-                </div>
-                <p className="request-address">456 Park Ave, New York, NY</p>
-                <div className="request-footer">
-                  <span className="request-payout">$8.75</span>
-                  <button className="btn-primary small" onClick={() => alert('Request accepted!')}>Accept</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'settings':
-        return (
-          <div className="page-content">
-            <h2 className="page-title">Settings</h2>
-            <div className="settings-section">
-              <h3>Account Settings</h3>
-              <div className="settings-item">
-                <span>Email Notifications</span>
-                <label className="switch">
-                  <input type="checkbox" defaultChecked />
-                  <span className="slider"></span>
-                </label>
-              </div>
-              <div className="settings-item">
-                <span>Push Notifications</span>
-                <label className="switch">
-                  <input type="checkbox" defaultChecked />
-                  <span className="slider"></span>
-                </label>
-              </div>
-              <div className="settings-item">
-                <span>Dark Mode</span>
-                <label className="switch">
-                  <input type="checkbox" />
-                  <span className="slider"></span>
-                </label>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'trips':
-        return (
-          <div className="page-content">
-            <h2 className="page-title">My Trips</h2>
-            <div className="trips-full-list">
-              {recentTrips.map((trip) => (
-                <div key={trip.id} className="trip-full-card">
-                  <div className="trip-full-header">
-                    <h3>{trip.restaurant}</h3>
-                    <span className="trip-status-badge">Completed</span>
+            
+            <h3 className="section-subtitle">Recent Transactions</h3>
+            <div className="transactions-list">
+              {earningsData.transactions.map((t) => (
+                <div key={t.id} className="transaction-item">
+                  <div>
+                    <span className="transaction-order">{t.order}</span>
+                    <span className="transaction-date">{t.date}</span>
                   </div>
-                  <p className="trip-full-address">{trip.address}</p>
-                  <div className="trip-full-details">
-                    <span><Clock size={14} /> {trip.time}</span>
-                    <span><DollarSign size={14} /> ${trip.earnings}</span>
-                  </div>
+                  <span className="transaction-amount">+${t.amount}</span>
                 </div>
               ))}
             </div>
+            <button className="back-to-dashboard" onClick={() => setActivePage('dashboard')}>
+              Back to Dashboard
+            </button>
+          </div>
+        );
+
+      case 'reviews':
+        return (
+          <div className="page-content">
+            <h2 className="page-title">Customer Reviews</h2>
+            <div className="reviews-summary">
+              <div className="rating-box">
+                <span className="rating-number">4.92</span>
+                <div className="rating-stars">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} size={20} fill="#F59E0B" color="#F59E0B" />
+                  ))}
+                </div>
+                <span className="rating-count">Based on 128 reviews</span>
+              </div>
+            </div>
+            <div className="reviews-grid">
+              {reviews.map((review) => (
+                <div key={review.id} className="review-card">
+                  <div className="review-header">
+                    <img src={review.avatar} alt={review.name} className="review-avatar" />
+                    <div className="review-info">
+                      <h4>{review.name}</h4>
+                      <div className="review-stars">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} size={14} fill={i < review.rating ? '#F59E0B' : 'none'} color="#F59E0B" />
+                        ))}
+                      </div>
+                    </div>
+                    <span className="review-date">{review.date}</span>
+                  </div>
+                  <p className="review-comment">"{review.comment}"</p>
+                  <button className="helpful-btn" onClick={() => alert('Marked as helpful')}>
+                    <ThumbsUp size={14} /> Helpful
+                  </button>
+                </div>
+              ))}
+            </div>
+            <button className="back-to-dashboard" onClick={() => setActivePage('dashboard')}>
+              Back to Dashboard
+            </button>
+          </div>
+        );
+
+      case 'profile':
+        return (
+          <div className="page-content">
+            <h2 className="page-title">Runner Profile</h2>
+            
+            <div className="profile-stats-row">
+              <div className="profile-stat-box">
+                <div className="profile-stat-header">
+                  <Star size={20} fill="#F59E0B" color="#F59E0B" />
+                  <span className="profile-stat-title">Rating</span>
+                </div>
+                <div className="profile-stat-main">
+                  <span className="profile-stat-big">4.92</span>
+                  <div className="profile-stat-stars">
+                    <Star size={14} fill="#F59E0B" color="#F59E0B" />
+                    <Star size={14} fill="#F59E0B" color="#F59E0B" />
+                    <Star size={14} fill="#F59E0B" color="#F59E0B" />
+                    <Star size={14} fill="#F59E0B" color="#F59E0B" />
+                    <Star size={14} fill="#F59E0B" color="#F59E0B" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="profile-stat-box">
+                <div className="profile-stat-header">
+                  <Bike size={20} color="#6E8649" />
+                  <span className="profile-stat-title">Total Trips</span>
+                </div>
+                <div className="profile-stat-main">
+                  <span className="profile-stat-big">156</span>
+                  <span className="profile-stat-trend">+23 this month</span>
+                </div>
+              </div>
+
+              <div className="profile-stat-box">
+                <div className="profile-stat-header">
+                  <Calendar size={20} color="#3B82F6" />
+                  <span className="profile-stat-title">Member Since</span>
+                </div>
+                <div className="profile-stat-main">
+                  <span className="profile-stat-big">2023</span>
+                  <span className="profile-stat-trend">2+ years</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="profile-container">
+              <div className="profile-header-card">
+                <img 
+                  src={user?.avatar_url || 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200'} 
+                  alt="Profile" 
+                  className="profile-large-image"
+                />
+                <div className="profile-info-large">
+                  <h2>{user?.name || 'Sarah Johnson'}</h2>
+                  <p className="profile-badge">Verified Runner</p>
+                </div>
+              </div>
+              
+              <div className="profile-details">
+                <h3>About Me</h3>
+                <p>Professional delivery runner with 2+ years of experience. Specializing in food delivery and quick commerce.</p>
+                
+                <h3>Contact Information</h3>
+                <p><strong>Email:</strong> {user?.email || 'sarah.j@connectus.com'}</p>
+                <p><strong>Phone:</strong> +1 (555) 123-4567</p>
+                <p><strong>Location:</strong> New York, NY</p>
+                <p><strong>Languages:</strong> English, Spanish</p>
+              </div>
+            </div>
+            <button className="back-to-dashboard" onClick={() => setActivePage('dashboard')}>
+              Back to Dashboard
+            </button>
           </div>
         );
 
       default:
-        return null;
+        return (
+          <div className="page-content">
+            <h2 className="page-title">Settings</h2>
+            <div className="settings-container">
+              <div className="settings-section">
+                <h3>Account Settings</h3>
+                <div className="settings-list">
+                  <div className="setting-item">
+                    <span>Email Notifications</span>
+                    <label className="toggle">
+                      <input type="checkbox" defaultChecked />
+                      <span className="toggle-slider"></span>
+                    </label>
+                  </div>
+                  <div className="setting-item">
+                    <span>Push Notifications</span>
+                    <label className="toggle">
+                      <input type="checkbox" defaultChecked />
+                      <span className="toggle-slider"></span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="danger-zone">
+                <h3>Danger Zone</h3>
+                <button className="delete-btn" onClick={() => alert('Delete account')}>Delete Account</button>
+              </div>
+            </div>
+            <button className="back-to-dashboard" onClick={() => setActivePage('dashboard')}>
+              Back to Dashboard
+            </button>
+          </div>
+        );
     }
   };
 
   return (
-    <div className="runner-dashboard">
-      {/* YOUR EXACT SIDEBAR CODE */}
-      <div className={`h-screen w-64 bg-[#0D330E] flex flex-col fixed left-0 top-0 shadow-2xl transition-all duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        {/* Logo Section */}
-        <div className="p-6 flex items-center justify-between border-b border-white/10">
-          <div className="flex items-center gap-3">
-            <div className="bg-[#6E8649] p-2 rounded-xl">
-              <ShoppingCart size={24} className="text-white" />
+    <div className="dashboard-container">
+      {/* Sidebar */}
+      <aside className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
+        <div className="sidebar-header">
+          <div className="logo">
+            <div className="logo-icon">
+              <ShoppingCart size={28} />
             </div>
-            <span className="text-xl font-bold text-white tracking-tight">ConnectUs</span>
+            {sidebarOpen && <h2>Connect<span>Us</span></h2>}
           </div>
+          <button className="close-sidebar" onClick={() => setSidebarOpen(false)}>
+            <X size={20} />
+          </button>
         </div>
 
-        <div className={`sidebar-container ${isOpen ? 'open' : 'closed'}`}>
-  {/* Logo Section */}
-  <div className="sidebar-logo">
-    <div className="logo-wrapper">
-      <div className="logo-icon">
-        <ShoppingCart size={24} />
-      </div>
-      <span className="logo-text">ConnectUs</span>
-    </div>
-  </div>
+        {sidebarOpen && (
+          <>
+            <div className="sidebar-user" onClick={handleProfileClick} style={{ cursor: 'pointer' }}>
+              <img 
+                src={user?.avatar_url || 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100'} 
+                alt="Profile"
+              />
+              <div>
+                <h3>{user?.name || 'Runner'}</h3>
+                <p>Verified Runner · 4.92 ⭐</p>
+              </div>
+            </div>
 
-  {/* Navigation Links */}
-  <nav className="sidebar-nav">
-    <div className="nav-items">
-      {menuItems.map((item) => {
-        const isActive = activePage === item.id;
-        return (
-          <button
-            key={item.name}
-            onClick={() => handleNavigation(item.id)}
-            className={`nav-item ${isActive ? 'active' : ''}`}
-          >
-            <span className="nav-icon">{item.icon}</span>
-            <span className="nav-text">{item.name}</span>
-          </button>
-        );
-      })}
-    </div>
-  </nav>
-
-  {/* User & Logout Section */}
-  <div className="sidebar-footer">
-    <div className="user-info">
-      <img 
-        src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=100" 
-        className="user-avatar"
-        alt="User"
-      />
-      <div className="user-details">
-        <p className="user-name">Sarah J.</p>
-        <p className="user-role">Verified Runner</p>
-      </div>
-    </div>
-    
-    <button className="logout-btn" onClick={() => alert('Logging out...')}>
-      <LogOut size={20} />
-      <span className="font-medium">Logout</span>
-    </button>
-  </div>
-</div>
-
-        {/* Navigation Links */}
-        <nav className="flex-1 px-4 py-6 space-y-2">
-          {menuItems.map((item) => {
-            const isActive = activePage === item.id;
-            return (
-              <button
-                key={item.name}
-                onClick={() => handleNavigation(item.id)}
-                className={`w-full flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-200 group ${
-                  isActive 
-                    ? 'bg-[#6E8649] text-white shadow-lg shadow-[#6E8649]/20' 
-                    : 'text-white/70 hover:bg-white/10 hover:text-white'
-                }`}
+            <nav className="sidebar-nav">
+              <button 
+                className={`nav-item ${activePage === 'dashboard' ? 'active' : ''}`}
+                onClick={handleDashboardClick}
               >
-                <span className={`${isActive ? 'text-white' : 'text-[#6E8649] group-hover:text-white'}`}>
-                  {item.icon}
-                </span>
-                <span className="font-medium">{item.name}</span>
+                <LayoutDashboard size={20} />
+                <span>Dashboard</span>
               </button>
-            );
-          })}
-        </nav>
+              <button 
+                className={`nav-item ${activePage === 'orders' ? 'active' : ''}`}
+                onClick={handleOrdersClick}
+              >
+                <Package size={20} />
+                <span>Orders</span>
+              </button>
+              <button 
+                className={`nav-item ${activePage === 'earnings' ? 'active' : ''}`}
+                onClick={handleEarningsClick}
+              >
+                <Wallet size={20} />
+                <span>Earnings</span>
+              </button>
+              <button 
+                className={`nav-item ${activePage === 'reviews' ? 'active' : ''}`}
+                onClick={handleReviewsClick}
+              >
+                <MessageSquare size={20} />
+                <span>Reviews</span>
+              </button>
+              <button 
+                className={`nav-item ${activePage === 'profile' ? 'active' : ''}`}
+                onClick={handleProfileClick}
+              >
+                <User size={20} />
+                <span>Profile</span>
+              </button>
+              <button 
+                className={`nav-item ${activePage === 'settings' ? 'active' : ''}`}
+                onClick={handleSettingsClick}
+              >
+                <Settings size={20} />
+                <span>Settings</span>
+              </button>
+            </nav>
 
-        {/* User & Logout Section */}
-        <div className="p-4 border-t border-white/10">
-          <div className="flex items-center gap-3 px-4 py-3 mb-2">
-            <img 
-              src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=100" 
-              className="w-10 h-10 rounded-full border-2 border-[#6E8649]"
-              alt="User"
-            />
-            <div className="overflow-hidden">
-              <p className="text-white font-bold text-sm truncate">Sarah J.</p>
-              <p className="text-white/50 text-xs">Verified Runner</p>
+            <div className="sidebar-footer">
+              <div className="online-status">
+                <span className={`status-dot ${isOnline ? 'online' : 'offline'}`}></span>
+                <span>{isOnline ? 'Online' : 'Offline'}</span>
+                <button className="toggle-status" onClick={handleToggleOnline}>
+                  Toggle
+                </button>
+              </div>
+              <button className="logout-btn" onClick={handleLogout}>
+                <LogOut size={18} />
+                <span>Logout</span>
+              </button>
             </div>
-          </div>
-          
-          <button className="w-full flex items-center gap-4 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-2xl transition-colors" onClick={() => alert('Logging out...')}>
-            <LogOut size={20} />
-            <span className="font-medium">Logout</span>
-          </button>
-        </div>
-      </div>
+          </>
+        )}
+      </aside>
 
-      {/* Main Content - Adjust margin to account for fixed sidebar */}
-      <main className="main-content" style={{ marginLeft: isOpen ? '16rem' : '0', transition: 'margin-left 0.3s ease' }}>
+      {/* Main Content */}
+      <main className={`main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
         {/* Top Bar */}
         <header className="top-bar">
           <div className="top-bar-left">
-            <button className="menu-btn" onClick={() => setIsOpen(!isOpen)}>
-              <Menu size={24} />
+            <button className="menu-btn" onClick={() => setSidebarOpen(!sidebarOpen)}>
+              {sidebarOpen ? <ChevronLeft size={24} /> : <Menu size={24} />}
             </button>
-            <div className="welcome">
-              <h1>Welcome back, Sarah</h1>
+            <div className="page-title">
+              <h1>Welcome back, {getFirstName()}</h1>
               <p>Ready for your next delivery?</p>
             </div>
           </div>
 
           <div className="top-bar-right">
-            <button className="notification-btn" onClick={() => alert('You have 3 new notifications')}>
+            <form onSubmit={handleSearch} className="search-container">
+              <Search size={18} color="#6E8649" />
+              <input type="text" placeholder="Search orders, customers..." />
+            </form>
+            <button className="notification-btn" onClick={handleNotifications}>
               <Bell size={20} />
               <span className="notification-badge">3</span>
             </button>
-            <div className="online-toggle">
-              <button 
-                className={`toggle-btn ${isOnline ? 'online' : 'offline'}`}
-                onClick={handleOnlineToggle}
-              >
-                <span className="dot"></span>
-                {isOnline ? 'Online' : 'Offline'}
-              </button>
-            </div>
           </div>
         </header>
 

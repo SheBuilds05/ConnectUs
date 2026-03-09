@@ -1,154 +1,178 @@
-// src/components/Sidebar.jsx
-import React, { useState } from 'react';
-import {
-  LayoutDashboard, Calendar, MessageCircle,
-  Heart, User, ShieldCheck, X, LogOut, Home
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { 
+  LayoutDashboard, 
+  Wallet, 
+  User, 
+  ClipboardList, 
+  Settings, 
+  LogOut, 
+  ShoppingCart 
 } from 'lucide-react';
-import { PlaceholderIcon } from './PlaceholderIcon';
-import logo from '../assets/images/logo.png';
+import { getCurrentUser, getUserProfile } from '../services/api';
 
-const SidebarLink = ({ icon, label, active = false, badge, onClick }) => (
-  <button
-    onClick={onClick}
-    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all group ${
-      active
-        ? 'bg-[#2D531A] text-white shadow-lg shadow-green-900/20'
-        : 'text-gray-500 hover:bg-gray-100'
-    }`}
-  >
-    <div className="flex items-center gap-3">
-      <div className={`${active ? 'text-white' : 'text-gray-400 group-hover:text-[#2D531A]'} transition-colors`}>
-        {icon}
-      </div>
-      <span className="text-sm font-bold tracking-tight">{label}</span>
-    </div>
-    {badge && (
-      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-        active ? 'bg-white/20 text-white' : 'bg-green-100 text-green-700'
-      }`}>
-        {badge}
-      </span>
-    )}
-  </button>
-);
+const Sidebar = () => {
+  const location = useLocation();
+  const [isOpen, setIsOpen] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-const Sidebar = ({ onClose, currentPage, onNavigate }) => {
-  const [logoError, setLogoError] = useState(false);
- 
-  const handleNavigation = (page) => {
-    if (onNavigate) {
-      onNavigate(page);
-    }
-    if (onClose) {
-      onClose();
-    }
-  };
+  useEffect(() => {
+    console.log('🔵 Sidebar mounted');
+    fetchUserData();
+  }, []);
 
-  const handleCloseAndGoHome = () => {
-    if (onNavigate) {
-      onNavigate('dashboard');
-    }
-    if (onClose) {
-      onClose();
+  const fetchUserData = async () => {
+    console.log('🔵 Fetching user data...');
+    
+    try {
+      // Check localStorage first
+      const token = localStorage.getItem('token');
+      console.log('🔵 Token from localStorage:', token ? '✅ exists' : '❌ not found');
+      
+      // Get from localStorage
+      const localUser = getCurrentUser();
+      console.log('🔵 LocalStorage user:', localUser);
+      
+      if (localUser) {
+        console.log('🔵 Setting user from localStorage:', localUser);
+        setUser(localUser);
+      }
+
+      // Fetch fresh data from API
+      console.log('🔵 Fetching user profile from API...');
+      const response = await getUserProfile();
+      console.log('🔵 API Response:', response);
+      
+      if (response && response.data) {
+        console.log('🔵 Setting user from API:', response.data);
+        setUser(response.data);
+        // Update localStorage with fresh data
+        localStorage.setItem('user', JSON.stringify(response.data));
+        console.log('🔵 Updated localStorage with API data');
+      } else {
+        console.log('🔵 No user data in API response');
+      }
+    } catch (error) {
+      console.error('🔴 Error fetching user data:', error);
+    } finally {
+      setLoading(false);
+      console.log('🔵 Loading finished, user state:', user);
     }
   };
 
   const handleLogout = () => {
-    console.log("Logging out...");
-    window.location.reload();
+    console.log('🔵 Logging out');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
   };
 
+  const menuItems = [
+    { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/runner/profile' },
+    { name: 'Runner Dashboard', icon: <LayoutDashboard size={20} />, path: '/runnerdashboard' },
+    { name: 'Profile', icon: <User size={20} />, path: '/runner/profile' },
+    { name: 'Wallet', icon: <Wallet size={20} />, path: '/runner/wallet' },
+    { name: 'View Requests', icon: <ClipboardList size={20} />, path: '/runner/requests' },
+    { name: 'Settings', icon: <Settings size={20} />, path: '/runner/settings' },
+  ];
+
+  const getUserInitials = () => {
+    if (user?.name) {
+      const names = user.name.split(' ');
+      if (names.length >= 2) {
+        return `${names[0][0]}${names[1][0]}`.toUpperCase();
+      }
+      return user.name.substring(0, 2).toUpperCase();
+    }
+    return 'U';
+  };
+
+  // Log the current user state on every render
+  console.log('🔵 Render - Current user state:', user);
+
   return (
-    <div className="h-full flex flex-col p-6 bg-white">
-      {/* Brand Logo Section */}
-      <div className="flex items-center justify-between mb-10">
+    <div className="h-screen w-64 bg-runner-deep flex flex-col fixed left-0 top-0 shadow-2xl">
+      {/* Logo Section */}
+      <div className="p-6 flex items-center justify-between border-b border-white/10">
         <div className="flex items-center gap-3">
-          {/* Round Logo Image with local asset */}
-          <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[#2D531A] shadow-md flex items-center justify-center bg-white">
-            {logoError ? (
-              <PlaceholderIcon text="C" size={48} />
-            ) : (
-              <img
-                src={logo}
-                alt="ConnectUs Logo"
-                className="w-full h-full object-cover"
-                onError={() => setLogoError(true)}
-              />
-            )}
+          <div className="bg-runner-light p-2 rounded-xl">
+            <ShoppingCart size={24} className="text-white" />
           </div>
-          <h1 className="text-2xl font-black text-[#0D330E] tracking-tighter">ConnectUs</h1>
+          <span className="text-xl font-bold text-white tracking-tight">ConnectUs</span>
         </div>
-       
-        {/* Close button with Home navigation */}
-        <button
-          onClick={handleCloseAndGoHome}
-          className="p-2 text-gray-400 hover:bg-gray-100 hover:text-red-500 rounded-lg transition-colors"
-          title="Close and go to Home"
-        >
-          <X size={24} />
-        </button>
       </div>
 
-      {/* Quick Home Button */}
-      <button
-        onClick={() => handleNavigation('dashboard')}
-        className="flex items-center gap-3 px-4 py-3 mb-4 text-sm font-bold text-[#2D531A] bg-green-50 rounded-xl hover:bg-green-100 transition-colors"
-      >
-        <Home size={18} />
-        <span>Back to Home</span>
-      </button>
-
       {/* Navigation Links */}
-      <nav className="flex-1 space-y-2 overflow-y-auto pr-2 custom-scrollbar">
-        <SidebarLink
-                  icon={<LayoutDashboard size={20} />}
-                  label="Dashboard"
-                  active={currentPage === 'dashboard'}
-                  onClick={() => handleNavigation('dashboard')} badge={undefined}        />
-        <SidebarLink
-                  icon={<Calendar size={20} />}
-                  label="My Bookings"
-                  active={currentPage === 'bookings'}
-                  onClick={() => handleNavigation('bookings')} badge={undefined}        />
-        <SidebarLink
-          icon={<MessageCircle size={20} />}
-          label="Messages"
-          badge="3"
-          active={currentPage === 'messages'}
-          onClick={() => handleNavigation('messages')}
-        />
-        <SidebarLink
-                  icon={<Heart size={20} />}
-                  label="Favorites"
-                  active={currentPage === 'favorites'}
-                  onClick={() => handleNavigation('favorites')} badge={undefined}        />
-        <SidebarLink
-                  icon={<User size={20} />}
-                  label="Account"
-                  active={currentPage === 'account'}
-                  onClick={() => handleNavigation('account')} badge={undefined}        />
+      <nav className="flex-1 px-4 py-6 space-y-2">
+        {menuItems.map((item) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <Link
+              key={item.name}
+              to={item.path}
+              className={`flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-200 group ${
+                isActive 
+                  ? 'bg-runner-light text-white shadow-lg' 
+                  : 'text-white/70 hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              <span className={`${isActive ? 'text-white' : 'text-runner-light group-hover:text-white'}`}>
+                {item.icon}
+              </span>
+              <span className="font-medium">{item.name}</span>
+            </Link>
+          );
+        })}
       </nav>
 
-      {/* Footer Area with Safety & Logout */}
-      <div className="mt-auto pt-6 space-y-4">
-        <div className="bg-green-50/50 p-5 rounded-3xl border border-green-100/50">
-          <div className="flex items-center gap-2 mb-2">
-            <ShieldCheck className="text-[#2D531A]" size={18} />
-            <span className="text-[10px] font-black uppercase text-[#2D531A] tracking-widest">Verified Safety</span>
+      {/* User & Logout Section */}
+      <div className="p-4 border-t border-white/10">
+        <div className="flex items-center gap-3 px-4 py-3 mb-2">
+          {loading ? (
+            <div className="w-10 h-10 rounded-full border-2 border-runner-light bg-runner-light/50 animate-pulse"></div>
+          ) : user?.avatar_url || user?.profile_photo ? (
+            <img 
+              src={user.avatar_url || user.profile_photo} 
+              className="w-10 h-10 rounded-full border-2 border-runner-light object-cover"
+              alt={user.name || 'User'}
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-full border-2 border-runner-light bg-runner-light flex items-center justify-center text-white font-bold">
+              {getUserInitials()}
+            </div>
+          )}
+          
+          <div className="overflow-hidden">
+            {loading ? (
+              <>
+                <div className="h-4 bg-white/20 rounded w-20 mb-1 animate-pulse"></div>
+                <div className="h-3 bg-white/10 rounded w-16 animate-pulse"></div>
+              </>
+            ) : (
+              <>
+                <p className="text-white font-bold text-sm truncate">
+                  {user?.name || 'Guest User'}
+                </p>
+                <p className="text-white/50 text-xs">
+                  {user?.role === 'runner' ? 'Verified Runner' : user?.role || 'User'}
+                  {user?.rating && ` · ${user.rating.toFixed(1)} ⭐`}
+                </p>
+              </>
+            )}
           </div>
-          <p className="text-[11px] text-gray-600 leading-relaxed font-medium">
-            All runners undergo background checks for your safety.
-          </p>
         </div>
-
-        <div className="border-t border-gray-100 pt-4">
-          <SidebarLink
-                      icon={<LogOut size={20} />}
-                      label="Log Out"
-                      onClick={handleLogout} badge={undefined}          />
-        </div>
+        
+        <button 
+          className="w-full flex items-center gap-4 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-2xl transition-colors"
+          onClick={handleLogout}
+        >
+          <LogOut size={20} />
+          <span className="font-medium">Logout</span>
+        </button>
       </div>
     </div>
   );
 };
+
 export default Sidebar;
