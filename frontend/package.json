@@ -36,3 +36,7 @@
     "vite": "^8.0.0-beta.13"
   }
 }
+"scripts": {
+  "test": "jest",
+  "lint": "eslint ."
+}
