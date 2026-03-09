@@ -33,11 +33,10 @@
     "tailwindcss": "^4.2.1",
     "vite": "^8.0.0-beta.13",
     "vitest": "^3.0.0"
-  }
-}
+  },
   "engines": {
-  "node": "20.x"
-},
+    "node": "20.x"
+  },
   "overrides": {
     "vite": "^8.0.0-beta.13"
   }
