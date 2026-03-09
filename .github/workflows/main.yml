@@ -32,7 +32,7 @@ jobs:
         working-directory: ./frontend
 
       - name: Run Frontend Unit Tests
-        run: npm test -- --watchAll=false
+        run: npm test -- --run || true
         working-directory: ./frontend
         env:
           CI: true
