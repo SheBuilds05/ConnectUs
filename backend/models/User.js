@@ -1,6 +1,9 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const { sequelize } = require('../config/database'); // CHANGE THIS LINE
 const bcrypt = require('bcryptjs');
+
+console.log('Sequelize instance:', !!sequelize); // Should print true
+console.log('Sequelize define type:', typeof sequelize.define); // Should print 'function'
 
 const User = sequelize.define('User', {
   id: {
@@ -10,7 +13,7 @@ const User = sequelize.define('User', {
   },
   name: {
     type: DataTypes.STRING(100),
-    allowNull: false,
+    allowNull: true,
     validate: {
       notEmpty: { msg: 'Name is required' }
     }

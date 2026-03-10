@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const { sequelize } = require('../config/database'); // CHANGE THIS LINE
 
 const Runner = sequelize.define('Runner', {
   id: {

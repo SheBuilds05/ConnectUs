@@ -1,4 +1,4 @@
-const sequelize = require('../config/database');
+const { sequelize } = require('../config/database'); // CHANGE THIS LINE
 const User = require('./User');
 const Runner = require('./Runner');
 
@@ -15,7 +15,12 @@ Runner.belongsTo(User, {
 
 const syncDatabase = async () => {
   try {
-    await sequelize.sync({ alter: true });
+    //Use alter await sequelize.sync({ alter: true });
+    await sequelize.sync({ 
+      alter: {
+        drop: false // Don't drop columns
+      }
+    });
     console.log('✅ Database models synced successfully');
   } catch (error) {
     console.error('❌ Error syncing database models:', error);

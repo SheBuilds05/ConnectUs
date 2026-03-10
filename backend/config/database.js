@@ -38,8 +38,6 @@ const closeConnection = async () => {
   }
 };
 
-// Note: query function is removed since we'll use Sequelize models
-
 module.exports = {
   sequelize,
   testConnection,

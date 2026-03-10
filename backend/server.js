@@ -1,8 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const { testConnection, query, closePool } = require('./config/database.js');
-const { User, Runner, syncDatabase } = require('./models'); // Combined import
+const { testConnection, closeConnection } = require('./config/database'); // Updated import
+const { User, Runner, syncDatabase } = require('./models');
 
 // Load environment variables
 dotenv.config();
@@ -30,14 +30,15 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Test database route
+// Test database route - Updated to use Sequelize
 app.get('/api/test-db', async (req, res) => {
   try {
-    const result = await query('SELECT NOW() as current_time');
+    const sequelize = require('./config/database').sequelize;
+    await sequelize.authenticate();
     res.json({ 
       success: true, 
       message: 'Database connected!', 
-      time: result.rows[0].current_time 
+      time: new Date().toISOString()
     });
   } catch (error) {
     res.status(500).json({ 
@@ -48,13 +49,15 @@ app.get('/api/test-db', async (req, res) => {
   }
 });
 
-// Get all users (example route)
+// Get all users - Updated to use Sequelize
 app.get('/api/users', async (req, res) => {
   try {
-    const result = await query('SELECT id, email, name, role, created_at FROM users ORDER BY created_at DESC');
+    const users = await User.findAll({
+      attributes: ['id', 'email', 'name', 'role', 'createdAt']
+    });
     res.json({ 
       success: true, 
-      data: result.rows 
+      data: users 
     });
   } catch (error) {
     res.status(500).json({ 
@@ -65,9 +68,9 @@ app.get('/api/users', async (req, res) => {
   }
 });
 
-// Create a new user (example route)
+// Create a new user - Updated to use Sequelize
 app.post('/api/users', async (req, res) => {
-  const { email, name, password, role = 'customer' } = req.body;
+  const { email, name, password, phone, role = 'customer' } = req.body;
   
   // Basic validation
   if (!email || !password) {
@@ -79,24 +82,33 @@ app.post('/api/users', async (req, res) => {
 
   try {
     // Check if user already exists
-    const existingUser = await query('SELECT id FROM users WHERE email = $1', [email]);
-    if (existingUser.rows.length > 0) {
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser) {
       return res.status(409).json({ 
         success: false, 
         message: 'User with this email already exists' 
       });
     }
 
-    // Insert new user (in production, hash the password!)
-    const result = await query(
-      'INSERT INTO users (email, name, password, role) VALUES ($1, $2, $3, $4) RETURNING id, email, name, role, created_at',
-      [email, name, password, role]
-    );
+    // Create new user
+    const user = await User.create({
+      email,
+      name,
+      password,
+      phone,
+      role
+    });
 
     res.status(201).json({ 
       success: true, 
       message: 'User created successfully', 
-      data: result.rows[0] 
+      data: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        createdAt: user.createdAt
+      }
     });
   } catch (error) {
     res.status(500).json({ 
@@ -111,18 +123,21 @@ app.post('/api/users', async (req, res) => {
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
 
-// Get all runners with their user info
+// Get all runners - Updated to use Sequelize
 app.get('/api/runners', async (req, res) => {
   try {
-    const result = await query(`
-      SELECT r.*, u.name, u.email, u.phone 
-      FROM runners r
-      JOIN users u ON r.user_id = u.id
-      ORDER BY r.rating DESC
-    `);
+    const runners = await Runner.findAll({
+      include: [{
+        model: User,
+        as: 'user',
+        attributes: ['name', 'email', 'phone']
+      }],
+      order: [['rating', 'DESC']]
+    });
+    
     res.json({ 
       success: true, 
-      data: result.rows 
+      data: runners 
     });
   } catch (error) {
     res.status(500).json({ 
@@ -133,26 +148,16 @@ app.get('/api/runners', async (req, res) => {
   }
 });
 
-// Get user bookings
+// Get user bookings - You'll need to create a Booking model first
 app.get('/api/users/:userId/bookings', async (req, res) => {
   const { userId } = req.params;
   
   try {
-    const result = await query(`
-      SELECT b.*, 
-             u.name as customer_name,
-             r.name as runner_name
-      FROM bookings b
-      JOIN users u ON b.customer_id = u.id
-      JOIN runners rn ON b.runner_id = rn.id
-      JOIN users r ON rn.user_id = r.id
-      WHERE b.customer_id = $1 OR rn.user_id = $1
-      ORDER BY b.booking_date DESC
-    `, [userId]);
-    
+    // This query will work once you create the Booking model
     res.json({ 
       success: true, 
-      data: result.rows 
+      message: 'Bookings endpoint - Booking model needed',
+      data: [] 
     });
   } catch (error) {
     res.status(500).json({ 
@@ -173,6 +178,9 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Routes
+app.use('/api/auth', require('./routes/auth.routes'));
+// app.use('/api/admin', require('./routes/admin.routes')); // Comment this out temporarily
 // Start server
 const server = app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
@@ -184,9 +192,9 @@ const server = app.listen(PORT, () => {
 process.on('SIGTERM', () => {
   console.log('SIGTERM signal received: closing HTTP server');
   server.close(async () => {
-    await closePool();
+    await closeConnection();
     console.log('HTTP server closed');
   });
 });
 
-module.exports = app; // Export for testing if needed
+module.exports = app;

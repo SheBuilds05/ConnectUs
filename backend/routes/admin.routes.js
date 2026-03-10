@@ -1,29 +1,17 @@
 const express = require('express');
 const router = express.Router();
+const { 
+  getAdminDashboard, 
+  penalizeRunner, 
+  getAllRunners 
+} = require('../controllers/adminController');
+const { protect, admin } = require('../middleware/authMiddleware');
 
-const adminController = require('../controllers/adminController');
-const { verifyToken, isAdmin } = require('../middleware/authMiddleware');
+// All admin routes should be protected with both protect and admin middleware
+router.get('/dashboard', protect, admin, getAdminDashboard);
+router.get('/runners', protect, admin, getAllRunners);
+router.put('/runners/:runnerId/penalize', protect, admin, penalizeRunner);
 
-console.log("DEBUG: Admin Controller exports:", adminController);
-
-// Admin Dashboard
-router.get('/dashboard', verifyToken, isAdmin, adminController.getAdminDashboard);
-
-// Penalize a specific runner
-router.post('/penalize/:runnerId', verifyToken, isAdmin, adminController.penalizeRunner);
-// Get all runners
-router.get('/runners', verifyToken, isAdmin, adminController.getAllRunners);
-
-const { register, login } = require('../controllers/authController');
-
-// @route   POST /api/auth/register
-// @desc    Register user
-// @access  Public
-router.post('/register', register);
-
-// @route   POST /api/auth/login
-// @desc    Login user
-// @access  Public
-router.post('/login', login);
+// Add any other admin routes here
 
 module.exports = router;
