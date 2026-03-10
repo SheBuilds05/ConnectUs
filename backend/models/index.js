@@ -1,25 +1,30 @@
-const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const { testConnection, query, closePool } = require('./config/database.js');
+const sequelize = require('../config/database');
+const User = require('./User');
+const Runner = require('./Runner');
 
-// Load environment variables
-dotenv.config();
+// Define associations
+User.hasOne(Runner, {
+  foreignKey: 'user_id',
+  as: 'runnerProfile'
+});
 
-const app = express();
-const PORT = process.env.PORT || 5000;
+Runner.belongsTo(User, {
+  foreignKey: 'user_id',
+  as: 'user'
+});
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+const syncDatabase = async () => {
+  try {
+    await sequelize.sync({ alter: true });
+    console.log('✅ Database models synced successfully');
+  } catch (error) {
+    console.error('❌ Error syncing database models:', error);
+  }
+};
 
-// Test database connection on startup
-testConnection();
-
-
-// Routes
-app.use('/api/auth', require('./routes/auth.routes'));
-app.use('/api/admin', require('./routes/admin.routes'));
-
-// ... rest of your server.js code
+module.exports = {
+  sequelize,
+  User,
+  Runner,
+  syncDatabase
+};

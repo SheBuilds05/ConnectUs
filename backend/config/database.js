@@ -1,20 +1,27 @@
-const { Pool } = require('pg');
+const { Sequelize } = require('sequelize');
 const dotenv = require('dotenv');
 
 dotenv.config();
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
+  dialect: 'postgres',
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false
+    }
+  },
+  logging: false, // Set to console.log to see SQL queries
+  define: {
+    timestamps: true,
+    underscored: true
   }
 });
 
 const testConnection = async () => {
   try {
-    const client = await pool.connect();
+    await sequelize.authenticate();
     console.log('✅ Database connected successfully');
-    client.release();
     return true;
   } catch (error) {
     console.error('❌ Database connection error:', error.message);
@@ -22,32 +29,19 @@ const testConnection = async () => {
   }
 };
 
-const query = async (text, params) => {
+const closeConnection = async () => {
   try {
-    const result = await pool.query(text, params);
-    return result;
+    await sequelize.close();
+    console.log('✅ Database connection closed');
   } catch (error) {
-    console.error('❌ Query error:', error.message);
-    throw error;
+    console.error('❌ Error closing database connection:', error.message);
   }
 };
 
-const closePool = async () => {
-  try {
-    await pool.end();
-    console.log('✅ Database pool closed');
-  } catch (error) {
-    console.error('❌ Error closing pool:', error.message);
-  }
-};
-// Test database connection on startup
-testConnection();
+// Note: query function is removed since we'll use Sequelize models
 
-// Sync database models (optional)
-syncDatabase();
 module.exports = {
-  pool,
+  sequelize,
   testConnection,
-  query,
-  closePool
+  closeConnection
 };

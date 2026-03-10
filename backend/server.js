@@ -2,13 +2,14 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const { testConnection, query, closePool } = require('./config/database.js');
-const { syncDatabase } = require('./models'); // ADD THIS
+const { User, Runner, syncDatabase } = require('./models'); // Combined import
+
 // Load environment variables
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const { User, Runner, syncDatabase } = require('./models');
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -16,6 +17,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Test database connection on startup
 testConnection();
+
+// Sync database models
+syncDatabase();
 
 // Health check route
 app.get('/api/health', (req, res) => {
@@ -105,7 +109,8 @@ app.post('/api/users', async (req, res) => {
 
 // Routes
 app.use('/api/auth', require('./routes/auth.routes'));
-app.use('/api/admin', require('./routes/admin.routes')); // if you have admin routes
+app.use('/api/admin', require('./routes/admin.routes'));
+
 // Get all runners with their user info
 app.get('/api/runners', async (req, res) => {
   try {
