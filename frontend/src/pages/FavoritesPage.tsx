@@ -16,7 +16,7 @@ import {
   Trash2,
   Bell
 } from 'lucide-react';
-import { RunnerCard } from '../components/RunnerCard';
+import RunnerCard from '../components/RunnerCard';
 import { runners } from '../data/mockData';
 
 const FavoritesPage = () => {

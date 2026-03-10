@@ -14,6 +14,7 @@ import UserSettings from "./pages/UserSettings";
 import FavoritesPage from "./pages/FavoritesPage";
 import MessagesPage from "./pages/MessagesPage";
 import AccountPage from "./pages/AccountPage";
+import {RunnerDetailsPage} from './pages/RunnerDetailsPage';
 
 import "./App.css";
 
@@ -82,6 +83,7 @@ function App() {
               <Route path="favorites" element={<FavoritesPage />} />
               <Route path="messages" element={<MessagesPage />} />
               <Route path="account" element={<AccountPage />} />
+              <Route path="runner/:runnerId" element={<RunnerDetailsPage />} />
               {/* Catch all for /user/* - redirect to user home */}
               <Route path="*" element={<Navigate to="/user" replace />} />
             </Routes>

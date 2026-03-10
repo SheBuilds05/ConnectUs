@@ -5,6 +5,7 @@ import { Server } from 'socket.io'; // Add this
 import authRoutes from './routes/authRoutes';
 import runnerRoutes from './routes/runnerRoutes'; 
 import userRoutes from './routes/userRoutes';
+import productRoutes from './routes/productRoutes';
 
 const app = express();
 const server = http.createServer(app); // Create HTTP server
@@ -38,6 +39,7 @@ io.on('connection', (socket) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/runners', runnerRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/products', productRoutes);
 
 // Use 'server.listen' instead of 'app.listen'
 server.listen(5000, '0.0.0.0', () => {
