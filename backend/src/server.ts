@@ -1,75 +1,57 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
-
-// Import routes
+import http from 'http'; // Add this
+import { Server } from 'socket.io'; // Add this
 import authRoutes from './routes/authRoutes';
-import orderRoutes from './routes/orderRoutes';
+import runnerRoutes from './routes/runnerRoutes'; 
 import userRoutes from './routes/userRoutes';
-import earningsRoutes from './routes/earningsRoutes';
 
-dotenv.config();
 
-// DECLARE app FIRST
 const app = express();
+const server = http.createServer(app); // Create HTTP server
 
-// THEN use middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Initialize Socket.io
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:3000", // Update this to your frontend URL
+    methods: ["GET", "POST"]
+  }
+});
 
-// THEN use routes
-app.use('/api/auth', authRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/earnings', earningsRoutes);
-
-// Health check - ADD THIS HERE
-app.get('/api/health', (req: Request, res: Response) => {
-  res.json({
-    success: true,
-    status: 'OK',
-    message: 'ConnectUs Backend is running',
+// Simple test endpoint - add this
+app.get('/api/test', (req, res) => {
+  res.json({ 
+    success: true, 
+    message: 'API is working!',
     timestamp: new Date().toISOString()
   });
 });
+app.use(cors());
+app.use(express.json());
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'OK' });
+});
+// Socket.io Connection Logic
+io.on('connection', (socket) => {
+  console.log('A user connected:', socket.id);
 
-// Test route
-app.get('/api/test', (req: Request, res: Response) => {
-  res.json({
-    success: true,
-    message: 'API is working!',
-    data: {
-      version: '1.0.0',
-      environment: process.env.NODE_ENV || 'development'
-    }
+  socket.on('join', (userId) => {
+    socket.join(`user_${userId}`);
+    console.log(`User ${userId} joined their private room`);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected');
   });
 });
 
-// Error handling middleware
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error('Error:', err.stack);
-  res.status(500).json({
-    success: false,
-    error: 'Something went wrong!',
-    message: process.env.NODE_ENV === 'development' ? err.message : undefined
-  });
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/runners', runnerRoutes);
+app.use('/api/users', userRoutes);
+
+// Use 'server.listen' instead of 'app.listen'
+server.listen(5000, '0.0.0.0', () => {
+  console.log('🚀 Server & Socket.io running on port 5000');
 });
 
-// 404 handler
-app.use((req: Request, res: Response) => {
-  res.status(404).json({
-    success: false,
-    error: 'Route not found'
-  });
-});
-
-const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📝 API available at http://localhost:${PORT}/api`);
-  console.log(`🔧 Test endpoint: http://localhost:${PORT}/api/test`);
-  console.log(`🏥 Health check: http://localhost:${PORT}/api/health`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-});

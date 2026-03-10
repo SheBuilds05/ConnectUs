@@ -1,203 +1,159 @@
 import { Request, Response } from 'express';
-import bcrypt from 'bcryptjs';
-import { query } from '../config/db';
+import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
-import { AuthRequest } from '../middleware/authMiddleware'; // ADD THIS IMPORT
-import { User, UserCreate, UserResponse } from '../models/user';
-dotenv.config();
+import pool from '../db';
 
-interface RegisterBody {
-  name: string;
-  email: string;
-  password: string;
-  role?: string;
-}
+// Register a new customer
+export const registerCustomer = async (req: Request, res: Response) => {
+  const { firstName, lastName, email, password, id_num } = req.body;
+  const full_name = `${firstName} ${lastName}`;
 
-interface LoginBody {
-  email: string;
-  password: string;
-}
-
-export const register = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, email, password, role = 'runner' } = req.body as RegisterBody;
-
-    const existingUser = await query(
-      'SELECT id FROM users WHERE email = $1',
+    const existing = await pool.query(
+      'SELECT email FROM users WHERE email = $1 UNION SELECT email FROM runnerprofile WHERE email = $1',
       [email]
     );
-
-    if (existingUser.rows.length > 0) {
-      res.status(400).json({
-        success: false,
-        error: 'User already exists'
-      });
-      return;
+    
+    if (existing.rows.length > 0) {
+      return res.status(400).json({ message: "Email already registered" });
     }
 
     const salt = await bcrypt.genSalt(10);
-    const password_hash = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-    const result = await query(
-      `INSERT INTO users (name, email, password_hash, role, is_online) 
-       VALUES ($1, $2, $3, $4, true) 
-       RETURNING id, name, email, role, rating, total_trips, total_earnings, avatar_url, is_online`,
-      [name, email, password_hash, role]
+    const newUser = await pool.query(
+      `INSERT INTO users (full_name, email, password_hash, id_num, role) 
+       VALUES ($1, $2, $3, $4, 'customer') 
+       RETURNING user_id, full_name, email, role`,
+      [full_name, email, hashedPassword, id_num]
     );
 
-    const user = result.rows[0];
-
-    const secret = process.env.JWT_SECRET || 'fallback_secret';
-    const expiresIn = process.env.JWT_EXPIRE || '7d';
-    
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
-      secret,
-      { expiresIn } as jwt.SignOptions
+      { id: newUser.rows[0].user_id, email: newUser.rows[0].email, role: 'customer', type: 'user' },
+      process.env.JWT_SECRET || 'secret',
+      { expiresIn: '24h' }
+    );
+
+    res.status(201).json({ token, user: newUser.rows[0] });
+  } catch (err: any) {
+    console.error("Registration Error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Register a new runner
+export const registerRunner = async (req: Request, res: Response) => {
+  const { 
+    username, email, password, phone, address,
+    city, postalCode, id_number, bio 
+  } = req.body;
+
+  try {
+    const existing = await pool.query(
+      'SELECT email FROM users WHERE email = $1 UNION SELECT email FROM runnerprofile WHERE email = $1',
+      [email]
+    );
+    
+    if (existing.rows.length > 0) {
+      return res.status(400).json({ message: "Email already registered" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Matching your Supabase schema: postal_code, id_document, password_hash
+    const newRunner = await pool.query(
+      `INSERT INTO runnerprofile (
+        username, email, password_hash, phone, address, city, 
+        postal_code, id_document, bio, verification_status, 
+        completed_bookings_count, id_verified, languages
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) 
+      RETURNING runner_id, username, email, verification_status`,
+      [
+        username, email, hashedPassword, phone, address, city, 
+        postalCode, id_number, bio, 'PENDING', 0, false, ['English']
+      ]
+    );
+
+    const token = jwt.sign(
+      { 
+        id: newRunner.rows[0].runner_id, 
+        email: newRunner.rows[0].email,
+        username: newRunner.rows[0].username,
+        role: 'runner',
+        type: 'runner'
+      },
+      process.env.JWT_SECRET || 'secret',
+      { expiresIn: '24h' }
     );
 
     res.status(201).json({
-      success: true,
-      data: {
-        user,
-        token
-      },
-      message: 'User registered successfully'
+      token,
+      user: {
+        id: newRunner.rows[0].runner_id,
+        name: newRunner.rows[0].username,
+        email: newRunner.rows[0].email,
+        role: 'runner',
+        verification_status: newRunner.rows[0].verification_status
+      }
     });
-  } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Server error during registration'
-    });
+  } catch (err: any) {
+    console.error("Runner Registration Error:", err.message);
+    res.status(500).json({ error: err.message });
   }
 };
 
-export const login = async (req: Request, res: Response): Promise<void> => {
+// Login 
+export const login = async (req: Request, res: Response) => {
+  const { email, password } = req.body;
   try {
-    const { email, password } = req.body as LoginBody;
-
-    const result = await query(
-      'SELECT * FROM users WHERE email = $1',
-      [email]
-    );
-
-    if (result.rows.length === 0) {
-      res.status(401).json({
-        success: false,
-        error: 'Invalid credentials'
-      });
-      return;
+    // Check customers first
+    const customerResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    if (customerResult.rows.length > 0) {
+      const user = customerResult.rows[0];
+      if (await bcrypt.compare(password, user.password_hash)) {
+        const token = jwt.sign({ id: user.user_id, email: user.email, role: 'customer', type: 'user' }, process.env.JWT_SECRET || 'secret', { expiresIn: '24h' });
+        return res.json({ token, user: { id: user.user_id, name: user.full_name, email: user.email, role: 'customer' } });
+      }
     }
 
-    const user = result.rows[0];
-
-    const isMatch = await bcrypt.compare(password, user.password_hash);
-
-    if (!isMatch) {
-      res.status(401).json({
-        success: false,
-        error: 'Invalid credentials'
-      });
-      return;
+    // Check runners
+    const runnerResult = await pool.query('SELECT * FROM runnerprofile WHERE email = $1', [email]);
+    if (runnerResult.rows.length > 0) {
+      const runner = runnerResult.rows[0];
+      if (await bcrypt.compare(password, runner.password_hash)) {
+        const token = jwt.sign({ id: runner.runner_id, email: runner.email, username: runner.username, role: 'runner', type: 'runner' }, process.env.JWT_SECRET || 'secret', { expiresIn: '24h' });
+        return res.json({ token, user: { id: runner.runner_id, name: runner.username, email: runner.email, role: 'runner', verification_status: runner.verification_status } });
+      }
     }
+    return res.status(400).json({ message: "Invalid email or password" });
+  } catch (err: any) {
+    console.error("Login Error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+};
 
-    await query(
-      'UPDATE users SET is_online = true, updated_at = CURRENT_TIMESTAMP WHERE id = $1',
-      [user.id]
-    );
-
-    const secret = process.env.JWT_SECRET || 'fallback_secret';
-    const expiresIn = process.env.JWT_EXPIRE || '7d';
+// Get current user details
+export const getCurrentUser = async (req: Request, res: Response) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ message: "No token provided" });
     
-    const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
-      secret,
-      { expiresIn } as jwt.SignOptions
-    );
-
-    const { password_hash, ...userWithoutPassword } = user;
-
-    res.json({
-      success: true,
-      data: {
-        user: userWithoutPassword,
-        token
-      },
-      message: 'Login successful'
-    });
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Server error during login'
-    });
-  }
-};
-
-export const logout = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { userId } = req.body;
-
-    if (userId) {
-      await query(
-        'UPDATE users SET is_online = false, updated_at = CURRENT_TIMESTAMP WHERE id = $1',
-        [userId]
+    const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+    
+    if (decoded.type === 'user') {
+      const result = await pool.query('SELECT user_id, full_name, email, role FROM users WHERE user_id = $1', [decoded.id]);
+      return res.json(result.rows[0]);
+    } else {
+      const result = await pool.query(
+        `SELECT runner_id as id, username as name, email, 'runner' as role, 
+                verification_status, city, profile_photo, completed_bookings_count 
+         FROM runnerprofile WHERE runner_id = $1`, 
+        [decoded.id]
       );
+      return res.json(result.rows[0]);
     }
-
-    res.json({
-      success: true,
-      message: 'Logged out successfully'
-    });
-  } catch (error) {
-    console.error('Logout error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Server error during logout'
-    });
-  }
-};
-
-export const getMe = async (req: Request, res: Response): Promise<void> => {
-  try {
-    // Cast to AuthRequest to access user property
-    const authReq = req as AuthRequest;
-    const userId = authReq.user?.id;
-
-    if (!userId) {
-      res.status(401).json({
-        success: false,
-        error: 'Not authorized'
-      });
-      return;
-    }
-
-    const result = await query(
-      `SELECT id, name, email, role, rating, total_trips, total_earnings, 
-              avatar_url, is_online, created_at 
-       FROM users WHERE id = $1`,
-      [userId]
-    );
-
-    if (result.rows.length === 0) {
-      res.status(404).json({
-        success: false,
-        error: 'User not found'
-      });
-      return;
-    }
-
-    res.json({
-      success: true,
-      data: result.rows[0]
-    });
-  } catch (error) {
-    console.error('Get user error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Server error'
-    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
   }
 };
