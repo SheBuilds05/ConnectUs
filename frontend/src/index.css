@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 /* Fixed Syntax */
 body {
@@ -9,4 +7,4 @@ body {
   min-width: 320px;
   min-height: 100vh;
   background-color: #D3D3D3;
-} /* Removed the comma and extra text here */
+}
