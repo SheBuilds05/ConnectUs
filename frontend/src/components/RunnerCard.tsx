@@ -1,4 +1,4 @@
-// src/components/RunnerCard.jsx
+// src/components/RunnerCard.jsx - Enhanced Version
 import React from 'react';
 import { Star, User, CheckCircle2, Briefcase, MapPin, ArrowRight, Shield, Award, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';

@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { getCurrentUser, getUserProfile } from '../services/api';
 
-const Sidebar = () => {
+const sidebar = () => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(true);
   const [user, setUser] = useState<any>(null);
@@ -175,4 +175,4 @@ const Sidebar = () => {
   );
 };
 
-export default Sidebar;
+export default sidebar;
