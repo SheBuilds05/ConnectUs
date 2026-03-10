@@ -14,4 +14,16 @@ router.post('/penalize/:runnerId', verifyToken, isAdmin, adminController.penaliz
 // Get all runners
 router.get('/runners', verifyToken, isAdmin, adminController.getAllRunners);
 
+const { register, login } = require('../controllers/authController');
+
+// @route   POST /api/auth/register
+// @desc    Register user
+// @access  Public
+router.post('/register', register);
+
+// @route   POST /api/auth/login
+// @desc    Login user
+// @access  Public
+router.post('/login', login);
+
 module.exports = router;

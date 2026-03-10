@@ -1,24 +1,82 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
+const bcrypt = require('bcryptjs');
 
-const UserSchema = new mongoose.Schema({
-    fullName: { type: String, required: true },
-    email: { type: String, unique: true, required: true },
-    password: { type: String, required: true },
-    identityNumber: { 
-        type: String, 
-        required: true, 
-        unique: true,
-        validate: {
-            validator: function(v) {
-                return /^\d{13}$/.test(v); // Basic 13-digit check
-            },
-            message: props => `${props.value} is not a valid 13-digit ID!`
-        }
+const User = sequelize.define('User', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  name: {
+    type: DataTypes.STRING(100),
+    allowNull: false,
+    validate: {
+      notEmpty: { msg: 'Name is required' }
+    }
+  },
+  email: {
+    type: DataTypes.STRING(100),
+    allowNull: false,
+    unique: {
+      msg: 'Email already exists'
     },
-    role: { type: String, enum: ['user', 'admin', 'runner'], default: 'user' },
-    penaltyPoints: { type: Number, default: 0 },
-    notices: [{ message: String, date: { type: Date, default: Date.now } }],
-    createdAt: { type: Date, default: Date.now }
+    validate: {
+      isEmail: { msg: 'Must be a valid email address' },
+      notEmpty: { msg: 'Email is required' }
+    }
+  },
+  password: {
+    type: DataTypes.STRING(255),
+    allowNull: false,
+    validate: {
+      notEmpty: { msg: 'Password is required' },
+      len: {
+        args: [6, 100],
+        msg: 'Password must be at least 6 characters'
+      }
+    }
+  },
+  phone: {
+    type: DataTypes.STRING(20),
+    allowNull: true
+  },
+  role: {
+    type: DataTypes.ENUM('customer', 'runner', 'admin'),
+    defaultValue: 'customer',
+    allowNull: false
+  },
+  isActive: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true
+  },
+  lastLogin: {
+    type: DataTypes.DATE,
+    allowNull: true
+  }
+}, {
+  timestamps: true,
+  underscored: true,
+  tableName: 'users',
+  hooks: {
+    beforeCreate: async (user) => {
+      if (user.password) {
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(user.password, salt);
+      }
+    },
+    beforeUpdate: async (user) => {
+      if (user.changed('password')) {
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(user.password, salt);
+      }
+    }
+  }
 });
 
-module.exports = mongoose.model('User', UserSchema);
+// Instance method to compare password
+User.prototype.comparePassword = async function(candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
+
+module.exports = User;
