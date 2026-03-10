@@ -6,6 +6,7 @@ import authRoutes from './routes/authRoutes';
 import runnerRoutes from './routes/runnerRoutes'; 
 import userRoutes from './routes/userRoutes';
 
+
 const app = express();
 const server = http.createServer(app); // Create HTTP server
 
@@ -17,9 +18,19 @@ const io = new Server(server, {
   }
 });
 
+// Simple test endpoint - add this
+app.get('/api/test', (req, res) => {
+  res.json({ 
+    success: true, 
+    message: 'API is working!',
+    timestamp: new Date().toISOString()
+  });
+});
 app.use(cors());
 app.use(express.json());
-
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'OK' });
+});
 // Socket.io Connection Logic
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
@@ -43,3 +54,4 @@ app.use('/api/users', userRoutes);
 server.listen(5000, '0.0.0.0', () => {
   console.log('🚀 Server & Socket.io running on port 5000');
 });
+
