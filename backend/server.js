@@ -2,6 +2,38 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { testConnection, query, closePool } from './config/database.js';
+process.on('uncaughtException', (err) => {
+  console.error('💥 Uncaught Exception:', err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (err) => {
+  console.error('💥 Unhandled Rejection:', err);
+  process.exit(1);
+});
+// backend/server.js
+const { Pool } = require('pg');
+const pool = new Pool({ /* your config */ });
+
+app.get('/api/test-fetch', async (req, res) => {
+  try {
+    // This query fetches everything from your Category table
+    const result = await pool.query('SELECT * FROM categories');
+    
+    // Log it in the terminal so you can see it on the backend
+    console.log("Data fetched from DB:", result.rows);
+    
+    // Send it to the browser/Postman
+    res.status(200).json({
+      success: true,
+      count: result.rows.length,
+      data: result.rows
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 // Load environment variables
 dotenv.config();
