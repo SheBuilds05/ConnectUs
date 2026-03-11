@@ -1,9 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const { testConnection, closeConnection } = require('./config/database'); // Updated import
-const { User, Runner, syncDatabase } = require('./models');
+const { sequelize } = require('./config/database'); 
+const { User, Runner } = require('./models');
 const authRoutes = require('./routes/auth.routes');
+const adminRoutes = require('./routes/admin.routes');
 
 // Load environment variables
 dotenv.config();
@@ -14,213 +15,46 @@ const PORT = process.env.PORT || 5002;
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use('/api/auth', authRoutes);
-
 app.use(express.urlencoded({ extended: true }));
 
-// Test database connection on startup
-testConnection();
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
 
-//syncDatabase();
-// Add this with your other routes
+// Health check and root API
 app.get('/api', (req, res) => {
-    res.json({
-        message: 'Welcome to ConnectUs API',
-        available_endpoints: [
-            'GET /api/test-db',
-            'POST /api/auth/register',
-            'POST /api/auth/login',
-            'GET /api/auth/profile',
-            'POST /api/auth/logout'
-        ],
-        documentation: 'Use POST requests with JSON body for auth endpoints'
-    });
-}); 
-// Health check route
+    res.json({ message: 'Welcome to ConnectUs API' });
+});
+
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    message: 'Server is running',
-    timestamp: new Date().toISOString()
-  });
+    res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// Test database route - Updated to use Sequelize
+// Database Test Route
 app.get('/api/test-db', async (req, res) => {
-  try {
-    const sequelize = require('./config/database').sequelize;
-    await sequelize.authenticate();
-    res.json({ 
-      success: true, 
-      message: 'Database connected!', 
-      time: new Date().toISOString()
-    });
-  } catch (error) {
-    res.status(500).json({ 
-      success: false, 
-      message: 'Database connection failed', 
-      error: error.message 
-    });
-  }
-});
-
-console.log('Auth routes mounted at /api/auth');
-console.log('Auth routes object:', Object.keys(authRoutes));
-// Add this near the end of server.js, just before app.listen()
-console.log('\n=== AVAILABLE ROUTES ===');
-app._router.stack.forEach(function(r){
-    if (r.route && r.route.path){
-        console.log(`${Object.keys(r.route.methods).join(', ').toUpperCase()} - ${r.route.path}`);
+    try {
+        await sequelize.authenticate();
+        res.json({ success: true, message: 'Database connected!' });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
     }
 });
-console.log('=======================\n');
 
-// Get all users - Updated to use Sequelize
-app.get('/api/users', async (req, res) => {
-  try {
-    const users = await User.findAll({
-      attributes: ['id', 'email', 'name', 'role', 'createdAt']
-    });
-    res.json({ 
-      success: true, 
-      data: users 
-    });
-  } catch (error) {
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to fetch users', 
-      error: error.message 
-    });
-  }
-});
-
-// Create a new user - Updated to use Sequelize
-app.post('/api/users', async (req, res) => {
-  const { email, name, password, phone, role = 'customer' } = req.body;
-  
-  // Basic validation
-  if (!email || !password) {
-    return res.status(400).json({ 
-      success: false, 
-      message: 'Email and password are required' 
-    });
-  }
-
-  try {
-    // Check if user already exists
-    const existingUser = await User.findOne({ where: { email } });
-    if (existingUser) {
-      return res.status(409).json({ 
-        success: false, 
-        message: 'User with this email already exists' 
-      });
+// Inside your server.js, modify the startServer function:
+async function startServer() {
+    try {
+        // Change from { alter: true } to { force: true } TEMPORARILY
+        // WARNING: { force: true } DELETES ALL EXISTING DATA in your users table!
+        await sequelize.sync({ force: true }); 
+        console.log('✅ Database forced-synced (ALL DATA DELETED)');
+        
+        app.listen(PORT, () => {
+            console.log(`🚀 Server running on port ${PORT}`);
+        });
+    } catch (err) {
+        console.error('❌ Failed to start server:', err);
     }
-
-    // Create new user
-    const user = await User.create({
-      email,
-      name,
-      password,
-      phone,
-      role
-    });
-
-    res.status(201).json({ 
-      success: true, 
-      message: 'User created successfully', 
-      data: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        createdAt: user.createdAt
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to create user', 
-      error: error.message 
-    });
-  }
-});
-
-// Routes
-app.use('/api/auth', require('./routes/auth.routes'));
-app.use('/api/admin', require('./routes/admin.routes'));
-
-// Get all runners - Updated to use Sequelize
-app.get('/api/runners', async (req, res) => {
-  try {
-    const runners = await Runner.findAll({
-      include: [{
-        model: User,
-        as: 'user',
-        attributes: ['name', 'email', 'phone']
-      }],
-      order: [['rating', 'DESC']]
-    });
-    
-    res.json({ 
-      success: true, 
-      data: runners 
-    });
-  } catch (error) {
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to fetch runners', 
-      error: error.message 
-    });
-  }
-});
-
-// Get user bookings - You'll need to create a Booking model first
-app.get('/api/users/:userId/bookings', async (req, res) => {
-  const { userId } = req.params;
-  
-  try {
-    // This query will work once you create the Booking model
-    res.json({ 
-      success: true, 
-      message: 'Bookings endpoint - Booking model needed',
-      data: [] 
-    });
-  } catch (error) {
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to fetch bookings', 
-      error: error.message 
-    });
-  }
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ 
-    success: false, 
-    message: 'Something went wrong!', 
-    error: err.message 
-  });
-});
-
-// Routes
-app.use('/api/auth', require('./routes/auth.routes'));
-// app.use('/api/admin', require('./routes/admin.routes')); // Comment this out temporarily
-// Start server
-const server = app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📝 API available at http://localhost:${PORT}/api`);
-  console.log(`🔍 Test DB: http://localhost:${PORT}/api/test-db`);
-});
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM signal received: closing HTTP server');
-  server.close(async () => {
-    await closeConnection();
-    console.log('HTTP server closed');
-  });
-});
+}
+startServer();
 
 module.exports = app;

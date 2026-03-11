@@ -14,7 +14,7 @@ const protect = async (req, res, next) => {
 
       // Get user from token
       req.user = await User.findByPk(decoded.id, {
-        attributes: { exclude: ['password'] }
+        attributes: { exclude: ['password_hash'] }
       });
 
       if (!req.user) {

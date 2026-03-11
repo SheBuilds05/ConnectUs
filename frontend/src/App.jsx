@@ -18,6 +18,25 @@ import FavoritesPage from "./pages/FavoritesPage";
 import MessagesPage from "./pages/MessagesPage";
 import UserHomePage from "./pages/UserHomePage";
 
+// --- NEW: PROTECTED ROUTE COMPONENT ---
+// This checks if the user is logged in and has the right role
+const ProtectedRoute = ({ children, adminOnly = false }) => {
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user'));
+
+  if (!token) {
+    // Not logged in? Back to login
+    return <Navigate to="/login" />;
+  }
+
+  if (adminOnly && user?.role !== 'admin') {
+    // Not an admin but trying to access admin pages? Back to home
+    return <Navigate to="/home" />;
+  }
+
+  return children;
+};
+
 const LayoutWrapper = ({ children }) => {
   const location = useLocation();
   
@@ -29,7 +48,6 @@ const LayoutWrapper = ({ children }) => {
     return <div className="min-h-screen bg-[#D3D3D3]">{children}</div>;
   }
 
-  // Private/App pages - now WITHOUT Sidebar
   return (
     <div className="min-h-screen bg-[#D3D3D3]">
       <main className="flex-1">
@@ -49,22 +67,29 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<Register />} />
 
-          {/* --- PRIVATE USER ROUTES (No Sidebar) --- */}
-          <Route path="/home" element={<UserHomePage />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/profile" element={<RunnerProfile />} />
-          <Route path="/account" element={<AccountPage />} />
-          <Route path="/bookings" element={<BookingsPage />} />
-          <Route path="/favorites" element={<FavoritesPage />} />
-          <Route path="/messages" element={<MessagesPage />} />
-          <Route path="/wallet" element={<WalletPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
+          {/* --- PRIVATE USER ROUTES (Protected) --- */}
+          <Route path="/home" element={<ProtectedRoute><UserHomePage /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><RunnerProfile /></ProtectedRoute>} />
+          <Route path="/account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
+          <Route path="/bookings" element={<ProtectedRoute><BookingsPage /></ProtectedRoute>} />
+          <Route path="/favorites" element={<ProtectedRoute><FavoritesPage /></ProtectedRoute>} />
+          <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
+          <Route path="/wallet" element={<ProtectedRoute><WalletPage /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
           
-          {/* Placeholder for requests from previous code */}
-          <Route path="/requests" element={<div className="p-8 text-white">Requests Page Coming Soon</div>} />
+          <Route path="/requests" element={
+            <ProtectedRoute>
+              <div className="p-8 text-white">Requests Page Coming Soon</div>
+            </ProtectedRoute>
+          } />
           
-          {/* --- ADMIN ROUTES --- */}
-          <Route path="/admin" element={<AdminDashboard />} />
+          {/* --- ADMIN ROUTES (Protected + Admin Only) --- */}
+          <Route path="/admin" element={
+            <ProtectedRoute adminOnly={true}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          } />
 
           {/* --- CATCH-ALL --- */}
           <Route path="*" element={<Navigate to="/" />} />
