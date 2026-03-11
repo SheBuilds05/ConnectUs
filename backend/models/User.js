@@ -12,14 +12,14 @@ const User = sequelize.define('User', {
     autoIncrement: true
   },
   name: {
-    type: DataTypes.STRING(100),
+    type: DataTypes.STRING,
     allowNull: true,
     validate: {
       notEmpty: { msg: 'Name is required' }
     }
   },
   email: {
-    type: DataTypes.STRING(100),
+    type: DataTypes.STRING,
     allowNull: false,
     unique: {
       msg: 'Email already exists'
@@ -30,8 +30,8 @@ const User = sequelize.define('User', {
     }
   },
   password: {
-    type: DataTypes.STRING(255),
-    allowNull: false,
+    type: DataTypes.STRING,
+    allowNull: true,
     validate: {
       notEmpty: { msg: 'Password is required' },
       len: {
@@ -58,7 +58,7 @@ const User = sequelize.define('User', {
     allowNull: true
   }
 }, {
-  timestamps: true,
+  timestamps: false,
   underscored: true,
   tableName: 'users',
   hooks: {
