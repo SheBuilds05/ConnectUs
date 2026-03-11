@@ -3,6 +3,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const { testConnection, closeConnection } = require('./config/database'); // Updated import
 const { User, Runner, syncDatabase } = require('./models');
+const authRoutes = require('./routes/auth.routes');
 
 // Load environment variables
 dotenv.config();
@@ -13,14 +14,28 @@ const PORT = process.env.PORT || 5002;
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use('/api/auth', authRoutes);
+
 app.use(express.urlencoded({ extended: true }));
 
 // Test database connection on startup
 testConnection();
 
-// Sync database models
 //syncDatabase();
-
+// Add this with your other routes
+app.get('/api', (req, res) => {
+    res.json({
+        message: 'Welcome to ConnectUs API',
+        available_endpoints: [
+            'GET /api/test-db',
+            'POST /api/auth/register',
+            'POST /api/auth/login',
+            'GET /api/auth/profile',
+            'POST /api/auth/logout'
+        ],
+        documentation: 'Use POST requests with JSON body for auth endpoints'
+    });
+}); 
 // Health check route
 app.get('/api/health', (req, res) => {
   res.json({ 
@@ -48,6 +63,17 @@ app.get('/api/test-db', async (req, res) => {
     });
   }
 });
+
+console.log('Auth routes mounted at /api/auth');
+console.log('Auth routes object:', Object.keys(authRoutes));
+// Add this near the end of server.js, just before app.listen()
+console.log('\n=== AVAILABLE ROUTES ===');
+app._router.stack.forEach(function(r){
+    if (r.route && r.route.path){
+        console.log(`${Object.keys(r.route.methods).join(', ').toUpperCase()} - ${r.route.path}`);
+    }
+});
+console.log('=======================\n');
 
 // Get all users - Updated to use Sequelize
 app.get('/api/users', async (req, res) => {

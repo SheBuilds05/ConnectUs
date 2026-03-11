@@ -10,4 +10,7 @@ router.post('/login', login);
 // Protected routes
 router.get('/profile', protect, getProfile);
 
+console.log('✅ Auth routes file loaded');
+console.log('Register route exists:', !!router.post);
+
 module.exports = router;

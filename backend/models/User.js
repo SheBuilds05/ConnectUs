@@ -29,17 +29,17 @@ const User = sequelize.define('User', {
       notEmpty: { msg: 'Email is required' }
     }
   },
-  password: {
+  password_hash: {
     type: DataTypes.STRING,
-    allowNull: true,
+    allowNull: false,
     validate: {
-      notEmpty: { msg: 'Password is required' },
-      len: {
-        args: [6, 100],
-        msg: 'Password must be at least 6 characters'
-      }
+        notEmpty: { msg: 'Password is required' },
+        len: {
+            args: [6, 100],
+            msg: 'Password must be at least 6 characters'
+        }
     }
-  },
+},
   phone: {
     type: DataTypes.STRING(20),
     allowNull: true
@@ -63,23 +63,23 @@ const User = sequelize.define('User', {
   tableName: 'users',
   hooks: {
     beforeCreate: async (user) => {
-      if (user.password) {
-        const salt = await bcrypt.genSalt(10);
-        user.password = await bcrypt.hash(user.password, salt);
-      }
+        if (user.password_hash) {
+            const salt = await bcrypt.genSalt(10);
+            user.password_hash = await bcrypt.hash(user.password_hash, salt);
+        }
     },
     beforeUpdate: async (user) => {
-      if (user.changed('password')) {
-        const salt = await bcrypt.genSalt(10);
-        user.password = await bcrypt.hash(user.password, salt);
-      }
+        if (user.changed('password_hash')) {
+            const salt = await bcrypt.genSalt(10);
+            user.password_hash = await bcrypt.hash(user.password_hash, salt);
+        }
     }
-  }
+}
 });
 
 // Instance method to compare password
 User.prototype.comparePassword = async function(candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
+  return await bcrypt.compare(candidatePassword, this.password_hash);
 };
 
 module.exports = User;
