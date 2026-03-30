@@ -1,18 +1,32 @@
-import React from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image, Button } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function DashboardScreen() {
-  
+export default function Landing() {
+  const router = useRouter();
+
+  useEffect(() => {
+    checkUser();
+  }, []);
+
+  const checkUser = async () => {
+    const token = await AsyncStorage.getItem("token");
+
+    if (token) {
+      router.replace('/admin');
+    }
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
       {/* --- TOP NAVIGATION BAR --- */}
       <View style={styles.topBar}>
         <View style={styles.userInfo}>
-          <Image 
-            source={{ uri: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=100' }} 
-            style={styles.avatarMini} 
+          <Image
+            source={{ uri: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=100' }}
+            style={styles.avatarMini}
           />
           <View>
             <Text style={styles.welcomeText}>Morning, Sarah</Text>
@@ -126,7 +140,7 @@ const styles = StyleSheet.create({
   statCard: { flex: 1, padding: 20, borderRadius: 24 },
   statValue: { color: 'white', fontSize: 22, fontWeight: 'bold', marginTop: 10 },
   statLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 12 },
-  earningsCard: { backgroundColor: 'white', padding: 20, borderRadius: 24, borderWeight: 1, borderColor: '#f3f4f6', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  earningsCard: { backgroundColor: 'white', padding: 20, borderRadius: 24, borderWidth: 1, borderColor: '#f3f4f6', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   earningsLabel: { color: '#9ca3af', fontSize: 12, fontWeight: '600' },
   earningsAmount: { fontSize: 20, fontWeight: 'bold', color: '#1a2e1a' },
   viewWalletBtn: { backgroundColor: '#f3f4f6', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 12 },
