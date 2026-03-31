@@ -1,5 +1,6 @@
 import { View, Text, Button } from 'react-native';
 
+const token = await storage.getItem("token");
 export default function Landing({ navigation }) {
   return (
     <View style={{ padding: 20 }}>

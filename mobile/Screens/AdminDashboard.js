@@ -1,13 +1,24 @@
-import { View, Text, Button } from 'react-native';
 
-export default function AdminDashboard({ navigation }) {
+
+import storage from '../../utils/storage';
+import { useEffect } from "react";
+import { useRouter } from "expo-router";
+
+export default function adminDashboard() {
+  const router = useRouter();
+await storage.removeItem("token");
+  useEffect(() => {
+    const checkAuth = async () => {
+     const token = await storage.getItem("token");
+      if (!token) {
+        router.replace("/login"); // redirect if not logged in
+      }
+    };
+
+    checkAuth();
+  }, []);
+
   return (
-    <View style={{ padding: 20 }}>
-      <Text style={{ fontSize: 24 }}>Admin Dashboard 👨‍💼</Text>
-
-      <Text>Welcome Admin!</Text>
-
-      <Button title="Logout" onPress={() => navigation.navigate('Landing')} />
-    </View>
+    // your dashboard UI
   );
 }

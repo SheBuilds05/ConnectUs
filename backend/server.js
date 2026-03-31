@@ -3,15 +3,70 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const { sequelize } = require('./config/database'); 
 const { User, Runner } = require('./models');
+const jwt = require("jsonwebtoken");
 const authRoutes = require('./routes/auth.routes');
 const adminRoutes = require('./routes/admin.routes');
 
 // Load environment variables
 dotenv.config();
-
 const app = express();
 const PORT = process.env.PORT || 5002;
+const SECRET = "mysecretkey";
+const user = {
+  id: 1,
+  email: "admin@test.com",
+  password: "123456"
+};
 
+// 🔐 LOGIN
+app.post("/api/login", (req, res) => {
+  const { email, password } = req.body;
+
+  if (email !== user.email || password !== user.password) {
+    return res.status(401).json({ message: "Invalid credentials" });
+  }
+
+  const token = jwt.sign({ id: user.id }, SECRET, { expiresIn: "1d" });
+
+  res.json({ token });
+});
+
+// 🔐 MIDDLEWARE
+const authMiddleware = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) return res.status(401).json({ message: "No token" });
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decoded = jwt.verify(token, SECRET);
+    req.user = decoded;
+    next();
+  } catch {
+    res.status(401).json({ message: "Invalid token" });
+  }
+};
+
+const verifyToken = require('./middleware/auth');
+
+app.get('/api/admin/dashboard', verifyToken, (req, res) => {
+  res.json({
+    message: "Welcome Admin",
+    user: req.user
+  });
+});
+
+// 🔐 PROTECTED ROUTE
+app.get("/api/dashboard", authMiddleware, (req, res) => {
+  res.json({
+    jobs: 156,
+    rating: 4.9,
+    earnings: 1250
+  });
+});
+
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 // Middleware
 app.use(cors());
 app.use(express.json());

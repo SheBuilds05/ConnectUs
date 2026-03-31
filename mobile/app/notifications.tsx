@@ -58,7 +58,16 @@ export default function NotificationsScreen() {
 }
 
 // Helper Component for Notification Rows
-const NotificationItem = ({ icon, title, message, time, isNew, color }) => (
+interface NotificationItemProps {
+  icon: "cube-outline" | "wallet-outline" | "star-outline" | "gift-outline";
+  title: string;
+  message: string;
+  time: string;
+  isNew: boolean;
+  color: string;
+}
+
+const NotificationItem: React.FC<NotificationItemProps> = ({ icon, title, message, time, isNew, color }) => (
   <TouchableOpacity style={[styles.notiBox, isNew && styles.notiUnread]}>
     <View style={[styles.iconContainer, { backgroundColor: color + '20' }]}>
       <Ionicons name={icon} size={22} color={color} />

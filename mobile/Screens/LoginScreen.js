@@ -1,41 +1,56 @@
-import { View, TextInput, Button, Text } from 'react-native';
-import { useState } from 'react';
+import { useState } from "react";
+import { View, TextInput, Button, Text } from "react-native";
+import storage from '../utils/storage';
+import { useRouter } from "expo-router";
 
-export default function Login({ navigation }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+export default function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const router = useRouter();
 
-  const handleLogin = () => {
-    console.log(email, password);
+  const handleLogin = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email, password })
+      });
 
-    // TEMP navigation
-    navigation.navigate('AdminDashboard');
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message);
+        return;
+      }
+
+      await storage.setItem("token", data.token);
+
+      router.replace("/"); // go to dashboard
+    } catch (err) {
+      alert("Network error");
+    }
   };
 
   return (
     <View style={{ padding: 20 }}>
-      <Text style={{ fontSize: 20 }}>Login</Text>
+      <Text>Login</Text>
 
       <TextInput
         placeholder="Email"
-        value={email}
         onChangeText={setEmail}
-        style={{ borderWidth: 1, marginVertical: 10 }}
+        style={{ borderWidth: 1, marginBottom: 10 }}
       />
 
       <TextInput
         placeholder="Password"
         secureTextEntry
-        value={password}
         onChangeText={setPassword}
-        style={{ borderWidth: 1, marginVertical: 10 }}
+        style={{ borderWidth: 1, marginBottom: 10 }}
       />
 
       <Button title="Login" onPress={handleLogin} />
-
-      <Text onPress={() => navigation.navigate('Register')}>
-        Don't have an account? Register
-      </Text>
     </View>
   );
 }

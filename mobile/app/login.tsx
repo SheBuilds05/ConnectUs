@@ -1,52 +1,81 @@
-import { View, TextInput, Button, Text } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useState } from 'react';
+import { View, Text, TextInput, Button, Alert, Platform, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-
+import { storeData, getData, storeToken, getToken } from '../utils/storage';
 export default function Login() {
   const router = useRouter();
+  const [role, setRole] = useState('customer'); // default role
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = async () => {
-    try {
-      const response = await fetch("http://YOUR-IP:5000/api/admin/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        // ✅ SAVE TOKEN
-        await AsyncStorage.setItem("token", data.token);
-
-        router.push('/admin');
-      } else {
-        alert(data.message);
-      }
-    } catch (error) {
-      alert("Network error");
+  // Fake backend simulation for demo purposes
+  const loginUser = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please enter email and password');
+      return;
     }
+
+    // Normally you would call your backend API here
+    // For demonstration, we just accept any input
+    const token = `${role}-token`; // generate a fake token
+    await setToken(role, token);
+
+    Alert.alert('Success', `Logged in as ${role}`);
+    router.replace('/Dashboard'); // Redirect to unified dashboard
   };
 
   return (
-    <View>
+    <View style={styles.container}>
+      <Text style={styles.title}>Login</Text>
+
+      <Text style={styles.label}>Email</Text>
       <TextInput
-        placeholder="Email"
+        style={styles.input}
+        placeholder="Enter email"
         value={email}
         onChangeText={setEmail}
+        autoCapitalize="none"
+        keyboardType="email-address"
       />
+
+      <Text style={styles.label}>Password</Text>
       <TextInput
-        placeholder="Password"
+        style={styles.input}
+        placeholder="Enter password"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
       />
-      <Button title="Login" onPress={handleLogin} />
+
+      <Text style={styles.label}>Select Role</Text>
+      <View style={styles.roles}>
+        {['admin', 'runner', 'customer'].map((r) => (
+          <Button
+            key={r}
+            title={r.charAt(0).toUpperCase() + r.slice(1)}
+            color={role === r ? '#1E90FF' : '#aaa'}
+            onPress={() => setRole(r)}
+          />
+        ))}
+      </View>
+
+      <View style={{ marginTop: 20 }}>
+        <Button title="Login" onPress={loginUser} />
+      </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, justifyContent: 'center', padding: 20 },
+  title: { fontSize: 28, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 },
+  label: { fontSize: 16, marginTop: 10 },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    padding: 10,
+    marginTop: 5,
+  },
+  roles: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 10 },
+});
