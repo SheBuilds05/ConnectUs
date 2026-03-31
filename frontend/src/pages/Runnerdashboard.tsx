@@ -1,773 +1,189 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  DollarSign, 
-  Clock, 
-  Bike, 
-  Star, 
-  Bell,
-  User,
-  Settings,
-  LogOut,
-  Menu,
-  X,
-  Home,
-  Wallet,
-  Award,
-  ChevronRight,
-  MapPin,
-  Package,
-  Search,
-  Phone,
-  MessageCircle,
-  Navigation,
-  Zap,
-  CheckCircle,
-  Filter,
-  ChevronLeft,
-  MessageSquare,
-  ShoppingCart,
-  LayoutDashboard,
-  Download,
-  ThumbsUp,
-  Calendar,
-  Gift
+  Wallet, Star, CheckCircle2, Package, TrendingUp, 
+  Menu, Zap, Shield, Clock, RefreshCw, ArrowRight, Bell, MapPin
 } from 'lucide-react';
-import './Runnerdashboard.css';
+import RunnerSidebar from '../components/RunnerSidebar';
 
-const Runnerdashboard = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [isOnline, setIsOnline] = useState(true);
-  const [activePage, setActivePage] = useState('dashboard');
-  const [activeTab, setActiveTab] = useState('available');
-  const [user, setUser] = useState<any>(null);
-
-  // Load user data from localStorage on component mount
-  useEffect(() => {
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      try {
-        const userData = JSON.parse(userStr);
-        console.log('Dashboard user data:', userData);
-        setUser(userData);
-      } catch (error) {
-        console.error('Error parsing user data:', error);
-      }
-    }
-  }, []);
-
-  // Stats data - you can replace these with API calls later
-  const stats = [
-    { label: 'Total Earnings', value: '$4,892', icon: <DollarSign size={24} />, change: '+12%' },
-    { label: 'Completed Trips', value: '156', icon: <Bike size={24} />, change: '+23' },
-    { label: 'Rating', value: '4.92', icon: <Star size={24} />, change: 'Top 5%' },
-    { label: 'Online Time', value: '128h', icon: <Clock size={24} />, change: 'This month' },
-  ];
-
-  // Available orders
-  const availableOrders = [
-    {
-      id: '#ORD-7890',
-      restaurant: 'Momofuku Ko',
-      items: 'Spicy Ramen • Gyoza',
-      customer: 'Michael C.',
-      distance: '1.2 km',
-      time: '15 min',
-      payout: 12.50,
-    },
-    {
-      id: '#ORD-7891',
-      restaurant: 'Oceana Grill',
-      items: 'Grilled Salmon • Salad',
-      customer: 'Sarah J.',
-      distance: '2.5 km',
-      time: '20 min',
-      payout: 15.75,
-    },
-    {
-      id: '#ORD-7892',
-      restaurant: 'Bubba Gump',
-      items: 'Shrimp Platter • Fries',
-      customer: 'David L.',
-      distance: '3.1 km',
-      time: '25 min',
-      payout: 18.20,
-    },
-  ];
-
-  // Active orders
-  const activeOrders = [
-    {
-      id: '#ORD-7885',
-      restaurant: 'Chipotle',
-      customer: 'Robert Taylor',
-      timeRemaining: '8 min',
-      payout: 12.50,
-      address: '456 Park Ave, Apt 2B',
-    }
-  ];
-
-  // Completed orders
-  const completedOrders = [
-    {
-      id: '#ORD-7870',
-      restaurant: 'Starbucks',
-      customer: 'Amanda Wilson',
-      date: 'Today, 10:30 AM',
-      payout: 8.75,
-      rating: 5
-    },
-    {
-      id: '#ORD-7865',
-      restaurant: 'Dunkin\'',
-      customer: 'James Brown',
-      date: 'Today, 9:15 AM',
-      payout: 7.50,
-      rating: 5
-    },
-  ];
-
-  // Reviews data
-  const reviews = [
-    {
-      id: 1,
-      name: 'John D.',
-      rating: 5,
-      comment: 'Fast delivery, very professional! Food was still hot.',
-      date: '2 hours ago',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=50'
-    },
-    {
-      id: 2,
-      name: 'Sarah M.',
-      rating: 5,
-      comment: 'Excellent service! Would definitely recommend.',
-      date: 'Yesterday',
-      avatar: 'https://images.unsplash.com/photo-1494790108777-2f3bdbce8c3b?w=50'
-    },
-    {
-      id: 3,
-      name: 'Mike R.',
-      rating: 4,
-      comment: 'Friendly runner, order was accurate and on time.',
-      date: '2 days ago',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50'
-    },
-  ];
-
-  // All orders data
-  const allOrders = [
-    { id: '#ORD-7890', restaurant: 'Momofuku Ko', date: 'Today, 11:20 AM', status: 'Delivered', payout: 12.50 },
-    { id: '#ORD-7891', restaurant: 'Oceana Grill', date: 'Today, 10:30 AM', status: 'Delivered', payout: 15.75 },
-    { id: '#ORD-7892', restaurant: 'Bubba Gump', date: 'Today, 9:23 AM', status: 'Delivered', payout: 18.20 },
-    { id: '#ORD-7885', restaurant: 'Chipotle', date: 'Today, 8:15 AM', status: 'In Progress', payout: 12.50 },
-  ];
-
-  // Earnings data
-  const earningsData = {
-    today: 48.50,
-    week: 324.75,
-    month: 1482.50,
-    total: 4892.25,
-    transactions: [
-      { id: 1, order: '#ORD-7890', amount: 12.50, date: 'Today, 11:20 AM' },
-      { id: 2, order: '#ORD-7891', amount: 15.75, date: 'Today, 10:30 AM' },
-      { id: 3, order: '#ORD-7892', amount: 18.20, date: 'Today, 9:23 AM' },
-      { id: 4, order: '#ORD-7885', amount: 12.50, date: 'Today, 8:15 AM' },
-    ]
-  };
-
-  // Recent trips
-  const recentTrips = [
-    { id: 1, restaurant: "Momofuku Ko", time: "11:20 PM", earnings: 12.50, address: "162 2nd Ave", rating: 4.8 },
-    { id: 2, restaurant: "Oceana Grill", time: "10:30 PM", earnings: 15.75, address: "456 Oak Ave", rating: 4.9 },
-    { id: 3, restaurant: "Bubba Gump", time: "9:23 PM", earnings: 18.20, address: "789 Pine Rd", rating: 4.7 },
-  ];
-
-  // ===== HANDLERS =====
-  const handleLogout = () => {
-    alert('👋 Logged out successfully');
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.href = '/login';
-  };
-
-  const handleToggleOnline = () => {
-    setIsOnline(!isOnline);
-    alert(`You are now ${!isOnline ? 'online' : 'offline'}`);
-  };
-
-  const handleNotifications = () => {
-    alert('🔔 You have 3 new notifications');
-  };
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    alert('🔍 Searching...');
-  };
-
-  const handleDashboardClick = () => {
-    setActivePage('dashboard');
-  };
-
-  const handleOrdersClick = () => {
-    setActivePage('orders');
-  };
-
-  const handleEarningsClick = () => {
-    setActivePage('earnings');
-  };
-
-  const handleReviewsClick = () => {
-    setActivePage('reviews');
-  };
-
-  const handleProfileClick = () => {
-    setActivePage('profile');
-  };
-
-  const handleSettingsClick = () => {
-    setActivePage('settings');
-  };
-
-  const handleAcceptOrder = (orderId: string) => {
-    alert(`✅ Order ${orderId} accepted!`);
-    setActiveTab('active');
-  };
-
-  const handleUpdateStatus = (orderId: string) => {
-    alert(`✅ Order ${orderId} marked as delivered!`);
-    setActiveTab('completed');
-  };
-
-  const handleSupport = () => alert('📞 Contacting support...');
-  const handleMessages = () => alert('💬 Opening messages...');
-  const handleNavigate = () => alert('🗺️ Opening navigation...');
-  const handleFilter = () => alert('🔍 Filter options');
-  const handleViewAllTrips = () => setActivePage('orders');
-  const handleTabChange = (tab: string) => setActiveTab(tab);
-  const handleWithdraw = () => alert('💰 Withdrawal requested');
-
-  // Get user's first name for welcome message
-  const getFirstName = () => {
-    if (user?.name) {
-      return user.name.split(' ')[0];
-    }
-    return 'Runner';
-  };
-
-  // Render different pages
-  const renderContent = () => {
-    switch(activePage) {
-      case 'dashboard':
-        return (
-          <>
-            <div className="stats-grid">
-              {stats.map((stat, index) => (
-                <div key={index} className="stat-card">
-                  <div className="stat-icon" style={{ backgroundColor: '#6E8649' }}>
-                    {stat.icon}
-                  </div>
-                  <div className="stat-content">
-                    <h3>{stat.value}</h3>
-                    <p>{stat.label}</p>
-                    <span className="stat-change">{stat.change}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="orders-section">
-              <div className="section-header">
-                <h2>Active Orders</h2>
-                <button className="view-all-btn" onClick={() => setActivePage('orders')}>
-                  View All <ChevronRight size={16} />
-                </button>
-              </div>
-
-              <div className="tabs-container">
-                <button
-                  className={`tab ${activeTab === 'available' ? 'active' : ''}`}
-                  onClick={() => handleTabChange('available')}
-                >
-                  Available ({availableOrders.length})
-                </button>
-                <button
-                  className={`tab ${activeTab === 'active' ? 'active' : ''}`}
-                  onClick={() => handleTabChange('active')}
-                >
-                  Active ({activeOrders.length})
-                </button>
-                <button
-                  className={`tab ${activeTab === 'completed' ? 'active' : ''}`}
-                  onClick={() => handleTabChange('completed')}
-                >
-                  Completed ({completedOrders.length})
-                </button>
-              </div>
-
-              <div className="orders-grid">
-                {activeTab === 'available' && availableOrders.map((order) => (
-                  <div key={order.id} className="order-card">
-                    <div className="order-header">
-                      <div>
-                        <span className="order-id">{order.id}</span>
-                        <h3>{order.restaurant}</h3>
-                      </div>
-                      <span className="order-payout">${order.payout}</span>
-                    </div>
-                    <p className="order-items">{order.items}</p>
-                    <div className="order-customer">
-                      <User size={14} color="#6E8649" />
-                      <span>{order.customer}</span>
-                    </div>
-                    <div className="order-details">
-                      <span><MapPin size={14} /> {order.distance}</span>
-                      <span><Clock size={14} /> {order.time}</span>
-                    </div>
-                    <button className="accept-btn" onClick={() => handleAcceptOrder(order.id)}>
-                      Accept Order <ChevronRight size={16} />
-                    </button>
-                  </div>
-                ))}
-
-                {activeTab === 'active' && activeOrders.map((order) => (
-                  <div key={order.id} className="order-card active">
-                    <div className="order-header">
-                      <div>
-                        <span className="order-id">{order.id}</span>
-                        <h3>{order.restaurant}</h3>
-                      </div>
-                      <span className="status-badge">In Progress</span>
-                    </div>
-                    <p className="order-customer-name">{order.customer}</p>
-                    <p className="order-address">{order.address}</p>
-                    <div className="timer">{order.timeRemaining} remaining</div>
-                    <div className="action-buttons">
-                      <button className="action-btn" onClick={handleSupport}><Phone size={14} /> Call</button>
-                      <button className="action-btn" onClick={handleMessages}><MessageCircle size={14} /> Message</button>
-                      <button className="action-btn" onClick={handleNavigate}><Navigation size={14} /> Navigate</button>
-                    </div>
-                    <button className="complete-btn" onClick={() => handleUpdateStatus(order.id)}>
-                      Mark as Delivered
-                    </button>
-                  </div>
-                ))}
-
-                {activeTab === 'completed' && completedOrders.map((order) => (
-                  <div key={order.id} className="order-card completed">
-                    <div className="order-header">
-                      <div>
-                        <span className="order-id">{order.id}</span>
-                        <h3>{order.restaurant}</h3>
-                      </div>
-                      <span className="completed-badge">Delivered</span>
-                    </div>
-                    <p className="order-customer-name">{order.customer}</p>
-                    <div className="order-footer">
-                      <span className="order-date">{order.date}</span>
-                      <span className="order-payout">${order.payout}</span>
-                    </div>
-                    <div className="rating">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} size={12} fill={i < order.rating ? '#F59E0B' : 'none'} color="#F59E0B" />
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="recent-trips">
-              <div className="section-header">
-                <h3>Recent Trips</h3>
-                <button className="view-all-btn" onClick={() => setActivePage('orders')}>
-                  View All <ChevronRight size={16} />
-                </button>
-              </div>
-              <div className="trips-list">
-                {recentTrips.map((trip) => (
-                  <div key={trip.id} className="trip-item">
-                    <div className="trip-info">
-                      <Bike size={16} />
-                      <div>
-                        <h4>{trip.restaurant}</h4>
-                        <p>{trip.address} · {trip.time}</p>
-                      </div>
-                    </div>
-                    <div className="trip-meta">
-                      <span className="earnings">${trip.earnings}</span>
-                      <span className="rating">
-                        <Star size={10} fill="#F59E0B" color="#F59E0B" /> {trip.rating}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
-        );
-
-      case 'orders':
-        return (
-          <div className="page-content">
-            <h2 className="page-title">All Orders</h2>
-            <div className="orders-table-container">
-              <table className="orders-table">
-                <thead>
-                  <tr>
-                    <th>Order ID</th>
-                    <th>Restaurant</th>
-                    <th>Date</th>
-                    <th>Status</th>
-                    <th>Payout</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {allOrders.map((order) => (
-                    <tr key={order.id}>
-                      <td className="order-id">{order.id}</td>
-                      <td>{order.restaurant}</td>
-                      <td>{order.date}</td>
-                      <td>
-                        <span className={`status-badge ${order.status === 'Delivered' ? 'delivered' : 'progress'}`}>
-                          {order.status}
-                        </span>
-                      </td>
-                      <td className="payout">${order.payout}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <button className="back-to-dashboard" onClick={() => setActivePage('dashboard')}>
-              Back to Dashboard
-            </button>
-          </div>
-        );
-
-      case 'earnings':
-        return (
-          <div className="page-content">
-            <h2 className="page-title">Earnings</h2>
-            <div className="earnings-cards">
-              <div className="earnings-card total">
-                <span className="earnings-label">Total Balance</span>
-                <span className="earnings-amount">${earningsData.total}</span>
-                <button className="withdraw-btn" onClick={handleWithdraw}>
-                  <Download size={14} /> Withdraw
-                </button>
-              </div>
-              <div className="earnings-card">
-                <span className="earnings-label">Today</span>
-                <span className="earnings-value">${earningsData.today}</span>
-              </div>
-              <div className="earnings-card">
-                <span className="earnings-label">This Week</span>
-                <span className="earnings-value">${earningsData.week}</span>
-              </div>
-              <div className="earnings-card">
-                <span className="earnings-label">This Month</span>
-                <span className="earnings-value">${earningsData.month}</span>
-              </div>
-            </div>
-            
-            <h3 className="section-subtitle">Recent Transactions</h3>
-            <div className="transactions-list">
-              {earningsData.transactions.map((t) => (
-                <div key={t.id} className="transaction-item">
-                  <div>
-                    <span className="transaction-order">{t.order}</span>
-                    <span className="transaction-date">{t.date}</span>
-                  </div>
-                  <span className="transaction-amount">+${t.amount}</span>
-                </div>
-              ))}
-            </div>
-            <button className="back-to-dashboard" onClick={() => setActivePage('dashboard')}>
-              Back to Dashboard
-            </button>
-          </div>
-        );
-
-      case 'reviews':
-        return (
-          <div className="page-content">
-            <h2 className="page-title">Customer Reviews</h2>
-            <div className="reviews-summary">
-              <div className="rating-box">
-                <span className="rating-number">4.92</span>
-                <div className="rating-stars">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={20} fill="#F59E0B" color="#F59E0B" />
-                  ))}
-                </div>
-                <span className="rating-count">Based on 128 reviews</span>
-              </div>
-            </div>
-            <div className="reviews-grid">
-              {reviews.map((review) => (
-                <div key={review.id} className="review-card">
-                  <div className="review-header">
-                    <img src={review.avatar} alt={review.name} className="review-avatar" />
-                    <div className="review-info">
-                      <h4>{review.name}</h4>
-                      <div className="review-stars">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} size={14} fill={i < review.rating ? '#F59E0B' : 'none'} color="#F59E0B" />
-                        ))}
-                      </div>
-                    </div>
-                    <span className="review-date">{review.date}</span>
-                  </div>
-                  <p className="review-comment">"{review.comment}"</p>
-                  <button className="helpful-btn" onClick={() => alert('Marked as helpful')}>
-                    <ThumbsUp size={14} /> Helpful
-                  </button>
-                </div>
-              ))}
-            </div>
-            <button className="back-to-dashboard" onClick={() => setActivePage('dashboard')}>
-              Back to Dashboard
-            </button>
-          </div>
-        );
-
-      case 'profile':
-        return (
-          <div className="page-content">
-            <h2 className="page-title">Runner Profile</h2>
-            
-            <div className="profile-stats-row">
-              <div className="profile-stat-box">
-                <div className="profile-stat-header">
-                  <Star size={20} fill="#F59E0B" color="#F59E0B" />
-                  <span className="profile-stat-title">Rating</span>
-                </div>
-                <div className="profile-stat-main">
-                  <span className="profile-stat-big">4.92</span>
-                  <div className="profile-stat-stars">
-                    <Star size={14} fill="#F59E0B" color="#F59E0B" />
-                    <Star size={14} fill="#F59E0B" color="#F59E0B" />
-                    <Star size={14} fill="#F59E0B" color="#F59E0B" />
-                    <Star size={14} fill="#F59E0B" color="#F59E0B" />
-                    <Star size={14} fill="#F59E0B" color="#F59E0B" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="profile-stat-box">
-                <div className="profile-stat-header">
-                  <Bike size={20} color="#6E8649" />
-                  <span className="profile-stat-title">Total Trips</span>
-                </div>
-                <div className="profile-stat-main">
-                  <span className="profile-stat-big">156</span>
-                  <span className="profile-stat-trend">+23 this month</span>
-                </div>
-              </div>
-
-              <div className="profile-stat-box">
-                <div className="profile-stat-header">
-                  <Calendar size={20} color="#3B82F6" />
-                  <span className="profile-stat-title">Member Since</span>
-                </div>
-                <div className="profile-stat-main">
-                  <span className="profile-stat-big">2023</span>
-                  <span className="profile-stat-trend">2+ years</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="profile-container">
-              <div className="profile-header-card">
-                <img 
-                  src={user?.avatar_url || 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200'} 
-                  alt="Profile" 
-                  className="profile-large-image"
-                />
-                <div className="profile-info-large">
-                  <h2>{user?.name || 'Sarah Johnson'}</h2>
-                  <p className="profile-badge">Verified Runner</p>
-                </div>
-              </div>
-              
-              <div className="profile-details">
-                <h3>About Me</h3>
-                <p>Professional delivery runner with 2+ years of experience. Specializing in food delivery and quick commerce.</p>
-                
-                <h3>Contact Information</h3>
-                <p><strong>Email:</strong> {user?.email || 'sarah.j@connectus.com'}</p>
-                <p><strong>Phone:</strong> +1 (555) 123-4567</p>
-                <p><strong>Location:</strong> New York, NY</p>
-                <p><strong>Languages:</strong> English, Spanish</p>
-              </div>
-            </div>
-            <button className="back-to-dashboard" onClick={() => setActivePage('dashboard')}>
-              Back to Dashboard
-            </button>
-          </div>
-        );
-
-      default:
-        return (
-          <div className="page-content">
-            <h2 className="page-title">Settings</h2>
-            <div className="settings-container">
-              <div className="settings-section">
-                <h3>Account Settings</h3>
-                <div className="settings-list">
-                  <div className="setting-item">
-                    <span>Email Notifications</span>
-                    <label className="toggle">
-                      <input type="checkbox" defaultChecked />
-                      <span className="toggle-slider"></span>
-                    </label>
-                  </div>
-                  <div className="setting-item">
-                    <span>Push Notifications</span>
-                    <label className="toggle">
-                      <input type="checkbox" defaultChecked />
-                      <span className="toggle-slider"></span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              <div className="danger-zone">
-                <h3>Danger Zone</h3>
-                <button className="delete-btn" onClick={() => alert('Delete account')}>Delete Account</button>
-              </div>
-            </div>
-            <button className="back-to-dashboard" onClick={() => setActivePage('dashboard')}>
-              Back to Dashboard
-            </button>
-          </div>
-        );
-    }
-  };
+const RunnerDashboard = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [userName, setUserName] = useState("Khensani"); // Using your name from profile
 
   return (
-    <div className="dashboard-container">
-      {/* Sidebar */}
-      <aside className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
-        <div className="sidebar-header">
-          <div className="logo">
-            <div className="logo-icon">
-              <ShoppingCart size={28} />
+    <div className="min-h-screen bg-[#D3D3D3] font-sans text-[#0D330E] flex relative overflow-x-hidden">
+      
+      {/* 1. STOLEN BACKGROUND EFFECTS (Grid & Glows) */}
+      <div className="fixed inset-0 pointer-events-none opacity-[0.03]" style={{
+        backgroundImage: `linear-gradient(rgba(13,51,14,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(13,51,14,0.1) 1px, transparent 1px)`,
+        backgroundSize: '40px 40px'
+      }}></div>
+      <div className="fixed top-0 -right-20 w-96 h-96 bg-[#A3B18A]/20 rounded-full blur-[120px] pointer-events-none"></div>
+      <div className="fixed bottom-0 -left-20 w-96 h-96 bg-[#2D531A]/10 rounded-full blur-[120px] pointer-events-none"></div>
+
+      {/* SIDEBAR */}
+      <RunnerSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+
+      {/* 2. STOLEN FLOATING HEADER PATTERN */}
+      <div className={`fixed top-0 right-0 left-0 z-40 p-4 transition-all duration-300 ${isSidebarOpen ? 'ml-72' : 'ml-0'}`}>
+        <div className="max-w-[1400px] mx-auto flex items-center justify-between px-6 py-3 bg-white/40 backdrop-blur-md rounded-2xl border border-white/40 shadow-sm">
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2.5 bg-[#0D330E] text-white rounded-full shadow-lg hover:scale-105 transition-all"
+            >
+              <Menu size={20} />
+            </button>
+            <div className="hidden sm:block">
+              <span className="text-[10px] text-gray-600 uppercase font-bold tracking-tighter">Duty Status:</span>
+              <h2 className="text-sm font-black text-[#0D330E] uppercase flex items-center gap-2">
+                Active Now <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              </h2>
             </div>
-            {sidebarOpen && <h2>Connect<span>Us</span></h2>}
           </div>
-          <button className="close-sidebar" onClick={() => setSidebarOpen(false)}>
-            <X size={20} />
-          </button>
+
+          <div className="flex items-center gap-2 px-5 py-2 bg-white/60 rounded-full border border-white/40 shadow-inner">
+            <MapPin size={14} className="text-[#2D531A]" />
+            <span className="text-xs font-black text-gray-700 uppercase tracking-tighter">Sandton, JHB</span>
+          </div>
+
+          <div className="relative">
+            <button className="p-2.5 bg-white rounded-full shadow-sm">
+              <Bell size={20} className="text-[#0D330E]" />
+              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+            </button>
+          </div>
         </div>
+      </div>
 
-        {sidebarOpen && (
-          <>
-            <div className="sidebar-user" onClick={handleProfileClick} style={{ cursor: 'pointer' }}>
-              <img 
-                src={user?.avatar_url || 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100'} 
-                alt="Profile"
-              />
-              <div>
-                <h3>{user?.name || 'Runner'}</h3>
-                <p>Verified Runner · 4.92 ⭐</p>
-              </div>
+      {/* MAIN CONTENT */}
+      <main className={`flex-1 transition-all duration-500 pt-32 pb-20 px-8 lg:px-16 ${isSidebarOpen ? 'ml-72' : 'ml-0'}`}>
+        <div className="max-w-[1400px] mx-auto space-y-12">
+          
+          {/* 3. STOLEN BANNER STYLE (Runner Version) */}
+          <div className="relative bg-gradient-to-br from-[#0D330E] to-[#1A4A1A] rounded-[2.5rem] p-10 overflow-hidden shadow-2xl border border-[#A3B18A]/30">
+            <div className="absolute top-0 right-0 p-8 opacity-10">
+              <Zap size={200} className="text-white rotate-12" />
             </div>
-
-            <nav className="sidebar-nav">
-              <button 
-                className={`nav-item ${activePage === 'dashboard' ? 'active' : ''}`}
-                onClick={handleDashboardClick}
-              >
-                <LayoutDashboard size={20} />
-                <span>Dashboard</span>
-              </button>
-              <button 
-                className={`nav-item ${activePage === 'orders' ? 'active' : ''}`}
-                onClick={handleOrdersClick}
-              >
-                <Package size={20} />
-                <span>Orders</span>
-              </button>
-              <button 
-                className={`nav-item ${activePage === 'earnings' ? 'active' : ''}`}
-                onClick={handleEarningsClick}
-              >
-                <Wallet size={20} />
-                <span>Earnings</span>
-              </button>
-              <button 
-                className={`nav-item ${activePage === 'reviews' ? 'active' : ''}`}
-                onClick={handleReviewsClick}
-              >
-                <MessageSquare size={20} />
-                <span>Reviews</span>
-              </button>
-              <button 
-                className={`nav-item ${activePage === 'profile' ? 'active' : ''}`}
-                onClick={handleProfileClick}
-              >
-                <User size={20} />
-                <span>Profile</span>
-              </button>
-              <button 
-                className={`nav-item ${activePage === 'settings' ? 'active' : ''}`}
-                onClick={handleSettingsClick}
-              >
-                <Settings size={20} />
-                <span>Settings</span>
-              </button>
-            </nav>
-
-            <div className="sidebar-footer">
-              <div className="online-status">
-                <span className={`status-dot ${isOnline ? 'online' : 'offline'}`}></span>
-                <span>{isOnline ? 'Online' : 'Offline'}</span>
-                <button className="toggle-status" onClick={handleToggleOnline}>
-                  Toggle
-                </button>
+            
+            <div className="relative z-10 flex flex-col md:flex-row justify-between items-end gap-8">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-[2px] w-12 bg-[#A3B18A]"></div>
+                  <span className="text-[#A3B18A] text-[10px] font-black uppercase tracking-[0.4em]">Runner Performance</span>
+                </div>
+                <h1 className="text-5xl md:text-7xl font-light text-white leading-none">
+                  Keep it up, <br />
+                  <span className="font-black italic bg-gradient-to-r from-[#A3B18A] to-[#C5D3B0] text-transparent bg-clip-text">
+                    {userName}.
+                  </span>
+                </h1>
+                <p className="text-white/60 text-sm max-w-md font-medium">
+                  You are in the top 5% of runners in Sandton today. Higher demand expected in 20 minutes.
+                </p>
               </div>
-              <button className="logout-btn" onClick={handleLogout}>
-                <LogOut size={18} />
-                <span>Logout</span>
-              </button>
-            </div>
-          </>
-        )}
-      </aside>
-
-      {/* Main Content */}
-      <main className={`main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
-        {/* Top Bar */}
-        <header className="top-bar">
-          <div className="top-bar-left">
-            <button className="menu-btn" onClick={() => setSidebarOpen(!sidebarOpen)}>
-              {sidebarOpen ? <ChevronLeft size={24} /> : <Menu size={24} />}
-            </button>
-            <div className="page-title">
-              <h1>Welcome back, {getFirstName()}</h1>
-              <p>Ready for your next delivery?</p>
+              
+              <div className="bg-white/10 backdrop-blur-md p-6 rounded-[2rem] border border-white/10 flex gap-10">
+                <div className="text-center">
+                  <p className="text-[9px] font-black text-[#A3B18A] uppercase tracking-widest mb-1">Success Rate</p>
+                  <p className="text-3xl font-black text-white italic">98%</p>
+                </div>
+                <div className="w-[1px] bg-white/10"></div>
+                <div className="text-center">
+                  <p className="text-[9px] font-black text-[#A3B18A] uppercase tracking-widest mb-1">Level</p>
+                  <p className="text-3xl font-black text-white italic">PRO</p>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="top-bar-right">
-            <form onSubmit={handleSearch} className="search-container">
-              <Search size={18} color="#6E8649" />
-              <input type="text" placeholder="Search orders, customers..." />
-            </form>
-            <button className="notification-btn" onClick={handleNotifications}>
-              <Bell size={20} />
-              <span className="notification-badge">3</span>
-            </button>
-          </div>
-        </header>
+          {/* 4. UPGRADED BENTO GRID */}
+          <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-6">
+            
+            {/* LARGE EARNINGS TILE */}
+            <div className="md:col-span-2 lg:col-span-3 bg-white/60 backdrop-blur-xl rounded-[3rem] p-10 border border-white/50 shadow-xl group hover:scale-[1.02] transition-all">
+              <div className="flex justify-between items-start mb-6">
+                <div className="p-4 bg-[#0D330E] rounded-2xl text-white">
+                  <Wallet size={24} />
+                </div>
+                <div className="px-4 py-1.5 bg-[#6E8649]/20 rounded-full text-[#0D330E] text-[10px] font-black uppercase italic tracking-widest">
+                  +12% vs last week
+                </div>
+              </div>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#0D330E]/40">Balance Available</p>
+              <h3 className="text-7xl font-black italic tracking-tighter text-[#0D330E]">R 4,250</h3>
+              <button className="mt-8 w-full py-4 bg-[#0D330E] text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl hover:bg-[#2D531A] transition-colors">
+                Withdraw Earnings
+              </button>
+            </div>
 
-        {/* Dynamic Content */}
-        {renderContent()}
+            {/* RATING TILE */}
+            <div className="bg-[#6E8649] rounded-[3rem] p-10 text-white shadow-xl flex flex-col items-center justify-center text-center border border-white/10 relative group">
+              <div className="absolute top-4 right-4 animate-pulse">
+                <Shield size={20} className="text-white/30" />
+              </div>
+              <Star size={40} className="mb-4 fill-white" />
+              <p className="text-5xl font-black italic">4.9</p>
+              <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mt-1">Trust Score</p>
+            </div>
+
+            {/* QUICK STATS */}
+            <div className="lg:col-span-2 grid grid-cols-1 gap-6">
+               <div className="bg-white/40 backdrop-blur-md rounded-[2.5rem] p-6 border border-white/50 flex items-center gap-6 shadow-sm">
+                  <div className="p-3 bg-white rounded-xl text-[#0D330E] shadow-sm"><CheckCircle2 size={20}/></div>
+                  <div>
+                    <p className="text-2xl font-black italic text-[#0D330E]">124</p>
+                    <p className="text-[9px] font-bold uppercase tracking-widest opacity-40">Total Trips</p>
+                  </div>
+               </div>
+               <div className="bg-white/40 backdrop-blur-md rounded-[2.5rem] p-6 border border-white/50 flex items-center gap-6 shadow-sm">
+                  <div className="p-3 bg-white rounded-xl text-[#6E8649] shadow-sm"><Clock size={20}/></div>
+                  <div>
+                    <p className="text-2xl font-black italic text-[#0D330E]">06h 12m</p>
+                    <p className="text-[9px] font-bold uppercase tracking-widest opacity-40">Online Today</p>
+                  </div>
+               </div>
+            </div>
+
+            {/* LIVE MISSIONS - Grid Style stolen from User's Runner Cards */}
+            <div className="md:col-span-4 lg:col-span-6 space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="h-[1px] flex-1 bg-gray-400/20"></div>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-[#0D330E] opacity-60">Live Missions</h3>
+                <div className="h-[1px] flex-1 bg-gray-400/20"></div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {[1, 2].map((i) => (
+                  <div key={i} className="group relative bg-white/40 backdrop-blur-md border border-white/50 rounded-[2.5rem] p-8 flex items-center justify-between hover:bg-white transition-all duration-500 shadow-sm overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#A3B18A]/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700"></div>
+                    <div className="flex items-center gap-6 relative z-10">
+                      <div className="w-16 h-16 bg-[#0D330E] rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:rotate-6 transition-transform">
+                        <Package size={28} />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[9px] font-black px-2 py-0.5 bg-[#6E8649] text-white rounded-full uppercase italic">Pick n Pay</span>
+                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Sandton Hub</span>
+                        </div>
+                        <h4 className="text-xl font-black italic uppercase text-[#0D330E]">Grocery Delivery</h4>
+                        <p className="text-xs font-bold text-[#6E8649] flex items-center gap-1 mt-1">
+                          <Zap size={12} fill="currentColor" /> R 85.00 Earning
+                        </p>
+                      </div>
+                    </div>
+                    <button className="relative z-10 h-14 w-14 rounded-full border-2 border-[#0D330E]/10 flex items-center justify-center text-[#0D330E] group-hover:bg-[#0D330E] group-hover:text-white transition-all shadow-md">
+                      <ArrowRight size={24} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+        </div>
       </main>
     </div>
   );
 };
 
-export default Runnerdashboard;
+export default RunnerDashboard;
