@@ -63,8 +63,15 @@ export default function ProfileScreen() {
   );
 }
 
-// Helper Component for List Items
-const ProfileItem = ({ icon, label, value }) => (
+// ✅ FIXED: Added TypeScript interfaces for props
+interface ProfileItemProps {
+  icon: keyof typeof Ionicons.glyphMap;  // Valid Ionicons name
+  label: string;
+  value: string;
+}
+
+// Helper Component for List Items with proper typing
+const ProfileItem: React.FC<ProfileItemProps> = ({ icon, label, value }) => (
   <View style={styles.infoRow}>
     <View style={styles.iconBox}>
       <Ionicons name={icon} size={20} color="#1a2e1a" />
@@ -80,14 +87,43 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f9fafb' },
   profileHeader: { alignItems: 'center', marginTop: 60, marginBottom: 30 },
   imageContainer: { position: 'relative' },
-  profileImage: { width: 110, height: 110, borderRadius: 55, borderWeight: 4, borderColor: '#4ade80' },
-  editBadge: { position: 'absolute', bottom: 0, right: 0, backgroundColor: '#1a2e1a', padding: 8, borderRadius: 20, borderWeight: 3, borderColor: '#f9fafb' },
+  profileImage: { 
+    width: 110, 
+    height: 110, 
+    borderRadius: 55, 
+    borderWidth: 4,
+    borderColor: '#4ade80' 
+  },
+  editBadge: { 
+    position: 'absolute', 
+    bottom: 0, 
+    right: 0, 
+    backgroundColor: '#1a2e1a', 
+    padding: 8, 
+    borderRadius: 20, 
+    borderWidth: 3,
+    borderColor: '#f9fafb' 
+  },
   userName: { fontSize: 24, fontWeight: 'bold', color: '#1a2e1a', marginTop: 15 },
   badge: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 5 },
   badgeText: { color: '#6b7280', fontSize: 14, fontWeight: '500' },
-  statsRow: { flexDirection: 'row', backgroundColor: 'white', marginHorizontal: 20, padding: 20, borderRadius: 24, elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10 },
+  statsRow: { 
+    flexDirection: 'row', 
+    backgroundColor: 'white', 
+    marginHorizontal: 20, 
+    padding: 20, 
+    borderRadius: 24, 
+    elevation: 2, 
+    shadowColor: '#000', 
+    shadowOpacity: 0.05, 
+    shadowRadius: 10 
+  },
   statItem: { flex: 1, alignItems: 'center' },
-  borderSides: { borderLeftWidth: 1, borderRightWidth: 1, borderColor: '#f3f4f6' },
+  borderSides: { 
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: '#f3f4f6' 
+  },
   statNumber: { fontSize: 18, fontWeight: 'bold', color: '#1a2e1a' },
   statLabel: { fontSize: 12, color: '#9ca3af', marginTop: 2 },
   section: { padding: 20, marginTop: 10 },

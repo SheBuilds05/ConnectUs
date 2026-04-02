@@ -126,7 +126,16 @@ const styles = StyleSheet.create({
   statCard: { flex: 1, padding: 20, borderRadius: 24 },
   statValue: { color: 'white', fontSize: 22, fontWeight: 'bold', marginTop: 10 },
   statLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 12 },
-  earningsCard: { backgroundColor: 'white', padding: 20, borderRadius: 24, borderWeight: 1, borderColor: '#f3f4f6', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  earningsCard: { 
+    backgroundColor: 'white', 
+    padding: 20, 
+    borderRadius: 24, 
+    borderWidth: 1,      // ✅ FIXED: changed from borderWeight to borderWidth
+    borderColor: '#f3f4f6', 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center' 
+  },
   earningsLabel: { color: '#9ca3af', fontSize: 12, fontWeight: '600' },
   earningsAmount: { fontSize: 20, fontWeight: 'bold', color: '#1a2e1a' },
   viewWalletBtn: { backgroundColor: '#f3f4f6', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 12 },
