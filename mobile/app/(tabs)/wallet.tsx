@@ -37,7 +37,7 @@ export default function WalletScreen() {
         <View style={styles.iconCircle}>
           <Ionicons name="basket" size={20} color="#4ade80" />
         </View>
-        <View style={{flex: 1, ml: 10}}>
+        <View style={{flex: 1, marginLeft: 10}}>
           <Text style={styles.transName}>Grocery Order #2104</Text>
           <Text style={styles.transDate}>March 2, 2026</Text>
         </View>
@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
   balanceAmount: { color: '#ffffff', fontSize: 36, fontWeight: 'bold', marginVertical: 10 },
   withdrawBtn: { backgroundColor: '#4ade80', padding: 15, borderRadius: 15, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10 },
   withdrawText: { color: '#1a2e1a', fontWeight: 'bold' },
-  bonusCard: { backgroundColor: '#ffffff', padding: 20, borderRadius: 20, borderWeight: 1, borderColor: '#f3f4f6' },
+  bonusCard: { backgroundColor: '#ffffff', padding: 20, borderRadius: 20, borderWidth: 1, borderColor: '#f3f4f6' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   bonusTitle: { fontWeight: 'bold', color: '#1a2e1a' },
   bonusDesc: { fontSize: 12, color: '#6b7280', marginTop: 4 },

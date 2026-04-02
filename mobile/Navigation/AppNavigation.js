@@ -1,23 +1,19 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-
+import { createStackNavigator } from '@react-navigation/stack';
 import LandingScreen from '../Screens/LandingScreen';
 import LoginScreen from '../Screens/LoginScreen';
 import RegisterScreen from '../Screens/RegisterScreen';
 import AdminDashboard from '../Screens/AdminDashboard';
 
-const Stack = createNativeStackNavigator();
+const Stack = createStackNavigator();
 
-export default function AppNavigator() {
+export default function AppNavigation() {
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Landing">
-        <Stack.Screen name="Landing" component={LandingScreen} />
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Register" component={RegisterScreen} />
-        <Stack.Screen name="AdminDashboard" component={AdminDashboard} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Landing" component={LandingScreen} />
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Register" component={RegisterScreen} />
+      <Stack.Screen name="AdminDashboard" component={AdminDashboard} />
+    </Stack.Navigator>
   );
 }
