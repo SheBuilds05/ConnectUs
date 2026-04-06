@@ -3,7 +3,7 @@ import cors from 'cors';
 import http from 'http';
 import { Server } from 'socket.io';
 import authRoutes from './routes/authRoutes';
-import runnerRoutes from './routes/runnerRoutes'; 
+import runnerRoutes from '../src/routes/runnerRoutes'; 
 import userRoutes from './routes/userRoutes';
 import adminRoutes from './routes/adminRoutes';
 
