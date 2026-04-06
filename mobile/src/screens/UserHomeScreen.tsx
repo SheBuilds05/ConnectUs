@@ -18,9 +18,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
-import { useNavigation, useRoute } from '@react-navigation/native'; // Add this
-import { getRunners } from '../../services/runnerService';
-import { getCurrentUser, getUserName, getUserEmail, logoutUser } from '../../services/api';
+import { useRoute } from '@react-navigation/native'; // ✅ Fixed: Added missing import
+import { getRunners } from '../services/runnerService';
+import { getCurrentUser, getUserName, getUserEmail, logoutUser } from '../services/api';
 import { Runner } from '../types';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -217,87 +217,11 @@ const RunnerCard = ({ runner, onPress }: { runner: Runner; onPress: () => void }
   </TouchableOpacity>
 );
 
-// Bottom Navigation Component - Moved inside to access navigation
-const BottomNav = ({ currentRoute }: { currentRoute: string }) => {
-  const navigation = useNavigation() as any;
-  
-  const menuItems = [
-    { name: 'Home', icon: 'home-outline', activeIcon: 'home', route: 'UserHome' },
-    { name: 'Explore', icon: 'search-outline', activeIcon: 'search', route: 'Explore' },
-    { name: 'Wallet', icon: 'wallet-outline', activeIcon: 'wallet', route: 'Wallet' },
-    { name: 'Profile', icon: 'person-outline', activeIcon: 'person', route: 'Profile' },
-  ];
-
-  const handleNavigation = (routeName: string) => {
-    try {
-      navigation.navigate(routeName);
-    } catch (error) {
-      console.error('Navigation error:', error);
-    }
-  };
-
-  return (
-    <View
-      style={{
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        backgroundColor: 'white',
-        borderTopWidth: 1,
-        borderTopColor: '#F3F4F6',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-        elevation: 5,
-      }}
-    >
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-around',
-          alignItems: 'center',
-          paddingVertical: 12,
-          paddingBottom: 24,
-        }}
-      >
-        {menuItems.map((item, index) => {
-          const isActive = currentRoute === item.route;
-          return (
-            <TouchableOpacity
-              key={index}
-              style={{ alignItems: 'center', gap: 4 }}
-              onPress={() => handleNavigation(item.route)}
-            >
-              <Ionicons
-                name={isActive ? (item.activeIcon as any) : (item.icon as any)}
-                size={24}
-                color={isActive ? '#2D531A' : '#9CA3AF'}
-              />
-              <Text
-                style={{
-                  fontSize: 10,
-                  marginTop: 4,
-                  color: isActive ? '#2D531A' : '#9CA3AF',
-                }}
-              >
-                {item.name}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-    </View>
-  );
-};
-
-// Sidebar Component - Moved inside to access navigation
-const SidebarComponent = ({ isVisible, onClose, userName, userEmail }: any) => {
-  const navigation = useNavigation() as any;
-  const route = useRoute() as any;
+// Enhanced Sidebar Component
+const Sidebar = ({ isVisible, onClose, userName, userEmail, navigation }: any) => {
   const slideAnim = useRef(new Animated.Value(-SCREEN_WIDTH)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const route = useRoute(); // ✅ Now works with the import
 
   const menuItems = [
     { name: 'Home', icon: 'home-outline', activeIcon: 'home', route: 'UserHome' },
@@ -305,7 +229,6 @@ const SidebarComponent = ({ isVisible, onClose, userName, userEmail }: any) => {
     { name: 'Track Order', icon: 'location-outline', activeIcon: 'location', route: 'TrackOrder' },
     { name: 'Wallet', icon: 'wallet-outline', activeIcon: 'wallet', route: 'Wallet' },
     { name: 'Favorites', icon: 'heart-outline', activeIcon: 'heart', route: 'Favorites' },
-    { name: 'Profile', icon: 'person-outline', activeIcon: 'person', route: 'Profile' },
     { name: 'Settings', icon: 'settings-outline', activeIcon: 'settings', route: 'Settings' },
     { name: 'Help', icon: 'help-circle-outline', activeIcon: 'help-circle', route: 'Help' },
   ];
@@ -344,11 +267,7 @@ const SidebarComponent = ({ isVisible, onClose, userName, userEmail }: any) => {
   const handleNavigation = (routeName: string) => {
     onClose();
     setTimeout(() => {
-      try {
-        navigation.navigate(routeName);
-      } catch (error) {
-        console.error('Navigation error:', error);
-      }
+      navigation.navigate(routeName);
     }, 300);
   };
 
@@ -364,14 +283,10 @@ const SidebarComponent = ({ isVisible, onClose, userName, userEmail }: any) => {
           onPress: async () => {
             await logoutUser();
             onClose();
-            try {
-              navigation.reset({
-                index: 0,
-                routes: [{ name: 'Login' }],
-              });
-            } catch (error) {
-              console.error('Navigation reset error:', error);
-            }
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Login' }],
+            });
           },
         },
       ],
@@ -387,10 +302,6 @@ const SidebarComponent = ({ isVisible, onClose, userName, userEmail }: any) => {
       .substring(0, 2);
   };
 
-  const isActiveRoute = (routeName: string) => {
-    return route.name === routeName;
-  };
-
   return (
     <Modal
       visible={isVisible}
@@ -399,6 +310,7 @@ const SidebarComponent = ({ isVisible, onClose, userName, userEmail }: any) => {
       onRequestClose={onClose}
     >
       <View style={{ flex: 1, flexDirection: 'row' }}>
+        {/* Overlay */}
         <Animated.View
           style={{
             flex: 1,
@@ -413,6 +325,7 @@ const SidebarComponent = ({ isVisible, onClose, userName, userEmail }: any) => {
           />
         </Animated.View>
 
+        {/* Sidebar Content */}
         <Animated.View
           style={{
             width: SCREEN_WIDTH * 0.75,
@@ -508,14 +421,10 @@ const SidebarComponent = ({ isVisible, onClose, userName, userEmail }: any) => {
                   <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginTop: 4 }} numberOfLines={1}>
                     {userEmail}
                   </Text>
-
-                  <TouchableOpacity 
-                    style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 }}
-                    onPress={() => handleNavigation('Notifications')}
-                  >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 }}>
                     <Ionicons name="notifications-outline" size={12} color="#A3B18A" />
-                    <Text style={{ fontSize: 8, color: 'rgba(255,255,255,0.6)' }}>2 new notifications</Text>
-                  </TouchableOpacity>
+                    <Text style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)' }}>2 new notifications</Text>
+                  </View>
                 </View>
               </View>
             </View>
@@ -523,7 +432,7 @@ const SidebarComponent = ({ isVisible, onClose, userName, userEmail }: any) => {
             {/* Navigation Menu */}
             <View style={{ paddingHorizontal: 12, gap: 4 }}>
               {menuItems.map((item, index) => {
-                const isActive = isActiveRoute(item.route);
+                const isActive = route.name === item.route;
                 return (
                   <TouchableOpacity
                     key={index}
@@ -618,8 +527,72 @@ const SidebarComponent = ({ isVisible, onClose, userName, userEmail }: any) => {
   );
 };
 
-const UserHomeScreen = () => {
-  const navigation = useNavigation() as any;
+// Bottom Navigation Component
+const BottomNav = ({ navigation, currentRoute }: any) => {
+  const menuItems = [
+    { name: 'Home', icon: 'home-outline', activeIcon: 'home', route: 'UserHome' },
+    { name: 'Explore', icon: 'search-outline', activeIcon: 'search', route: 'Explore' },
+    { name: 'Wallet', icon: 'wallet-outline', activeIcon: 'wallet', route: 'Wallet' },
+    { name: 'Profile', icon: 'person-outline', activeIcon: 'person', route: 'Profile' },
+  ];
+
+  return (
+    <View
+      style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: 'white',
+        borderTopWidth: 1,
+        borderTopColor: '#F3F4F6',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 5,
+      }}
+    >
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-around',
+          alignItems: 'center',
+          paddingVertical: 12,
+          paddingBottom: 24,
+        }}
+      >
+        {menuItems.map((item, index) => {
+          const isActive = currentRoute === item.route;
+          return (
+            <TouchableOpacity
+              key={index}
+              style={{ alignItems: 'center', gap: 4 }}
+              onPress={() => navigation.navigate(item.route)}
+            >
+              <Ionicons
+                name={isActive ? (item.activeIcon as any) : (item.icon as any)}
+                size={24}
+                color={isActive ? '#2D531A' : '#9CA3AF'}
+              />
+              <Text
+                style={{
+                  fontSize: 10,
+                  marginTop: 4,
+                  color: isActive ? '#2D531A' : '#9CA3AF',
+                }}
+              >
+                {item.name}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
+  );
+};
+
+const UserHomeScreen = ({ navigation }: any) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [runners, setRunners] = useState<Runner[]>([]);
@@ -714,22 +687,6 @@ const UserHomeScreen = () => {
     setSearchTerm(text);
   };
 
-  const handleRunnerPress = (runnerId: number) => {
-    try {
-      navigation.navigate('RunnerDetails', { runnerId });
-    } catch (error) {
-      console.error('Navigation error:', error);
-    }
-  };
-
-  const handleNotifications = () => {
-    try {
-      navigation.navigate('Notifications');
-    } catch (error) {
-      console.error('Navigation error:', error);
-    }
-  };
-
   // Filter runners based on search term
   const filteredRunners = runners.filter(
     (runner) =>
@@ -743,11 +700,12 @@ const UserHomeScreen = () => {
       <StatusBar style="dark" />
       
       {/* Sidebar */}
-      <SidebarComponent
+      <Sidebar
         isVisible={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         userName={userName}
         userEmail={userEmail}
+        navigation={navigation}
       />
 
       <SafeAreaView style={{ flex: 1 }}>
@@ -780,7 +738,7 @@ const UserHomeScreen = () => {
               </Text>
             </View>
 
-            <TouchableOpacity onPress={handleNotifications}>
+            <TouchableOpacity onPress={() => navigation.navigate('Notifications')}>
               <View>
                 <Ionicons name="notifications-outline" size={24} color="#4B5563" />
                 <View
@@ -1009,7 +967,7 @@ const UserHomeScreen = () => {
                 <RunnerCard
                   key={runner.runner_id}
                   runner={runner}
-                  onPress={() => handleRunnerPress(runner.runner_id)}
+                  onPress={() => navigation.navigate('RunnerDetails', { runnerId: runner.runner_id })}
                 />
               ))
             )}
@@ -1018,7 +976,7 @@ const UserHomeScreen = () => {
       </SafeAreaView>
 
       {/* Bottom Navigation */}
-      <BottomNav currentRoute={currentRoute} />
+      <BottomNav navigation={navigation} currentRoute={currentRoute} />
     </View>
   );
 };
