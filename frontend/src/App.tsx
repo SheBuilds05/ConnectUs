@@ -16,9 +16,7 @@ import MessagesPage from "./pages/MessagesPage";
 import AccountPage from "./pages/AccountPage";
 import RunnerWallet from "./pages/RunnerWallet";
 import AdminDashboard from "./pages/AdminDashboard";
-// REPLACED: Imported your RunnerProfile component
 import RunnerProfile from './pages/RunnerProfile'; 
-
 import "./App.css";
 import SettingsPage from './pages/SettingsPage';
 
@@ -77,7 +75,7 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={['customer']}>
             <Routes>
-              <Route index element={<UserHomePage />} />
+              <Route index element={<UserHomePage onMenuClick={() => {}} />} />
               <Route path="bookings" element={<UserBookings />} />
               <Route path="track" element={<UserTrackOrder />} />
               <Route path="settings" element={<UserSettings />} />
