@@ -36,6 +36,7 @@ interface RunnerRegisterData {
   id_number: string;
   bio: string;
 }
+
 interface AdminRegisterData {
   firstName: string;
   lastName: string;
@@ -146,7 +147,7 @@ export const logoutUser = () => {
   localStorage.removeItem('user');
 };
 
-// ========== USER PROFILE FUNCTIONS ==========
+//  USER PROFILE FUNCTIONS 
 export const getCurrentUser = (): User | null => {
   const userStr = localStorage.getItem('user');
   if (userStr) {
@@ -159,13 +160,13 @@ export const getCurrentUser = (): User | null => {
   return null;
 };
 
-// 🔥 ADD THIS MISSING FUNCTION - Get user profile from API
+// Get user profile from API
 export const getUserProfile = async (): Promise<{ data: User }> => {
   const response = await api.get('/users/profile');
   return response.data;
 };
 
-// 🔥 ADD THIS MISSING FUNCTION - Update user profile
+// Update user profile
 export const updateUserProfile = async (profileData: Partial<User>): Promise<{ data: User }> => {
   const response = await api.put('/users/profile', profileData);
   // Update localStorage with new data
@@ -175,19 +176,19 @@ export const updateUserProfile = async (profileData: Partial<User>): Promise<{ d
   return response.data;
 };
 
-// 🔥 ADD THIS MISSING FUNCTION - Get user stats
+//  Get user stats
 export const getUserStats = async (): Promise<{ data: any }> => {
   const response = await api.get('/users/stats');
   return response.data;
 };
 
-// 🔥 ADD THIS MISSING FUNCTION - Get user reviews
+// Get user reviews
 export const getUserReviews = async (): Promise<{ data: any[] }> => {
   const response = await api.get('/users/reviews');
   return response.data;
 };
 
-// ========== ORDER FUNCTIONS ==========
+//  ORDER FUNCTIONS 
 export const getAvailableOrders = async () => {
   const response = await api.get('/orders/available');
   return response.data;
@@ -218,7 +219,7 @@ export const getOrderById = async (orderId: number) => {
   return response.data;
 };
 
-// ========== EARNINGS FUNCTIONS ==========
+//  EARNINGS FUNCTIONS 
 export const getEarnings = async () => {
   const response = await api.get('/earnings');
   return response.data;
@@ -229,7 +230,7 @@ export const getEarningsHistory = async (period: string = 'month') => {
   return response.data;
 };
 
-// ========== HELPER FUNCTIONS ==========
+//  HELPER FUNCTIONS 
 export const getUserRole = (): string => {
   const user = getCurrentUser();
   return user?.role || 'customer';
