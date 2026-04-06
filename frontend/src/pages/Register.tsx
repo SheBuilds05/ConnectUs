@@ -787,29 +787,6 @@ const Register = () => {
             Sign in
           </Link>
         </p>
-
-        {/* Admin Link */}
-        <div style={{ 
-          textAlign: 'center', 
-          marginTop: '1.5rem',
-          paddingTop: '1.5rem',
-          borderTop: `1px solid ${colors.sage}30`
-        }}>
-          <Link 
-            to="/admin" 
-            style={{ 
-              color: colors.sage, 
-              textDecoration: 'none',
-              fontSize: '0.9rem',
-              fontWeight: '500',
-              transition: 'color 0.2s'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.color = colors.moss}
-            onMouseLeave={(e) => e.currentTarget.style.color = colors.sage}
-          >
-            Admin Access →
-          </Link>
-        </div>
       </div>
     </div>
   );
