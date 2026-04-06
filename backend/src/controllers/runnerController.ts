@@ -77,7 +77,21 @@ export const getRunnerById = async (req: Request, res: Response) => {
     res.status(500).json({ error: err.message });
   }
 };
-
+export const getRunnerProducts = async (req: Request, res: Response) => {
+  const { runnerId } = req.params;
+  try {
+    const result = await pool.query(
+      `SELECT product_id, runner_id, category_id, title, description, image_url, price 
+       FROM products 
+       WHERE runner_id = $1`,
+      [runnerId]
+    );
+    res.json(result.rows);
+  } catch (err: any) {
+    console.error('Error fetching runner products:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+};
 // Update runner profile
 export const updateRunnerProfile = async (req: Request, res: Response) => {
   const { runnerId } = req.params;
