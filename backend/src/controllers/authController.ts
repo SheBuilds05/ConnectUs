@@ -3,6 +3,49 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import pool from '../db';
 
+// Register a new admin
+export const registerAdmin = async (req: Request, res: Response) => {
+  const { firstName, lastName, email, password, secretCode } = req.body;
+
+  if (secretCode !== '1875') {
+    return res.status(403).json({ message: "Invalid secret code" });
+  }
+
+  const full_name = `${firstName} ${lastName}`;
+
+  try {
+    const existing = await pool.query(
+      'SELECT email FROM users WHERE email = $1 UNION SELECT email FROM runnerprofile WHERE email = $1',
+      [email]
+    );
+
+    if (existing.rows.length > 0) {
+      return res.status(400).json({ message: "Email already registered" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const newAdmin = await pool.query(
+      `INSERT INTO users (full_name, email, password_hash, role) 
+       VALUES ($1, $2, $3, 'admin') 
+       RETURNING user_id, full_name, email, role`,
+      [full_name, email, hashedPassword]
+    );
+
+    const token = jwt.sign(
+      { id: newAdmin.rows[0].user_id, email: newAdmin.rows[0].email, role: 'admin', type: 'user' },
+      process.env.JWT_SECRET || 'secret',
+      { expiresIn: '24h' }
+    );
+
+    res.status(201).json({ token, user: newAdmin.rows[0] });
+  } catch (err: any) {
+    console.error("Admin Registration Error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 // Register a new customer
 export const registerCustomer = async (req: Request, res: Response) => {
   const { firstName, lastName, email, password, id_num } = req.body;
@@ -13,7 +56,7 @@ export const registerCustomer = async (req: Request, res: Response) => {
       'SELECT email FROM users WHERE email = $1 UNION SELECT email FROM runnerprofile WHERE email = $1',
       [email]
     );
-    
+
     if (existing.rows.length > 0) {
       return res.status(400).json({ message: "Email already registered" });
     }
@@ -61,7 +104,6 @@ export const registerRunner = async (req: Request, res: Response) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Matching your Supabase schema: postal_code, id_document, password_hash
     const newRunner = await pool.query(
       `INSERT INTO runnerprofile (
         username, email, password_hash, phone, address, city, 
@@ -103,17 +145,24 @@ export const registerRunner = async (req: Request, res: Response) => {
   }
 };
 
-// Login 
+// Login
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
   try {
-    // Check customers first
-    const customerResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-    if (customerResult.rows.length > 0) {
-      const user = customerResult.rows[0];
+    // Check users table first (customers + admins)
+    const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    if (userResult.rows.length > 0) {
+      const user = userResult.rows[0];
       if (await bcrypt.compare(password, user.password_hash)) {
-        const token = jwt.sign({ id: user.user_id, email: user.email, role: 'customer', type: 'user' }, process.env.JWT_SECRET || 'secret', { expiresIn: '24h' });
-        return res.json({ token, user: { id: user.user_id, name: user.full_name, email: user.email, role: 'customer' } });
+        const token = jwt.sign(
+          { id: user.user_id, email: user.email, role: user.role, type: 'user' },
+          process.env.JWT_SECRET || 'secret',
+          { expiresIn: '24h' }
+        );
+        return res.json({
+          token,
+          user: { id: user.user_id, name: user.full_name, email: user.email, role: user.role }
+        });
       }
     }
 
@@ -122,10 +171,18 @@ export const login = async (req: Request, res: Response) => {
     if (runnerResult.rows.length > 0) {
       const runner = runnerResult.rows[0];
       if (await bcrypt.compare(password, runner.password_hash)) {
-        const token = jwt.sign({ id: runner.runner_id, email: runner.email, username: runner.username, role: 'runner', type: 'runner' }, process.env.JWT_SECRET || 'secret', { expiresIn: '24h' });
-        return res.json({ token, user: { id: runner.runner_id, name: runner.username, email: runner.email, role: 'runner', verification_status: runner.verification_status } });
+        const token = jwt.sign(
+          { id: runner.runner_id, email: runner.email, username: runner.username, role: 'runner', type: 'runner' },
+          process.env.JWT_SECRET || 'secret',
+          { expiresIn: '24h' }
+        );
+        return res.json({
+          token,
+          user: { id: runner.runner_id, name: runner.username, email: runner.email, role: 'runner', verification_status: runner.verification_status }
+        });
       }
     }
+
     return res.status(400).json({ message: "Invalid email or password" });
   } catch (err: any) {
     console.error("Login Error:", err.message);
@@ -142,13 +199,16 @@ export const getCurrentUser = async (req: Request, res: Response) => {
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'secret');
     
     if (decoded.type === 'user') {
-      const result = await pool.query('SELECT user_id, full_name, email, role FROM users WHERE user_id = $1', [decoded.id]);
+      const result = await pool.query(
+        'SELECT user_id, full_name, email, role FROM users WHERE user_id = $1',
+        [decoded.id]
+      );
       return res.json(result.rows[0]);
     } else {
       const result = await pool.query(
         `SELECT runner_id as id, username as name, email, 'runner' as role, 
                 verification_status, city, profile_photo, completed_bookings_count 
-         FROM runnerprofile WHERE runner_id = $1`, 
+         FROM runnerprofile WHERE runner_id = $1`,
         [decoded.id]
       );
       return res.json(result.rows[0]);

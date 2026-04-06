@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { registerCustomer, registerRunner } from '../services/api';
+import { registerCustomer, registerRunner, registerAdmin } from '../services/api';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -18,6 +18,15 @@ const Register = () => {
     confirmPassword: '',
     idNumber: ''
   });
+  //Admin form state
+  const [adminData, setAdminData] = useState({
+  firstName: '',
+  lastName: '',
+  email: '',
+  password: '',
+  confirmPassword: '',
+  secretCode: ''
+});
 
   // Runner form state
   const [runnerData, setRunnerData] = useState({
@@ -104,6 +113,32 @@ const Register = () => {
       setLoading(false);
     }
   };
+
+  const handleAdminSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (adminData.password !== adminData.confirmPassword) {
+    setError('Passwords do not match'); return;
+  }
+  if (adminData.secretCode !== '1875') {
+    setError('Invalid secret code'); return;
+  }
+  setLoading(true); setError(''); setSuccess('');
+  try {
+    await registerAdmin({
+      firstName: adminData.firstName.trim(),
+      lastName: adminData.lastName.trim(),
+      email: adminData.email.trim().toLowerCase(),
+      password: adminData.password,
+      secretCode: adminData.secretCode
+    });
+    setSuccess('Admin account created! Redirecting...');
+    setTimeout(() => navigate('/admin'), 2000);
+  } catch (err: any) {
+    setError(err.message || 'Registration failed.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleRunnerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -428,126 +463,102 @@ const Register = () => {
             </div>
           </div>
         )}
+{/* Admin Card */}
+<div
+  onClick={() => !loading && selectAccountType('admin')}
+  style={{
+    padding: '2rem 1rem',
+    borderRadius: '16px',
+    border: `2px solid ${colors.sage}30`,
+    backgroundColor: colors.white,
+    cursor: loading ? 'not-allowed' : 'pointer',
+    textAlign: 'center',
+    transition: 'all 0.2s',
+    opacity: loading ? 0.6 : 1
+  }}
+  onMouseEnter={(e) => {
+    if (!loading) {
+      e.currentTarget.style.borderColor = colors.moss;
+      e.currentTarget.style.backgroundColor = `${colors.moss}05`;
+      e.currentTarget.style.transform = 'translateY(-2px)';
+    }
+  }}
+  onMouseLeave={(e) => {
+    if (!loading) {
+      e.currentTarget.style.borderColor = `${colors.sage}30`;
+      e.currentTarget.style.backgroundColor = colors.white;
+      e.currentTarget.style.transform = 'translateY(0)';
+    }
+  }}
+>
+  <div style={{ marginBottom: '1rem', fontSize: '2.5rem' }}>🛡️</div>
+  <h3 style={{ color: colors.forest, marginBottom: '0.5rem', fontWeight: '600', fontSize: '1.2rem' }}>
+    Admin
+  </h3>
+  <p style={{ color: colors.leaf, fontSize: '0.85rem', lineHeight: '1.5' }}>
+    Platform administrator access
+  </p>
+</div>
 
-        {/* Customer Registration Form */}
-        {selectedType === 'customer' && (
-          <form onSubmit={handleCustomerSubmit}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-              <div>
-                <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>
-                  First Name
-                </label>
-                <input
-                  type="text"
-                  value={customerData.firstName}
-                  onChange={(e) => setCustomerData({...customerData, firstName: e.target.value})}
-                  style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
-                  placeholder="First name"
-                  required
-                  disabled={loading}
-                />
-              </div>
-              <div>
-                <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>
-                  Last Name
-                </label>
-                <input
-                  type="text"
-                  value={customerData.lastName}
-                  onChange={(e) => setCustomerData({...customerData, lastName: e.target.value})}
-                  style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
-                  placeholder="Last name"
-                  required
-                  disabled={loading}
-                />
-              </div>
-            </div>
+        {/* Admin Registration Form */}
+{selectedType === 'admin' && (
+  <form onSubmit={handleAdminSubmit}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+      <div>
+        <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>First Name</label>
+        <input type="text" value={adminData.firstName}
+          onChange={(e) => setAdminData({...adminData, firstName: e.target.value})}
+          style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
+          placeholder="First name" required disabled={loading} />
+      </div>
+      <div>
+        <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>Last Name</label>
+        <input type="text" value={adminData.lastName}
+          onChange={(e) => setAdminData({...adminData, lastName: e.target.value})}
+          style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
+          placeholder="Last name" required disabled={loading} />
+      </div>
+    </div>
 
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>
-                Email Address
-              </label>
-              <input
-                type="email"
-                value={customerData.email}
-                onChange={(e) => setCustomerData({...customerData, email: e.target.value})}
-                style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
-                placeholder="Enter your email"
-                required
-                disabled={loading}
-              />
-            </div>
+    <div style={{ marginBottom: '1.5rem' }}>
+      <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>Email Address</label>
+      <input type="email" value={adminData.email}
+        onChange={(e) => setAdminData({...adminData, email: e.target.value})}
+        style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
+        placeholder="Admin email" required disabled={loading} />
+    </div>
 
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>
-                SA ID Number
-              </label>
-              <input
-                type="text"
-                value={customerData.idNumber}
-                onChange={(e) => setCustomerData({...customerData, idNumber: e.target.value.replace(/\D/g, '').slice(0, 13)})}
-                style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
-                placeholder="13-digit SA ID number"
-                required
-                disabled={loading}
-                maxLength={13}
-              />
-            </div>
+    <div style={{ marginBottom: '1.5rem' }}>
+      <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>Secret Code</label>
+      <input type="password" value={adminData.secretCode}
+        onChange={(e) => setAdminData({...adminData, secretCode: e.target.value})}
+        style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
+        placeholder="Enter admin secret code" required disabled={loading} />
+    </div>
 
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>
-                Password
-              </label>
-              <input
-                type="password"
-                value={customerData.password}
-                onChange={(e) => setCustomerData({...customerData, password: e.target.value})}
-                style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
-                placeholder="Create a password (min. 6 characters)"
-                required
-                disabled={loading}
-                minLength={6}
-              />
-            </div>
+    <div style={{ marginBottom: '1.5rem' }}>
+      <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>Password</label>
+      <input type="password" value={adminData.password}
+        onChange={(e) => setAdminData({...adminData, password: e.target.value})}
+        style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
+        placeholder="Create a password" required disabled={loading} minLength={6} />
+    </div>
 
-            <div style={{ marginBottom: '2rem' }}>
-              <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>
-                Confirm Password
-              </label>
-              <input
-                type="password"
-                value={customerData.confirmPassword}
-                onChange={(e) => setCustomerData({...customerData, confirmPassword: e.target.value})}
-                style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
-                placeholder="Confirm your password"
-                required
-                disabled={loading}
-              />
-            </div>
+    <div style={{ marginBottom: '2rem' }}>
+      <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>Confirm Password</label>
+      <input type="password" value={adminData.confirmPassword}
+        onChange={(e) => setAdminData({...adminData, confirmPassword: e.target.value})}
+        style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
+        placeholder="Confirm your password" required disabled={loading} />
+    </div>
 
-            <button 
-              type="submit" 
-              style={{ 
-                backgroundColor: colors.forest, 
-                color: colors.white, 
-                width: '100%', 
-                padding: '1rem', 
-                borderRadius: '50px', 
-                border: 'none', 
-                cursor: loading ? 'not-allowed' : 'pointer', 
-                fontWeight: '600',
-                fontSize: '1rem',
-                marginBottom: '1.5rem',
-                transition: 'all 0.2s',
-                boxShadow: `0 4px 12px ${colors.forest}40`,
-                opacity: loading ? 0.7 : 1
-              }}
-              disabled={loading}
-            >
-              {loading ? 'Creating Account...' : 'Create Customer Account'}
-            </button>
-          </form>
-        )}
+    <button type="submit"
+      style={{ backgroundColor: colors.forest, color: colors.white, width: '100%', padding: '1rem', borderRadius: '50px', border: 'none', cursor: loading ? 'not-allowed' : 'pointer', fontWeight: '600', fontSize: '1rem', marginBottom: '1.5rem', opacity: loading ? 0.7 : 1 }}
+      disabled={loading}>
+      {loading ? 'Creating Admin Account...' : 'Create Admin Account'}
+    </button>
+  </form>
+)}
 
         {/* Runner Registration Form */}
         {selectedType === 'runner' && (

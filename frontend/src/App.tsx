@@ -15,6 +15,7 @@ import FavoritesPage from "./pages/FavoritesPage";
 import MessagesPage from "./pages/MessagesPage";
 import AccountPage from "./pages/AccountPage";
 import RunnerWallet from "./pages/RunnerWallet";
+import AdminDashboard from "./pages/AdminDashboard";
 // REPLACED: Imported your RunnerProfile component
 import RunnerProfile from './pages/RunnerProfile'; 
 
@@ -111,14 +112,11 @@ function App() {
         }
       />
 
-      <Route
-        path="/admin/*"
-        element={
-          <ProtectedRoute allowedRoles={['admin']}>
-            <div className="p-8 text-white">Admin Dashboard Coming Soon</div>
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/admin/*" element={
+  <ProtectedRoute allowedRoles={['admin']}>
+    <AdminDashboard />
+  </ProtectedRoute>
+} />
 
       <Route path="*" element={<Navigate to="/landing" replace />} />
     </Routes>

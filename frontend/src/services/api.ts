@@ -36,6 +36,13 @@ interface RunnerRegisterData {
   id_number: string;
   bio: string;
 }
+interface AdminRegisterData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  secretCode: string;
+}
 
 export interface User {
   id: number;
@@ -107,7 +114,18 @@ export const registerRunner = async (userData: RunnerRegisterData) => {
     throw new Error(error.response?.data?.message || 'Runner registration failed');
   }
 };
-
+export const registerAdmin = async (userData: AdminRegisterData) => {
+  try {
+    const response = await api.post('/auth/register/admin', userData);
+    if (response.data.token) {
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Admin registration failed');
+  }
+};
 export const loginUser = async (credentials: LoginCredentials) => {
   try {
     const response = await api.post('/auth/login', credentials);
