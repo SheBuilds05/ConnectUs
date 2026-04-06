@@ -18,6 +18,7 @@ const Register = () => {
     confirmPassword: '',
     idNumber: ''
   });
+  
   //Admin form state
   const [adminData, setAdminData] = useState({
   firstName: '',
@@ -284,7 +285,8 @@ const Register = () => {
         maxHeight: '90vh',
         overflowY: 'auto'
       }}>
-        {/* Logo Section */}
+        
+        {/* Logo-Section */}
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
           <div style={{ 
             backgroundColor: colors.forest, 
@@ -351,7 +353,7 @@ const Register = () => {
           </div>
         )}
 
-        {/* Account Type Selection - Only show if no type selected */}
+        {/* Account Type Selection */}
         {!selectedType && (
           <div style={{ marginBottom: '2.5rem' }}>
             <label style={{ 
@@ -365,6 +367,7 @@ const Register = () => {
             </label>
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+             
               {/* Customer Card */}
               <div
                 onClick={() => !loading && selectAccountType('customer')}
@@ -463,6 +466,7 @@ const Register = () => {
             </div>
           </div>
         )}
+        
 {/* Admin Card */}
 <div
   onClick={() => !loading && selectAccountType('admin')}
@@ -500,7 +504,7 @@ const Register = () => {
   </p>
 </div>
 
-        {/* Admin Registration Form */}
+        {/* Admin Registration */}
 {selectedType === 'admin' && (
   <form onSubmit={handleAdminSubmit}>
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
