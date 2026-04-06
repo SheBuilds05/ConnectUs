@@ -66,7 +66,8 @@ export interface User {
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
-    if (token) {
+    const isAuthRoute = config.url?.includes('/auth/');
+    if (token && !isAuthRoute) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -78,7 +79,11 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401) {
+    if (
+      error.response?.status === 401 &&
+      !window.location.pathname.includes('/login') &&
+      !error.config?.url?.includes('/auth/')
+    ) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';

@@ -11,11 +11,14 @@ const app = express();
 const server = http.createServer(app); 
 
 //MIDDLEWARE (Order matters!)
-app.use(cors({
-  origin: 'http://localhost:3000', 
-  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'PUT'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+const corsOptions = {
+  origin: 'http://localhost:3000',
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id'],
+  credentials: true
+};
+app.use(cors(corsOptions));
+app.use((req, res, next) => { if (req.method === 'OPTIONS') { res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000'); res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS'); res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,x-user-id'); res.setHeader('Access-Control-Allow-Credentials', 'true'); return res.sendStatus(200); } next(); });
 
 app.use(express.json());
 
@@ -62,3 +65,5 @@ const PORT = 5000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server & Socket.io running on http://localhost:${PORT}`);
 });
+
+
