@@ -6,6 +6,8 @@ import authRoutes from './routes/authRoutes';
 import runnerRoutes from '../src/routes/runnerRoutes'; 
 import userRoutes from './routes/userRoutes';
 import adminRoutes from './routes/adminRoutes';
+import bookingRoutes from './routes/bookingRoutes';
+
 
 const app = express();
 const server = http.createServer(app); 
@@ -49,6 +51,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/runners', runnerRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api', bookingRoutes);
 
 // Test endpoints
 app.get('/api/health', (req, res) => res.json({ status: 'OK' }));

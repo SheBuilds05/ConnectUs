@@ -23,7 +23,7 @@ export interface Booking {
 }
 
 export interface CreateBookingData {
-  runner_id: number;
+  runner_id?: number; // ✅ Made optional
   product_description: string;
   delivery_location: string;
   budget: number;
@@ -64,16 +64,19 @@ export const createBooking = async (bookingData: CreateBookingData): Promise<Boo
     throw new Error('You must be logged in to create a booking');
   }
 
-  // Ensure user has an ID (the property might be 'user_id' or 'id')
-  const userId = user.user_id || user.user_id;
+  // Use user.id (your User interface has 'id')
+  const userId = user.id;
   if (!userId) {
     console.error('[createBooking] User object has no id', user);
     throw new Error('Invalid user data – missing user id');
   }
 
+  console.log('[createBooking] Using userId:', userId);
+
+  // ✅ runner_id is optional - send null if not provided
   const payload = {
     user_id: userId,
-    runner_id: bookingData.runner_id,
+    runner_id: bookingData.runner_id || null,
     product_description: bookingData.product_description,
     delivery_location: bookingData.delivery_location,
     budget: bookingData.budget,

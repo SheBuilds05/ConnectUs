@@ -12,16 +12,22 @@ import {
   Modal,
   TextInput,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
+import { useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getRunnerById, getRunnerProducts, RunnerProfile, Product } from '../../services/runnerService';
 import { calculateFees } from '../../services/bookingService';
 
 export default function RunnerDetailsScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const route = useRoute();
+  const { id } = route.params as { id?: string };
   const runnerId = id ? parseInt(id) : null;
+
+  console.log('🔍 RunnerDetails - URL ID:', id);
+  console.log('🔍 RunnerDetails - Parsed runnerId:', runnerId);
 
   const [runner, setRunner] = useState<RunnerProfile | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -53,16 +59,19 @@ export default function RunnerDetailsScreen() {
 
   const loadRunnerDetails = async () => {
     if (!runnerId) return;
+    console.log('📥 Loading runner details for ID:', runnerId);
     setLoading(true);
     try {
       const [runnerData, productsData] = await Promise.all([
         getRunnerById(runnerId),
         getRunnerProducts(runnerId)
       ]);
+      console.log('✅ Runner loaded:', runnerData?.username, 'ID:', runnerData?.runner_id);
+      console.log('✅ Products loaded:', productsData.length);
       setRunner(runnerData);
       setProducts(productsData);
     } catch (error) {
-      console.error('Error loading runner details:', error);
+      console.error('❌ Error loading runner details:', error);
       Alert.alert('Error', 'Failed to load runner details');
     } finally {
       setLoading(false);
@@ -82,33 +91,66 @@ export default function RunnerDetailsScreen() {
   };
 
   const handleProductSelect = (product: Product) => {
+    console.log('🛒 Product selected:', product.title, 'ID:', product.product_id);
     setSelectedProduct(product);
     setShowBookingModal(true);
   };
 
   const handleCreateBooking = () => {
+    console.log('📝 handleCreateBooking called');
+    console.log('  - Runner:', runner?.username, 'ID:', runner?.runner_id);
+    console.log('  - Selected Product:', selectedProduct?.title);
+    console.log('  - Delivery Location:', deliveryLocation);
+    console.log('  - Delivery Type:', selectedDeliveryType);
+    
     if (!deliveryLocation.trim()) {
       Alert.alert('Error', 'Please enter delivery location');
       return;
     }
+    
+    const bookingParams = {
+      runnerId: runner?.runner_id,
+      runnerName: runner?.username,
+      productId: selectedProduct?.product_id,
+      productName: selectedProduct?.title,
+      productPrice: selectedProduct?.price,
+      productFee: feeBreakdown.productFee,
+      runnerFee: feeBreakdown.runnerFee,
+      deliveryFee: feeBreakdown.deliveryFee,
+      serviceFee: feeBreakdown.serviceFee,
+      totalAmount: feeBreakdown.total,
+      deliveryLocation,
+      specialInstructions,
+      deliveryType: selectedDeliveryType
+    };
+    
+    console.log('🚀 Navigating to create-booking with params:', JSON.stringify(bookingParams, null, 2));
     router.push({
       pathname: '/create-booking',
-      params: {
-        runnerId: runner?.runner_id,
-        runnerName: runner?.username,
-        productId: selectedProduct?.product_id,
-        productName: selectedProduct?.title,
-        productPrice: selectedProduct?.price,
-        productFee: feeBreakdown.productFee,
-        runnerFee: feeBreakdown.runnerFee,
-        deliveryFee: feeBreakdown.deliveryFee,
-        serviceFee: feeBreakdown.serviceFee,
-        totalAmount: feeBreakdown.total,
-        deliveryLocation,
-        specialInstructions,
-        deliveryType: selectedDeliveryType
-      }
+      params: bookingParams
     });
+  };
+
+  const handleDirectBooking = async () => {
+    console.log('📝 Direct booking - Runner:', runner?.username, 'ID:', runner?.runner_id);
+    
+    const bookingData = {
+      runnerId: runner?.runner_id,
+      runnerName: runner?.username,
+      productId: '',
+      productName: '',
+      productPrice: 0,
+    };
+    
+    console.log('💾 Saving to AsyncStorage:', JSON.stringify(bookingData));
+    await AsyncStorage.setItem('pendingBooking', JSON.stringify(bookingData));
+    
+    // Verify it was saved
+    const saved = await AsyncStorage.getItem('pendingBooking');
+    console.log('✅ Verification - saved data:', saved);
+    
+    console.log('🚀 Navigating to create-booking (direct)');
+    router.push('/create-booking');
   };
 
   if (loading) {
@@ -231,28 +273,17 @@ export default function RunnerDetailsScreen() {
         </View>
       </ScrollView>
         
-        {/* Book Runner Button */}
-<TouchableOpacity 
-  style={styles.bookRunnerButton}
-  onPress={() => {
-    router.push({
-      pathname: '/create-booking',
-      params: {
-        runnerId: runner?.runner_id,
-        runnerName: runner?.username,
-        // No product selected
-        productId: '',
-        productName: '',
-        productPrice: 0,
-      }
-    });
-  }}
->
-  <LinearGradient colors={['#0D330E', '#1A4A1A']} style={styles.bookRunnerGradient}>
-    <Ionicons name="calendar" size={20} color="#fff" />
-    <Text style={styles.bookRunnerText}>Book This Runner</Text>
-  </LinearGradient>
-</TouchableOpacity>
+      {/* Book Runner Button - Direct Booking */}
+      <TouchableOpacity 
+        style={styles.bookRunnerButton}
+        onPress={handleDirectBooking}
+      >
+        <LinearGradient colors={['#0D330E', '#1A4A1A']} style={styles.bookRunnerGradient}>
+          <Ionicons name="calendar" size={20} color="#fff" />
+          <Text style={styles.bookRunnerText}>Book This Runner</Text>
+        </LinearGradient>
+      </TouchableOpacity>
+
       {/* Booking Modal */}
       <Modal visible={showBookingModal} animationType="slide" transparent onRequestClose={() => setShowBookingModal(false)}>
         <View style={styles.modalOverlay}>
@@ -377,22 +408,22 @@ const styles = StyleSheet.create({
   bookButtonGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 16, gap: 8 },
   bookButtonText: { fontSize: 16, fontWeight: 'bold', color: '#fff' },
   bookRunnerButton: {
-  marginHorizontal: 20,
-  marginTop: 16,
-  marginBottom: 30,
-  borderRadius: 12,
-  overflow: 'hidden',
-},
-bookRunnerGradient: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: 16,
-  gap: 8,
-},
-bookRunnerText: {
-  fontSize: 16,
-  fontWeight: 'bold',
-  color: '#fff',
-},
+    marginHorizontal: 20,
+    marginTop: 16,
+    marginBottom: 30,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  bookRunnerGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    gap: 8,
+  },
+  bookRunnerText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
 });

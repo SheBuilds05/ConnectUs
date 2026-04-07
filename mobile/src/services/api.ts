@@ -56,6 +56,7 @@ export interface User {
   bio?: string;
   phone?: string;
   created_at?: string;
+  
 }
 
 // Request interceptor - Add token to requests

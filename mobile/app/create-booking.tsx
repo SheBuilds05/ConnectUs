@@ -1,7 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image,
-  ActivityIndicator, Alert, SafeAreaView, KeyboardAvoidingView, Platform,
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  Image,
+  ActivityIndicator,
+  Alert,
+  SafeAreaView,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -56,10 +66,21 @@ export default function CreateBookingScreen() {
           return;
         }
 
+        const debugStorage = async () => {
+          const allKeys = await AsyncStorage.getAllKeys();
+          console.log('🔑 All AsyncStorage keys:', allKeys);
+          const pending = await AsyncStorage.getItem('pendingBooking');
+          console.log('📦 Direct check - pendingBooking:', pending);
+          console.log('📦 Router params:', router.query);
+        };
+        debugStorage();
+
         // Load data from AsyncStorage
         const stored = await AsyncStorage.getItem('pendingBooking');
+        console.log('📦 AsyncStorage data:', stored);
         if (stored) {
           const data = JSON.parse(stored);
+          console.log('📦 Parsed booking data:', data);
           setBookingData(data);
           if (data.productName) setDescription(data.productName);
           if (data.productPrice) setBudget(data.productPrice.toString());
@@ -94,52 +115,60 @@ export default function CreateBookingScreen() {
     }
   };
 
-const handleCreateBooking = async () => {
-  console.log('1. Button clicked');
-  if (!description.trim()) {
-    Alert.alert('Error', 'Please describe what you need');
-    return;
-  }
-  if (!location.trim()) {
-    Alert.alert('Error', 'Please enter delivery location');
-    return;
-  }
-  if (!budget || Number(budget) <= 0) {
-    Alert.alert('Error', 'Please enter a valid budget');
-    return;
-  }
-  console.log('2. Validation passed');
+  const handleCreateBooking = async () => {
+    console.log('1. Button clicked');
+    console.log('2. Current bookingData:', bookingData);
+    console.log('3. runnerId from bookingData:', bookingData?.runnerId);
+    
+    if (!description.trim()) {
+      Alert.alert('Error', 'Please describe what you need');
+      return;
+    }
+    if (!location.trim()) {
+      Alert.alert('Error', 'Please enter delivery location');
+      return;
+    }
+    if (!budget || Number(budget) <= 0) {
+      Alert.alert('Error', 'Please enter a valid budget');
+      return;
+    }
+    console.log('4. Validation passed');
 
-  setIsProcessing(true);
-  setError(null);
-  const payload = {
-  runner_id: bookingData?.runnerId || 0,
-  product_description: description,
-  delivery_location: location,
-  budget: total,
-  product_image_url: imageUri || undefined,
-  scheduled_for: new Date().toISOString(),
-  special_instructions: specialInstructions,
-};
+    setIsProcessing(true);
+    setError(null);
+    
+    // ✅ runner_id is optional - send undefined to make it null in backend
+    const payload = {
+      product_description: description,
+      delivery_location: location,
+      budget: total,
+      product_image_url: imageUri || undefined,
+      scheduled_for: new Date().toISOString(),
+      special_instructions: specialInstructions,
+    };
 
-  try {
-    console.log('3. Calling createBooking with payload:', payload);
-    const booking = await createBooking(payload);
-    console.log('4. Booking created:', booking);
-    setIsPaid(true);
-    console.log('5. isPaid set to true');
-  } catch (err: any) {
-    console.log('6. Error caught:', err);
-    const msg = err.message || 'Failed to create booking';
-    setError(msg);
-    Alert.alert('Booking Failed', msg);
-  } finally {
-    setIsProcessing(false);
-  }
-};
+    console.log('5. Payload being sent (no runner_id required):', payload);
 
+    try {
+      console.log('6. Calling createBooking...');
+      const booking = await createBooking(payload);
+      console.log('7. Booking created:', booking);
+      setIsPaid(true);
+      console.log('8. isPaid set to true');
+    } catch (err: any) {
+      console.log('9. Error caught:', err);
+      const msg = err.message || 'Failed to create booking';
+      setError(msg);
+      Alert.alert('Booking Failed', msg);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // ✅ Fixed exit handler - always go to home screen
   const handleExit = () => {
-    router.back();
+    console.log('Exit button pressed - navigating to home');
+    router.replace('/(tabs)');
   };
 
   const renderStepContent = () => {
@@ -286,9 +315,9 @@ const handleCreateBooking = async () => {
             <View style={styles.successIconContainer}>
               <Ionicons name="checkmark-circle" size={80} color="#A3B18A" />
             </View>
-            <Text style={styles.successTitle}>Payment Successful!</Text>
+            <Text style={styles.successTitle}>Booking Created!</Text>
             <Text style={styles.successMessage}>
-              Your order has been placed and a runner is being assigned.
+              Your order has been placed and a runner will be assigned shortly.
             </Text>
             <TouchableOpacity style={styles.trackButton} onPress={() => router.push('/order/track')}>
               <Text style={styles.trackButtonText}>Track My Order</Text>

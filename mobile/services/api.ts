@@ -23,6 +23,7 @@ export interface User {
   status: string;
   created_at: string;
   last_login_at?: string;
+  id: number;
 }
 
 // ✅ Updated RunnerProfile to match actual backend response
