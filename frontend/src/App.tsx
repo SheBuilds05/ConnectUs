@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { isAuthenticated, getUserRole } from "./services/api";
 
 // Pages
-import Register from "./pages/Register"; // Single register page that handles both roles
+import Register from "./pages/Register"; 
 import LoginPage from "./pages/LoginPage";
 import LandingPage from "./pages/LandingPage";
 import UserHomePage from "./pages/UserHomePage";
@@ -14,8 +14,11 @@ import UserSettings from "./pages/UserSettings";
 import FavoritesPage from "./pages/FavoritesPage";
 import MessagesPage from "./pages/MessagesPage";
 import AccountPage from "./pages/AccountPage";
-
+import RunnerWallet from "./pages/RunnerWallet";
+import AdminDashboard from "./pages/AdminDashboard";
+import RunnerProfile from './pages/RunnerProfile'; 
 import "./App.css";
+import SettingsPage from './pages/SettingsPage';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode, allowedRoles: string[] }) => {
@@ -27,7 +30,6 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode,
   }
 
   if (!allowedRoles.includes(userRole)) {
-    // Redirect to appropriate dashboard based on role
     if (userRole === 'runner') {
       return <Navigate to="/runner" replace />;
     } else if (userRole === 'customer') {
@@ -40,7 +42,6 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode,
   return <>{children}</>;
 };
 
-// Role-based redirect for root path
 const RoleBasedRedirect = () => {
   const authenticated = isAuthenticated();
   const role = getUserRole();
@@ -49,7 +50,6 @@ const RoleBasedRedirect = () => {
     return <Navigate to="/landing" replace />;
   }
   
-  // Redirect based on user role
   switch(role) {
     case 'runner':
       return <Navigate to="/runner" replace />;
@@ -67,7 +67,7 @@ function App() {
       <Route path="/" element={<RoleBasedRedirect />} />
       <Route path="/landing" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<Register />} /> {/* Single register route */}
+      <Route path="/register" element={<Register />} />
 
       {/* Customer Routes */}
       <Route
@@ -75,14 +75,16 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={['customer']}>
             <Routes>
-              <Route index element={<UserHomePage />} />
+              <Route index element={<UserHomePage onMenuClick={() => {}} />} />
               <Route path="bookings" element={<UserBookings />} />
               <Route path="track" element={<UserTrackOrder />} />
               <Route path="settings" element={<UserSettings />} />
               <Route path="favorites" element={<FavoritesPage />} />
               <Route path="messages" element={<MessagesPage />} />
               <Route path="account" element={<AccountPage />} />
-              {/* Catch all for /user/* - redirect to user home */}
+              {/* NOTE: If customers still need to see a runner's details, 
+                  you might need a different component here later */}
+              <Route path="runner/:runnerId" element={<RunnerProfile />} />
               <Route path="*" element={<Navigate to="/user" replace />} />
             </Routes>
           </ProtectedRoute>
@@ -97,27 +99,23 @@ function App() {
             <Routes>
               <Route index element={<RunnerDashboard />} />
               <Route path="dashboard" element={<RunnerDashboard />} />
-              <Route path="profile" element={<div className="p-8 text-white">Runner Profile Coming Soon</div>} />
-              <Route path="earnings" element={<div className="p-8 text-white">Earnings Page Coming Soon</div>} />
-              <Route path="settings" element={<div className="p-8 text-white">Runner Settings Coming Soon</div>} />
-              {/* Catch all for /runner/* - redirect to runner dashboard */}
+              {/* FIXED: Replaced the "Coming Soon" div with your RunnerProfile component */}
+              <Route path="profile" element={<RunnerProfile />} />
+              <Route path="wallet" element={<RunnerWallet />} />
+              <Route path="Settings" element={<SettingsPage />} />
+              
               <Route path="*" element={<Navigate to="/runner" replace />} />
             </Routes>
           </ProtectedRoute>
         }
       />
 
-      {/* Admin Routes (if needed) */}
-      <Route
-        path="/admin/*"
-        element={
-          <ProtectedRoute allowedRoles={['admin']}>
-            <div className="p-8 text-white">Admin Dashboard Coming Soon</div>
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/admin/*" element={
+  <ProtectedRoute allowedRoles={['admin']}>
+    <AdminDashboard />
+  </ProtectedRoute>
+} />
 
-      {/* Catch all - redirect to landing */}
       <Route path="*" element={<Navigate to="/landing" replace />} />
     </Routes>
   );

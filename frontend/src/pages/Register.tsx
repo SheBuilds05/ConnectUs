@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { registerCustomer, registerRunner } from '../services/api';
+import { registerCustomer, registerRunner, registerAdmin } from '../services/api';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -17,6 +17,16 @@ const Register = () => {
     password: '',
     confirmPassword: '',
     idNumber: ''
+  });
+  
+  // Admin form state
+  const [adminData, setAdminData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    secretCode: ''
   });
 
   // Runner form state
@@ -105,6 +115,36 @@ const Register = () => {
     }
   };
 
+  const handleAdminSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (adminData.password !== adminData.confirmPassword) {
+      setError('Passwords do not match'); 
+      return;
+    }
+    if (adminData.secretCode !== '1875') {
+      setError('Invalid secret code'); 
+      return;
+    }
+    setLoading(true); 
+    setError(''); 
+    setSuccess('');
+    try {
+      await registerAdmin({
+        firstName: adminData.firstName.trim(),
+        lastName: adminData.lastName.trim(),
+        email: adminData.email.trim().toLowerCase(),
+        password: adminData.password,
+        secretCode: adminData.secretCode
+      });
+      setSuccess('Admin account created! Redirecting...');
+      setTimeout(() => navigate('/admin'), 2000);
+    } catch (err: any) {
+      setError(err.message || 'Registration failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleRunnerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -178,6 +218,7 @@ const Register = () => {
   const selectAccountType = (type: string) => {
     setSelectedType(type);
     setError('');
+    setSuccess('');
   };
 
   const CustomerIcon = () => (
@@ -193,6 +234,15 @@ const Register = () => {
       <circle cx="12" cy="8" r="3" stroke={selectedType === 'runner' ? colors.moss : colors.forest} strokeWidth="1.5"/>
       <path d="M5 18L7 15L10 18L14 13L17 16L19 14" stroke={selectedType === 'runner' ? colors.moss : colors.forest} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
       <path d="M18 21L15 18L12 20L9 18L6 21" stroke={colors.sage} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+
+  const AdminIcon = () => (
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12Z" stroke={selectedType === 'admin' ? colors.moss : colors.forest} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M5 20V19C5 15.13 8.13 12 12 12C15.87 12 19 15.13 19 19V20" stroke={selectedType === 'admin' ? colors.moss : colors.forest} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M19 4L21 6L19 8" stroke={colors.sage} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M21 6H18" stroke={colors.sage} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   );
 
@@ -249,7 +299,8 @@ const Register = () => {
         maxHeight: '90vh',
         overflowY: 'auto'
       }}>
-        {/* Logo Section */}
+        
+        {/* Logo-Section */}
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
           <div style={{ 
             backgroundColor: colors.forest, 
@@ -273,6 +324,7 @@ const Register = () => {
           }}>
             {selectedType === 'customer' ? 'Create Customer Account' : 
              selectedType === 'runner' ? 'Become a Runner' : 
+             selectedType === 'admin' ? 'Admin Registration' :
              'Create Account'}
           </h2>
           <p style={{ 
@@ -282,6 +334,7 @@ const Register = () => {
           }}>
             {selectedType === 'customer' ? 'Join as a customer and start ordering' : 
              selectedType === 'runner' ? 'Start earning by delivering items' : 
+             selectedType === 'admin' ? 'Platform administrator access' :
              'Join ConnectUs and start your journey'}
           </p>
         </div>
@@ -316,7 +369,7 @@ const Register = () => {
           </div>
         )}
 
-        {/* Account Type Selection - Only show if no type selected */}
+        {/* Account Type Selection */}
         {!selectedType && (
           <div style={{ marginBottom: '2.5rem' }}>
             <label style={{ 
@@ -423,6 +476,57 @@ const Register = () => {
                   lineHeight: '1.5'
                 }}>
                   I want to deliver items to others
+                </p>
+              </div>
+
+              {/* Admin Card */}
+              <div
+                onClick={() => !loading && selectAccountType('admin')}
+                style={{
+                  padding: '2rem 1rem',
+                  borderRadius: '16px',
+                  border: `2px solid ${colors.sage}30`,
+                  backgroundColor: colors.white,
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  textAlign: 'center',
+                  transition: 'all 0.2s',
+                  opacity: loading ? 0.6 : 1,
+                  gridColumn: 'span 2',
+                  maxWidth: '300px',
+                  margin: '0 auto'
+                }}
+                onMouseEnter={(e) => {
+                  if (!loading) {
+                    e.currentTarget.style.borderColor = colors.moss;
+                    e.currentTarget.style.backgroundColor = `${colors.moss}05`;
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!loading) {
+                    e.currentTarget.style.borderColor = `${colors.sage}30`;
+                    e.currentTarget.style.backgroundColor = colors.white;
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }
+                }}
+              >
+                <div style={{ marginBottom: '1rem' }}>
+                  <AdminIcon />
+                </div>
+                <h3 style={{ 
+                  color: colors.forest, 
+                  marginBottom: '0.5rem',
+                  fontWeight: '600',
+                  fontSize: '1.2rem'
+                }}>
+                  Admin
+                </h3>
+                <p style={{ 
+                  color: colors.leaf, 
+                  fontSize: '0.85rem',
+                  lineHeight: '1.5'
+                }}>
+                  Platform administrator access
                 </p>
               </div>
             </div>
@@ -545,6 +649,125 @@ const Register = () => {
               disabled={loading}
             >
               {loading ? 'Creating Account...' : 'Create Customer Account'}
+            </button>
+          </form>
+        )}
+
+        {/* Admin Registration Form */}
+        {selectedType === 'admin' && (
+          <form onSubmit={handleAdminSubmit}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+              <div>
+                <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>
+                  First Name
+                </label>
+                <input 
+                  type="text" 
+                  value={adminData.firstName}
+                  onChange={(e) => setAdminData({...adminData, firstName: e.target.value})}
+                  style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
+                  placeholder="First name" 
+                  required 
+                  disabled={loading} 
+                />
+              </div>
+              <div>
+                <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>
+                  Last Name
+                </label>
+                <input 
+                  type="text" 
+                  value={adminData.lastName}
+                  onChange={(e) => setAdminData({...adminData, lastName: e.target.value})}
+                  style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
+                  placeholder="Last name" 
+                  required 
+                  disabled={loading} 
+                />
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>
+                Email Address
+              </label>
+              <input 
+                type="email" 
+                value={adminData.email}
+                onChange={(e) => setAdminData({...adminData, email: e.target.value})}
+                style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
+                placeholder="Admin email" 
+                required 
+                disabled={loading} 
+              />
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>
+                Secret Code
+              </label>
+              <input 
+                type="password" 
+                value={adminData.secretCode}
+                onChange={(e) => setAdminData({...adminData, secretCode: e.target.value})}
+                style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
+                placeholder="Enter admin secret code" 
+                required 
+                disabled={loading} 
+              />
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>
+                Password
+              </label>
+              <input 
+                type="password" 
+                value={adminData.password}
+                onChange={(e) => setAdminData({...adminData, password: e.target.value})}
+                style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
+                placeholder="Create a password" 
+                required 
+                disabled={loading} 
+                minLength={6} 
+              />
+            </div>
+
+            <div style={{ marginBottom: '2rem' }}>
+              <label style={{ color: colors.forest, display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.95rem' }}>
+                Confirm Password
+              </label>
+              <input 
+                type="password" 
+                value={adminData.confirmPassword}
+                onChange={(e) => setAdminData({...adminData, confirmPassword: e.target.value})}
+                style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: `1px solid ${colors.sage}30`, outline: 'none', fontSize: '1rem', boxSizing: 'border-box' }}
+                placeholder="Confirm your password" 
+                required 
+                disabled={loading} 
+              />
+            </div>
+
+            <button 
+              type="submit"
+              style={{ 
+                backgroundColor: colors.forest, 
+                color: colors.white, 
+                width: '100%', 
+                padding: '1rem', 
+                borderRadius: '50px', 
+                border: 'none', 
+                cursor: loading ? 'not-allowed' : 'pointer', 
+                fontWeight: '600', 
+                fontSize: '1rem', 
+                marginBottom: '1.5rem',
+                transition: 'all 0.2s',
+                boxShadow: `0 4px 12px ${colors.forest}40`,
+                opacity: loading ? 0.7 : 1
+              }}
+              disabled={loading}
+            >
+              {loading ? 'Creating Admin Account...' : 'Create Admin Account'}
             </button>
           </form>
         )}
@@ -733,6 +956,36 @@ const Register = () => {
               onClick={() => {
                 setSelectedType(null);
                 setError('');
+                setSuccess('');
+                // Reset all forms
+                setCustomerData({
+                  firstName: '',
+                  lastName: '',
+                  email: '',
+                  password: '',
+                  confirmPassword: '',
+                  idNumber: ''
+                });
+                setRunnerData({
+                  username: '',
+                  email: '',
+                  password: '',
+                  confirmPassword: '',
+                  phone: '',
+                  address: '',
+                  city: '',
+                  postalCode: '',
+                  idNumber: '',
+                  bio: ''
+                });
+                setAdminData({
+                  firstName: '',
+                  lastName: '',
+                  email: '',
+                  password: '',
+                  confirmPassword: '',
+                  secretCode: ''
+                });
               }}
               style={{ 
                 color: colors.moss, 
@@ -772,29 +1025,6 @@ const Register = () => {
             Sign in
           </Link>
         </p>
-
-        {/* Admin Link */}
-        <div style={{ 
-          textAlign: 'center', 
-          marginTop: '1.5rem',
-          paddingTop: '1.5rem',
-          borderTop: `1px solid ${colors.sage}30`
-        }}>
-          <Link 
-            to="/admin" 
-            style={{ 
-              color: colors.sage, 
-              textDecoration: 'none',
-              fontSize: '0.9rem',
-              fontWeight: '500',
-              transition: 'color 0.2s'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.color = colors.moss}
-            onMouseLeave={(e) => e.currentTarget.style.color = colors.sage}
-          >
-            Admin Access →
-          </Link>
-        </div>
       </div>
     </div>
   );

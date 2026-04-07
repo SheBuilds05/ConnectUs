@@ -6,17 +6,23 @@ import pool from '../db';
  * Triggered by handlePayment in UserBookings.tsx
  */
 export const createBooking = async (req: Request, res: Response) => {
-  const { customer_id, product_description, delivery_location, budget, status } = req.body;
+  const user_id = (req as any).user?.id;
+  const { product_description, delivery_location, budget, is_priority,runner_id } = req.body;
+  
+  if (!user_id) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
   try {
     const result = await pool.query(
-      `INSERT INTO bookings (customer_id, product_description, delivery_location, budget, status) 
-       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [customer_id, product_description, delivery_location, budget, status]
+      `INSERT INTO bookings (user_id, product_description, delivery_location, budget, status, runner_id) 
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [user_id, product_description, delivery_location, budget, 'CREATED', runner_id]
     );
     res.status(201).json(result.rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to create booking" });
+  } catch (err: any) {
+    console.error('Create booking error:', err.message);
+    res.status(500).json({ error: 'Failed to create booking', details: err.message });
   }
 };
 
@@ -36,10 +42,9 @@ export const getUserBookings = async (req: Request, res: Response) => {
         b.created_at,
         u.full_name as runner_name, 
         u.phone as runner_phone
-        /* Removed u.profile_pic because it doesn't exist in your DB */
        FROM bookings b 
-       LEFT JOIN users u ON b.assigned_runner_id = u.user_id 
-       WHERE b.customer_id = $1 
+       LEFT JOIN users u ON b.runner_id = u.user_id 
+       WHERE b.user_id = $1 
        ORDER BY b.created_at DESC`,
       [userId]
     );

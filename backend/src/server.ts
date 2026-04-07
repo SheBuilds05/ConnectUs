@@ -1,58 +1,69 @@
-﻿import express from 'express';
+import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import http from 'http';
 import { Server } from 'socket.io';
-
-dotenv.config();
+import authRoutes from './routes/authRoutes';
+import runnerRoutes from '../src/routes/runnerRoutes'; 
+import userRoutes from './routes/userRoutes';
+import adminRoutes from './routes/adminRoutes';
 
 const app = express();
-const server = http.createServer(app);
+const server = http.createServer(app); 
+
+//MIDDLEWARE (Order matters!)
+const corsOptions = {
+  origin: 'http://localhost:3000',
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id'],
+  credentials: true
+};
+app.use(cors(corsOptions));
+app.use((req, res, next) => { if (req.method === 'OPTIONS') { res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000'); res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS'); res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,x-user-id'); res.setHeader('Access-Control-Allow-Credentials', 'true'); return res.sendStatus(200); } next(); });
+
+app.use(express.json());
+
+// SOCKET.IO INITIALIZATION
 const io = new Server(server, {
   cors: {
-    origin: '*',
-    credentials: true
+    origin: "http://localhost:3000", 
+    methods: ["GET", "POST"]
   }
 });
 
-const PORT = process.env.PORT || 5000;
-
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Server is running' });
-});
-
-app.post('/api/auth/login', (req, res) => {
-  const { email, password } = req.body;
-  
-  if (email === 'test@example.com' && password === 'password123') {
-    res.json({
-      success: true,
-      data: {
-        token: 'mock-token-12345',
-        user: { id: 1, name: 'Test User', email: 'test@example.com', role: 'runner' }
-      },
-      message: 'Login successful'
-    });
-  } else {
-    res.status(401).json({ success: false, message: 'Invalid credentials' });
-  }
-});
-
-app.post('/api/auth/register', (req, res) => {
-  res.json({ success: true, message: 'Registration successful' });
-});
-
+//SOCKET.IO LOGIC
 io.on('connection', (socket) => {
-  console.log('New client connected:', socket.id);
+  console.log('A user connected:', socket.id);
+
+  socket.on('join', (userId) => {
+    socket.join(`user_${userId}`);
+    console.log(`User ${userId} joined their private room`);
+  });
+
   socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
+    console.log('User disconnected');
   });
 });
 
-server.listen(PORT, () => {
-  console.log('Server running on port', PORT);
+// ROUTES
+app.use('/api/auth', authRoutes);
+app.use('/api/runners', runnerRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/admin', adminRoutes);
+
+// Test endpoints
+app.get('/api/health', (req, res) => res.json({ status: 'OK' }));
+app.get('/api/test', (req, res) => {
+  res.json({ 
+    success: true, 
+    message: 'API is working!',
+    timestamp: new Date().toISOString()
+  });
 });
+
+// START SERVER
+const PORT = 5000;
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server & Socket.io running on http://localhost:${PORT}`);
+});
+
+
