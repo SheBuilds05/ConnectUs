@@ -1,24 +1,12 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@theme {
- 
-  --color-runner-bg: #D3D3D3;
-  --color-runner-light: #6E8649;
-  --color-runner-medium: #477023;
-  --color-runner-dark: #2D531A;
-  --color-runner-deep: #0D330E;
-}
-
-
+/* Fixed Syntax */
 body {
-  @apply bg-runner-bg font-sans antialiased;
-}
-/* Remove Tailwind imports, just keep your custom styles */
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
-
-/* Any additional custom styles can go here */
+  margin: 0;
+  padding: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #D3D3D3;
+} /* Removed the comma and extra text here */
