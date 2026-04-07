@@ -19,6 +19,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import RunnerProfile from './pages/RunnerProfile'; 
 import "./App.css";
 import SettingsPage from './pages/SettingsPage';
+import RunnerDetailsPage from './pages/RunnerDetailsPage';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode, allowedRoles: string[] }) => {
@@ -76,17 +77,83 @@ function App() {
           <ProtectedRoute allowedRoles={['customer']}>
             <Routes>
               <Route index element={<UserHomePage onMenuClick={() => {}} />} />
-              <Route path="bookings" element={<UserBookings />} />
-              <Route path="track" element={<UserTrackOrder />} />
-              <Route path="settings" element={<UserSettings />} />
-              <Route path="favorites" element={<FavoritesPage />} />
-              <Route path="messages" element={<MessagesPage />} />
-              <Route path="account" element={<AccountPage />} />
-              {/* NOTE: If customers still need to see a runner's details, 
-                  you might need a different component here later */}
-              <Route path="runner/:runnerId" element={<RunnerProfile />} />
+              {/* FIXED: Move runner details route outside the nested structure */}
               <Route path="*" element={<Navigate to="/user" replace />} />
             </Routes>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* FIXED: Move RunnerDetailsPage to a separate route outside the nested structure */}
+      <Route
+        path="/runner/:runnerId"
+        element={
+          <ProtectedRoute allowedRoles={['customer']}>
+            <RunnerDetailsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/book-runner/:runnerId"
+        element={
+          <ProtectedRoute allowedRoles={['customer']}>
+            <UserBookings />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Keep other customer routes as separate routes */}
+      <Route
+        path="/user/bookings"
+        element={
+          <ProtectedRoute allowedRoles={['customer']}>
+            <UserBookings />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/user/track"
+        element={
+          <ProtectedRoute allowedRoles={['customer']}>
+            <UserTrackOrder />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/user/settings"
+        element={
+          <ProtectedRoute allowedRoles={['customer']}>
+            <UserSettings />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/user/favorites"
+        element={
+          <ProtectedRoute allowedRoles={['customer']}>
+            <FavoritesPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/user/messages"
+        element={
+          <ProtectedRoute allowedRoles={['customer']}>
+            <MessagesPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/user/account"
+        element={
+          <ProtectedRoute allowedRoles={['customer']}>
+            <AccountPage />
           </ProtectedRoute>
         }
       />
@@ -99,11 +166,9 @@ function App() {
             <Routes>
               <Route index element={<RunnerDashboard />} />
               <Route path="dashboard" element={<RunnerDashboard />} />
-              {/* FIXED: Replaced the "Coming Soon" div with your RunnerProfile component */}
               <Route path="profile" element={<RunnerProfile />} />
               <Route path="wallet" element={<RunnerWallet />} />
               <Route path="Settings" element={<SettingsPage />} />
-              
               <Route path="*" element={<Navigate to="/runner" replace />} />
             </Routes>
           </ProtectedRoute>
@@ -111,10 +176,10 @@ function App() {
       />
 
       <Route path="/admin/*" element={
-  <ProtectedRoute allowedRoles={['admin']}>
-    <AdminDashboard />
-  </ProtectedRoute>
-} />
+        <ProtectedRoute allowedRoles={['admin']}>
+          <AdminDashboard />
+        </ProtectedRoute>
+      } />
 
       <Route path="*" element={<Navigate to="/landing" replace />} />
     </Routes>

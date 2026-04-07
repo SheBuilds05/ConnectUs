@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import * as Icons from 'lucide-react'; 
 import { Search, MapPin, Bell, SlidersHorizontal, Menu, Star, Zap, Shield, Clock, RefreshCw, X } from 'lucide-react';
 import { RunnerCard } from '../components/RunnerCard';
-import { RunnerModal } from '../components/RunnerModal';
+import RunnerModal from '../components/RunnerModal';
 import { categories } from '../data/mockData';
 import UserSidebar from '../components/UserSidebar';
 import BottomNav from '../components/BottomNav';

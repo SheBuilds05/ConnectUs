@@ -1,11 +1,15 @@
 import { Router } from 'express';
 import { 
-  createBooking,      // Added: to handle new bookings from UserBookings.tsx
+  createBooking,      
   getUserBookings, 
-  getUserProfile,     // Added: to load initial data in UserSettings.tsx
-  updateUserProfile,  // Updated: renamed to match the Settings logic
+  getUserProfile,     
+  updateUserProfile,  
   cancelBooking,
-  getBookingStatus
+  getBookingStatus, 
+  getWallet,      
+  topUpWallet,
+  withdrawFunds,
+  getRunnerById
 } from '../controllers/userController';
 import { authenticateUser } from '../middleware/authMiddleware';
 
@@ -18,5 +22,9 @@ router.get('/bookings/:bookingId/track', getBookingStatus);
 router.put('/bookings/:bookingId/cancel', cancelBooking);
 router.get('/:userId/profile', getUserProfile);
 router.put('/:userId/profile', updateUserProfile);
+router.get('/:userId/wallet', getWallet);
+router.post('/:userId/wallet/topup', topUpWallet);
+router.post('/:userId/wallet/withdraw', withdrawFunds);
+router.get('/runners/:runnerId', getRunnerById);
 
 export default router;
