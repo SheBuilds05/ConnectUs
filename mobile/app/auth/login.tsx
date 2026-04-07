@@ -45,24 +45,21 @@ export default function LoginScreen() {
     try {
       console.log('Attempting login with:', { email: email.trim().toLowerCase() });
       
-      const response = await loginUser(email.trim().toLowerCase(), password);
+      const response = await loginUser(email.trim().toLowerCase(), password, false);
       
       console.log('Login successful:', response);
-      console.log('User role:', response.user.role);
+      console.log('User role:', response.user?.role);
       
       // Redirect based on user role
-      if (response.user.role === 'runner') {
+      if (response.user?.role === 'runner') {
         console.log('Redirecting to runner dashboard');
-        // For runner role, you can create a separate runner dashboard
-        router.replace('/(tabs)'); // Or '/runner' if you have a runner tab layout
-      } else if (response.user.role === 'customer') {
-        console.log('Redirecting to customer dashboard');
-        router.replace('/(tabs)');
-      } else if (response.user.role === 'admin') {
+        router.replace('/runner/dashboard');
+      } else if (response.user?.role === 'admin') {
         console.log('Redirecting to admin dashboard');
-        router.replace('/(tabs)');
+        router.replace('/admin/dashboard');
       } else {
-        // Default fallback
+        // customer or default
+        console.log('Redirecting to customer dashboard');
         router.replace('/(tabs)');
       }
       
@@ -77,13 +74,11 @@ export default function LoginScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <LinearGradient colors={[colors.canvas, colors.canvas]} style={styles.gradient}>
-        {/* Background Decorative Elements */}
         <View style={styles.bgCircle1} />
         <View style={styles.bgCircle2} />
 
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardView}>
           <View style={styles.content}>
-            {/* Logo Section */}
             <View style={styles.logoSection}>
               <View style={styles.logoBox}>
                 <Text style={styles.logoText}>C</Text>
@@ -92,14 +87,12 @@ export default function LoginScreen() {
               <Text style={styles.subtitle}>Sign in to continue to ConnectUs</Text>
             </View>
 
-            {/* Error Message */}
             {error ? (
               <View style={styles.errorContainer}>
                 <Text style={styles.errorText}>{error}</Text>
               </View>
             ) : null}
 
-            {/* Form */}
             <View style={styles.form}>
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Email Address</Text>
@@ -148,22 +141,16 @@ export default function LoginScreen() {
                   end={{ x: 1, y: 0 }}
                   style={styles.loginGradient}
                 >
-                  {loading ? (
-                    <ActivityIndicator color={colors.white} />
-                  ) : (
-                    <Text style={styles.loginButtonText}>Sign In</Text>
-                  )}
+                  {loading ? <ActivityIndicator color={colors.white} /> : <Text style={styles.loginButtonText}>Sign In</Text>}
                 </LinearGradient>
               </TouchableOpacity>
 
-              {/* Divider */}
               <View style={styles.divider}>
                 <View style={styles.dividerLine} />
                 <Text style={styles.dividerText}>or</Text>
                 <View style={styles.dividerLine} />
               </View>
 
-              {/* Register Link */}
               <TouchableOpacity onPress={() => router.push('/auth/register')}>
                 <Text style={styles.registerLink}>
                   Do not have an account? <Text style={styles.registerLinkBold}>Register here</Text>
@@ -178,20 +165,10 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  gradient: {
-    flex: 1,
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-  },
+  container: { flex: 1 },
+  gradient: { flex: 1 },
+  keyboardView: { flex: 1 },
+  content: { flex: 1, justifyContent: 'center', paddingHorizontal: 24 },
   bgCircle1: {
     position: 'absolute',
     top: '-10%',
@@ -212,10 +189,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.forest + '20',
     zIndex: 0,
   },
-  logoSection: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
+  logoSection: { alignItems: 'center', marginBottom: 40 },
   logoBox: {
     backgroundColor: colors.forest,
     width: 64,
@@ -230,47 +204,14 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
   },
-  logoText: {
-    color: colors.white,
-    fontSize: 32,
-    fontWeight: '600',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.forest,
-    marginBottom: 8,
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: colors.leaf,
-    opacity: 0.9,
-  },
-  errorContainer: {
-    backgroundColor: '#fee',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#fcc',
-  },
-  errorText: {
-    color: '#c33',
-    fontSize: 13,
-    textAlign: 'center',
-  },
-  form: {
-    gap: 20,
-  },
-  inputGroup: {
-    gap: 8,
-  },
-  label: {
-    color: colors.forest,
-    fontWeight: '500',
-    fontSize: 14,
-  },
+  logoText: { color: colors.white, fontSize: 32, fontWeight: '600' },
+  title: { fontSize: 28, fontWeight: '700', color: colors.forest, marginBottom: 8, letterSpacing: -0.5 },
+  subtitle: { fontSize: 14, color: colors.leaf, opacity: 0.9 },
+  errorContainer: { backgroundColor: '#fee', padding: 12, borderRadius: 8, marginBottom: 20, borderWidth: 1, borderColor: '#fcc' },
+  errorText: { color: '#c33', fontSize: 13, textAlign: 'center' },
+  form: { gap: 20 },
+  inputGroup: { gap: 8 },
+  label: { color: colors.forest, fontWeight: '500', fontSize: 14 },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -281,53 +222,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     height: 52,
   },
-  inputIcon: {
-    marginRight: 12,
-  },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    color: colors.text,
-  },
-  loginButton: {
-    borderRadius: 50,
-    overflow: 'hidden',
-    marginTop: 8,
-  },
-  loginButtonDisabled: {
-    opacity: 0.7,
-  },
-  loginGradient: {
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  loginButtonText: {
-    color: colors.white,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-    marginVertical: 8,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.sage + '30',
-  },
-  dividerText: {
-    color: colors.leaf,
-    fontSize: 14,
-  },
-  registerLink: {
-    textAlign: 'center',
-    color: colors.leaf,
-    fontSize: 14,
-  },
-  registerLinkBold: {
-    color: colors.moss,
-    fontWeight: '600',
-  },
+  inputIcon: { marginRight: 12 },
+  input: { flex: 1, fontSize: 16, color: colors.text },
+  loginButton: { borderRadius: 50, overflow: 'hidden', marginTop: 8 },
+  loginButtonDisabled: { opacity: 0.7 },
+  loginGradient: { paddingVertical: 16, alignItems: 'center' },
+  loginButtonText: { color: colors.white, fontSize: 16, fontWeight: '600' },
+  divider: { flexDirection: 'row', alignItems: 'center', gap: 16, marginVertical: 8 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: colors.sage + '30' },
+  dividerText: { color: colors.leaf, fontSize: 14 },
+  registerLink: { textAlign: 'center', color: colors.leaf, fontSize: 14 },
+  registerLinkBold: { color: colors.moss, fontWeight: '600' },
 });

@@ -169,34 +169,13 @@ const loadUserData = async () => {
   };
 
   // ✅ Fixed logout function
- const handleLogout = () => {
-  setIsSidebarOpen(false);
-  Alert.alert(
-    'Logout', 
-    'Are you sure you want to logout?',
-    [
-      { text: 'Cancel', style: 'cancel' },
-      { 
-        text: 'Logout', 
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await logoutUser();
-            // Use a small delay to ensure storage is cleared
-            setTimeout(() => {
-              // Navigate to login screen
-              router.push('/auth/login');
-            }, 100);
-          } catch (error) {
-            console.error('Logout error:', error);
-            router.push('/auth/login');
-          }
-        }
-      }
-    ]
-  );
+ const handleLogout = async () => {
+  console.log('Logging out...');
+  await logoutUser();
+  setTimeout(() => {
+    router.replace('/landing');
+  }, 100);
 };
-
   const SidebarContent = () => (
     <LinearGradient
       colors={['#2D531A', '#1A3A1A']}

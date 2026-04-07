@@ -1,29 +1,32 @@
+// app/index.tsx
 import React, { useEffect, useState } from 'react';
-import { View, ActivityIndicator, Text } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
 import { Redirect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getCurrentUser } from '../services/api';
 
 export default function Index() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
-    // Force logout on every app start - clear storage first
-    forceLogoutAndCheck();
+    checkAuthStatus();
   }, []);
 
-  const forceLogoutAndCheck = async () => {
+  const checkAuthStatus = async () => {
     try {
-      // Force clear storage on every app start
-      await AsyncStorage.removeItem('token');
-      await AsyncStorage.removeItem('user');
-      
-      console.log('🔍 Storage cleared - forcing logout');
-      
-      // After clearing, set authenticated to false
-      setIsAuthenticated(false);
+      const token = await AsyncStorage.getItem('token');
+      const user = await getCurrentUser();
+      if (token && user) {
+        setIsAuthenticated(true);
+        setUserRole(user.role || 'customer');
+      } else {
+        setIsAuthenticated(false);
+        setUserRole(null);
+      }
     } catch (error) {
-      console.error('Force logout error:', error);
+      console.error('Auth check error:', error);
       setIsAuthenticated(false);
     } finally {
       setIsLoading(false);
@@ -34,13 +37,20 @@ export default function Index() {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#477023" />
-        <Text style={{ marginTop: 20, color: '#666' }}>Loading...</Text>
       </View>
     );
   }
 
-  console.log('🔍 Redirecting to: /auth/login');
-  
-  // Always redirect to login since we cleared storage
-  return <Redirect href="/auth/login" />;
-}
+  if (!isAuthenticated) {
+    return <Redirect href="/landing" />;
+  }
+
+  // Role-based redirect
+  if (userRole === 'runner') {
+    return <Redirect href="/runner/dashboard" />;
+  } else if (userRole === 'admin') {
+    return <Redirect href="/admin/dashboard" />;
+  } else {
+    return <Redirect href="/(tabs)" />;
+  }
+};

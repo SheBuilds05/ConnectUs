@@ -26,7 +26,6 @@ export interface User {
   id: number;
 }
 
-// ✅ Updated RunnerProfile to match actual backend response
 export interface RunnerProfile {
   runner_id: number;
   username: string;
@@ -38,7 +37,6 @@ export interface RunnerProfile {
   bio: string;
   languages: string[];
   id_verified: boolean;
-  // optional extra fields (if your backend provides them)
   phone?: string;
   rating?: number;
   address?: string;
@@ -94,8 +92,37 @@ api.interceptors.response.use(
 
 // ========== AUTH FUNCTIONS ==========
 
-export const loginUser = async (email: string, password: string) => {
-  const response = await api.post('/auth/login', { email, password });
+export const loginUser = async (email: string, password: string, rememberMe: boolean = false) => {
+  try {
+    const response = await api.post('/auth/login', { email, password, rememberMe });
+    
+    if (response.data.token) {
+      await AsyncStorage.setItem('token', response.data.token);
+      await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+    
+    return response.data;
+  } catch (error: any) {
+    console.error('Login API error:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Login failed');
+  }
+};
+
+// Customer registration (with firstName, lastName, id_num)
+export const registerCustomer = async (userData: {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  id_num: string;
+}) => {
+  const response = await api.post('/auth/register/customer', {
+    firstName: userData.firstName,
+    lastName: userData.lastName,
+    email: userData.email,
+    password: userData.password,
+    id_num: userData.id_num,
+  });
   
   if (response.data.token) {
     await AsyncStorage.setItem('token', response.data.token);
@@ -105,13 +132,37 @@ export const loginUser = async (email: string, password: string) => {
   return response.data;
 };
 
-export const registerCustomer = async (userData: {
-  full_name: string;
+// Runner registration
+export const registerRunner = async (userData: {
+  username: string;
   email: string;
   password: string;
   phone: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  id_number: string;
+  bio: string;
 }) => {
-  const response = await api.post('/auth/register/customer', userData);
+  const response = await api.post('/auth/register/runner', userData);
+  
+  if (response.data.token) {
+    await AsyncStorage.setItem('token', response.data.token);
+    await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
+  }
+  
+  return response.data;
+};
+
+// Admin registration
+export const registerAdmin = async (userData: {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  secretCode: string;
+}) => {
+  const response = await api.post('/auth/register/admin', userData);
   
   if (response.data.token) {
     await AsyncStorage.setItem('token', response.data.token);
@@ -186,8 +237,7 @@ export const addFunds = async (amount: number): Promise<{ checkout_url: string; 
   return response.data?.data || response.data;
 };
 
-// ========== RUNNER FUNCTIONS (if not already in runnerService) ==========
-// Note: These are kept here for convenience, but you might already have them in runnerService.ts
+// ========== RUNNER FUNCTIONS ==========
 
 export const getRunners = async (params?: any) => {
   const response = await api.get('/runners', { params });
