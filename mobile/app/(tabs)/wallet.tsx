@@ -1,294 +1,150 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+﻿import React, { useState, useEffect } from 'react';
+import {
+  View, Text, StyleSheet, ScrollView, RefreshControl, ActivityIndicator, TouchableOpacity, Alert,
+} from 'react-native';
+import Icon from 'react-native-vector-icons/Feather';
+import { useAuth } from '../../src/context/AuthContext';
+import { earningsAPI } from '../../src/api/endpoints';
+import { Sidebar } from '../../src/components/Sidebar';
 
 export default function WalletScreen() {
+  const { user } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [balance, setBalance] = useState(1250.50);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchData = async () => {
+    try {
+      const res = await earningsAPI.getEarnings();
+      if (res.data?.success && res.data?.data) {
+        setBalance(res.data.data.total || 1250.50);
+      }
+    } catch (error) { console.error(error);
+    } finally { setLoading(false); setRefreshing(false); }
+  };
+
+  useEffect(() => { fetchData(); }, []);
+  const onRefresh = () => { setRefreshing(true); fetchData(); };
+
+  const handleWithdraw = () => {
+    Alert.alert('Withdraw', 'Withdrawal feature coming soon', [{ text: 'OK' }]);
+  };
+
+  const sampleTransactions = [
+    { id: 1, title: 'Package Delivery', date: 'Mar 30, 2024', amount: 15.00 },
+    { id: 2, title: 'Food Delivery', date: 'Mar 29, 2024', amount: 8.50 },
+    { id: 3, title: 'Package Delivery', date: 'Mar 28, 2024', amount: 12.00 },
+  ];
+
+  if (loading) {
+    return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#0D330E" /></View>;
+  }
+
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Header */}
+    <View style={styles.container}>
+      <Sidebar visible={sidebarOpen} onClose={() => setSidebarOpen(false)} userName={user?.name} />
+
+      <View style={styles.gridBackground} />
+      <View style={[styles.glowTop, { backgroundColor: '#A3B18A' }]} />
+      <View style={[styles.glowBottom, { backgroundColor: '#2D531A' }]} />
+
       <View style={styles.header}>
-        <Text style={styles.title}>My Wallet</Text>
-        <Text style={styles.subtitle}>Manage your earnings and transactions</Text>
-      </View>
-
-      {/* Balance Card */}
-      <View style={styles.balanceCard}>
-        <Text style={styles.balanceLabel}>Total Balance</Text>
-        <Text style={styles.balanceAmount}>R 2,450.00</Text>
-        <TouchableOpacity style={styles.withdrawButton}>
-          <Text style={styles.withdrawButtonText}>Withdraw Funds</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Stats Row */}
-      <View style={styles.statsRow}>
-        <View style={styles.statCard}>
-          <Ionicons name="trending-up" size={24} color="#4ade80" />
-          <Text style={styles.statAmount}>R 1,250</Text>
-          <Text style={styles.statLabel}>This Week</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Ionicons name="calendar" size={24} color="#4ade80" />
-          <Text style={styles.statAmount}>R 3,800</Text>
-          <Text style={styles.statLabel}>This Month</Text>
-        </View>
-      </View>
-
-      {/* Bonus Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Bonuses & Promotions</Text>
-        <View style={styles.bonusCard}>
-          <View style={styles.bonusIcon}>
-            <Ionicons name="gift" size={24} color="#4ade80" />
+        <View style={styles.headerInner}>
+          <TouchableOpacity onPress={() => setSidebarOpen(true)} style={styles.menuButton}>
+            <Icon name="menu" size={20} color="white" />
+          </TouchableOpacity>
+          <View style={styles.locationBadge}>
+            <Icon name="map-pin" size={14} color="#2D531A" />
+            <Text style={styles.locationText}>Sandton, JHB</Text>
           </View>
-          <View style={styles.bonusContent}>
-            <Text style={styles.bonusTitle}>Weekend Bonus</Text>
-            <Text style={styles.bonusDescription}>Complete 10 deliveries this weekend</Text>
-          </View>
-          <Text style={styles.bonusAmount}>+R 150</Text>
+          <TouchableOpacity style={styles.notificationButton}>
+            <Icon name="bell" size={20} color="#0D330E" />
+            <View style={styles.notificationDot} />
+          </TouchableOpacity>
         </View>
       </View>
 
-      {/* Recent Transactions */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Recent Transactions</Text>
-        
-        <TransactionItem 
-          icon="cart" 
-          title="Delivery #1234" 
-          date="Today, 2:30 PM" 
-          amount="+R 45.00" 
-          positive={true}
-        />
-        
-        <TransactionItem 
-          icon="wallet" 
-          title="Withdrawal" 
-          date="Yesterday, 10:15 AM" 
-          amount="-R 200.00" 
-          positive={false}
-        />
-        
-        <TransactionItem 
-          icon="star" 
-          title="Bonus - Peak Hour" 
-          date="Mar 28, 2025" 
-          amount="+R 25.00" 
-          positive={true}
-        />
-        
-        <TransactionItem 
-          icon="cart" 
-          title="Delivery #1230" 
-          date="Mar 27, 2025" 
-          amount="+R 55.00" 
-          positive={true}
-        />
-      </View>
-    </ScrollView>
-  );
-}
+      <ScrollView style={styles.mainContent} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#0D330E']} />}>
+        <View style={styles.banner}>
+          <View style={styles.bannerContent}>
+            <View style={styles.bannerLeft}>
+              <View style={styles.bannerLine} />
+              <Text style={styles.bannerLabel}>WALLET</Text>
+              <Text style={styles.bannerTitle}>Your <Text style={styles.bannerName}>earnings</Text></Text>
+            </View>
+          </View>
+        </View>
 
-// ✅ FIXED: Added TypeScript interface for TransactionItem props
-interface TransactionItemProps {
-  icon: keyof typeof Ionicons.glyphMap;
-  title: string;
-  date: string;
-  amount: string;
-  positive: boolean;
-}
+        <View style={styles.balanceCard}>
+          <Text style={styles.balanceLabel}>Total Balance</Text>
+          <Text style={styles.balanceAmount}>R {balance.toFixed(2)}</Text>
+        </View>
 
-// Transaction Item Component with proper typing
-const TransactionItem: React.FC<TransactionItemProps> = ({ icon, title, date, amount, positive }) => {
-  return (
-    <View style={styles.transactionItem}>
-      <View style={styles.transactionIcon}>
-        <Ionicons name={icon} size={20} color="#1a2e1a" />
-      </View>
-      <View style={styles.transactionDetails}>
-        <Text style={styles.transactionTitle}>{title}</Text>
-        <Text style={styles.transactionDate}>{date}</Text>
-      </View>
-      <Text style={[
-        styles.transactionAmount,
-        positive ? styles.positiveAmount : styles.negativeAmount
-      ]}>
-        {amount}
-      </Text>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Recent Transactions</Text>
+          {sampleTransactions.map((transaction) => (
+            <View key={transaction.id} style={styles.transactionCard}>
+              <View style={styles.transactionIcon}>
+                <Icon name="credit-card" size={20} color="#6E8649" />
+              </View>
+              <View style={styles.transactionInfo}>
+                <Text style={styles.transactionTitle}>{transaction.title}</Text>
+                <Text style={styles.transactionDate}>{transaction.date}</Text>
+              </View>
+              <Text style={styles.transactionAmount}>+R {transaction.amount.toFixed(2)}</Text>
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.withdrawCard}>
+          <Text style={styles.withdrawLabel}>Available for Withdrawal</Text>
+          <Text style={styles.withdrawAmount}>R {balance.toFixed(2)}</Text>
+          <TouchableOpacity style={styles.withdrawButton} onPress={handleWithdraw}>
+            <Icon name="arrow-down" size={16} color="white" />
+            <Text style={styles.withdrawButtonText}>Withdraw Funds</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f9fafb',
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1a2e1a',
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginTop: 4,
-  },
-  balanceCard: {
-    backgroundColor: '#1a2e1a',
-    marginHorizontal: 20,
-    marginTop: 20,
-    padding: 24,
-    borderRadius: 24,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  balanceLabel: {
-    fontSize: 14,
-    color: '#9ca3af',
-    marginBottom: 8,
-  },
-  balanceAmount: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: '#ffffff',
-    marginBottom: 16,
-  },
-  withdrawButton: {
-    backgroundColor: '#4ade80',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  withdrawButtonText: {
-    color: '#1a2e1a',
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    gap: 16,
-    marginHorizontal: 20,
-    marginTop: 20,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-    padding: 16,
-    borderRadius: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#f3f4f6',
-  },
-  statAmount: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1a2e1a',
-    marginTop: 8,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#6b7280',
-    marginTop: 4,
-  },
-  section: {
-    marginTop: 24,
-    paddingHorizontal: 20,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1a2e1a',
-    marginBottom: 16,
-  },
-  bonusCard: {
-    backgroundColor: '#ffffff',
-    padding: 16,
-    borderRadius: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,           // ✅ FIXED: changed from borderWeight to borderWidth
-    borderColor: '#f3f4f6',
-  },
-  bonusIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#f3f4f6',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  bonusContent: {
-    flex: 1,
-  },
-  bonusTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1a2e1a',
-  },
-  bonusDescription: {
-    fontSize: 12,
-    color: '#6b7280',
-    marginTop: 2,
-  },
-  bonusAmount: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#4ade80',
-  },
-  transactionItem: {
-    backgroundColor: '#ffffff',
-    padding: 16,
-    borderRadius: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#f3f4f6',
-  },
-  transactionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f3f4f6',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  transactionDetails: {
-    flex: 1,
-  },
-  transactionTitle: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#1a2e1a',
-  },
-  transactionDate: {
-    fontSize: 12,
-    color: '#9ca3af',
-    marginTop: 2,
-  },
-  transactionAmount: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  positiveAmount: {
-    color: '#4ade80',
-  },
-  negativeAmount: {
-    color: '#ef4444',
-  },
+  container: { flex: 1, backgroundColor: '#D3D3D3' },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#D3D3D3' },
+  gridBackground: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.03 },
+  glowTop: { position: 'absolute', top: 0, right: -80, width: 384, height: 384, borderRadius: 192, opacity: 0.2 },
+  glowBottom: { position: 'absolute', bottom: 0, left: -80, width: 384, height: 384, borderRadius: 192, opacity: 0.1 },
+  header: { position: 'absolute', top: 0, right: 0, left: 0, zIndex: 40, padding: 16, paddingTop: 48 },
+  headerInner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 12, backgroundColor: 'rgba(255,255,255,0.4)', borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.4)' },
+  menuButton: { padding: 10, backgroundColor: '#0D330E', borderRadius: 999 },
+  locationBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: 'rgba(255,255,255,0.6)', borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,255,255,0.4)' },
+  locationText: { fontSize: 12, fontWeight: '900', color: '#333' },
+  notificationButton: { padding: 10, backgroundColor: 'white', borderRadius: 999, position: 'relative' },
+  notificationDot: { position: 'absolute', top: 8, right: 8, width: 8, height: 8, backgroundColor: 'red', borderRadius: 4, borderWidth: 2, borderColor: 'white' },
+  mainContent: { flex: 1, marginTop: 100, paddingHorizontal: 20 },
+  banner: { backgroundColor: '#0D330E', borderRadius: 32, padding: 24, marginBottom: 20 },
+  bannerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16 },
+  bannerLeft: { flex: 1, gap: 12 },
+  bannerLine: { width: 40, height: 2, backgroundColor: '#A3B18A' },
+  bannerLabel: { fontSize: 10, color: '#A3B18A', fontWeight: '900', letterSpacing: 3 },
+  bannerTitle: { fontSize: 28, fontWeight: '300', color: 'white', lineHeight: 36 },
+  bannerName: { fontWeight: '900', fontStyle: 'italic', color: '#A3B18A' },
+  balanceCard: { backgroundColor: 'rgba(255,255,255,0.6)', borderRadius: 32, padding: 24, alignItems: 'center', marginBottom: 20 },
+  balanceLabel: { fontSize: 14, color: '#666', marginBottom: 8 },
+  balanceAmount: { fontSize: 44, fontWeight: 'bold', color: '#0D330E' },
+  section: { marginBottom: 20 },
+  sectionTitle: { fontSize: 18, fontWeight: '600', color: '#0D330E', marginBottom: 16 },
+  transactionCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.4)', borderRadius: 20, padding: 16, marginBottom: 12 },
+  transactionIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(110,134,73,0.1)', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  transactionInfo: { flex: 1 },
+  transactionTitle: { fontSize: 16, fontWeight: '600', color: '#0D330E' },
+  transactionDate: { fontSize: 12, color: '#666', marginTop: 2 },
+  transactionAmount: { fontSize: 16, fontWeight: '700', color: '#10B981' },
+  withdrawCard: { backgroundColor: '#0D330E', borderRadius: 32, padding: 24, alignItems: 'center', marginBottom: 40 },
+  withdrawLabel: { fontSize: 14, color: '#A3B18A', marginBottom: 8 },
+  withdrawAmount: { fontSize: 36, fontWeight: 'bold', color: 'white', marginBottom: 16 },
+  withdrawButton: { backgroundColor: '#6E8649', flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 12, paddingHorizontal: 24, borderRadius: 30 },
+  withdrawButtonText: { color: 'white', fontSize: 14, fontWeight: '600' },
 });

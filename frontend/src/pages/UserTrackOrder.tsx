@@ -94,8 +94,14 @@ const UserTrackOrder = () => {
         { 
 
           headers: { 
+
             "Content-Type": "application/json", 
-            "Authorization": `Bearer ${token}` }, 
+
+            "Authorization": `Bearer ${token}`, 
+
+            "x-user-id": String(user.id) 
+
+          }, 
 
         } 
 

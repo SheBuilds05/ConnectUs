@@ -1,5 +1,12 @@
-/* stylelint-disable at-rule-no-unknown */
-@import "tailwindcss/base";
-@import "tailwindcss/components";
-@import "tailwindcss/utilities";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
+/* Fixed Syntax */
+body {
+  margin: 0;
+  padding: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #D3D3D3;
+} /* Removed the comma and extra text here */

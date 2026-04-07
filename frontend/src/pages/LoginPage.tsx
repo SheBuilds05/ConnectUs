@@ -245,6 +245,48 @@ const LoginPage = () => {
             />
           </div>
 
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            marginBottom: '2rem' 
+          }}>
+            <label style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '0.5rem',
+              cursor: 'pointer'
+            }}>
+              <input 
+                type="checkbox" 
+                checked={formData.rememberMe} 
+                onChange={(e) => setFormData({...formData, rememberMe: e.target.checked})}
+                style={{ 
+                  width: '18px', 
+                  height: '18px',
+                  cursor: 'pointer',
+                  accentColor: colors.moss
+                }} 
+                disabled={loading}
+              />
+              <span style={{ color: colors.leaf, fontSize: '0.95rem' }}>Remember me</span>
+            </label>
+            <Link 
+              to="/forgot-password" 
+              style={{ 
+                color: colors.moss, 
+                textDecoration: 'none',
+                fontSize: '0.95rem',
+                fontWeight: '500',
+                transition: 'color 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.color = colors.forest}
+              onMouseLeave={(e) => e.currentTarget.style.color = colors.moss}
+            >
+              Forgot Password?
+            </Link>
+          </div>
+
           <button 
             type="submit" 
             style={{ 
@@ -294,6 +336,71 @@ const LoginPage = () => {
           <div style={{ flex: 1, height: '1px', backgroundColor: `${colors.sage}30` }} />
         </div>
 
+        {/* Social Login */}
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: '1fr 1fr', 
+          gap: '1rem',
+          marginBottom: '2rem'
+        }}>
+          <button
+            type="button"
+            style={{ 
+              padding: '0.8rem',
+              borderRadius: '50px',
+              border: `1px solid ${colors.sage}30`,
+              backgroundColor: colors.white,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = colors.canvas;
+              e.currentTarget.style.borderColor = colors.moss;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = colors.white;
+              e.currentTarget.style.borderColor = `${colors.sage}30`;
+            }}
+            onClick={() => alert('Google login coming soon!')}
+            disabled={loading}
+          >
+            <span style={{ fontSize: '1.2rem' }}>G</span>
+            <span style={{ color: colors.forest }}>Google</span>
+          </button>
+          <button
+            type="button"
+            style={{ 
+              padding: '0.8rem',
+              borderRadius: '50px',
+              border: `1px solid ${colors.sage}30`,
+              backgroundColor: colors.white,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = colors.canvas;
+              e.currentTarget.style.borderColor = colors.moss;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = colors.white;
+              e.currentTarget.style.borderColor = `${colors.sage}30`;
+            }}
+            onClick={() => alert('Apple login coming soon!')}
+            disabled={loading}
+          >
+            <span style={{ fontSize: '1.2rem' }}></span>
+            <span style={{ color: colors.forest }}>Apple</span>
+          </button>
+        </div>
+
         {/* Register Link */}
         <p style={{ 
           textAlign: 'center', 
@@ -315,6 +422,29 @@ const LoginPage = () => {
             Register here
           </Link>
         </p>
+
+        {/* Admin Link */}
+        <div style={{ 
+          textAlign: 'center', 
+          marginTop: '1.5rem',
+          paddingTop: '1.5rem',
+          borderTop: `1px solid ${colors.sage}30`
+        }}>
+          <Link 
+            to="/admin" 
+            style={{ 
+              color: colors.sage, 
+              textDecoration: 'none',
+              fontSize: '0.9rem',
+              fontWeight: '500',
+              transition: 'color 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.color = colors.moss}
+            onMouseLeave={(e) => e.currentTarget.style.color = colors.sage}
+          >
+            Admin Login →
+          </Link>
+        </div>
       </div>
     </div>
   );

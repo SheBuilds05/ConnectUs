@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { getEarnings, getEarningsHistory } from '../controllers/earningsController';
-import protect from '../middleware/authMiddleware';
+import { protect } from '../middleware/authMiddleware';
 
 const router = Router();
 

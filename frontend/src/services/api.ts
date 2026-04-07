@@ -37,14 +37,6 @@ interface RunnerRegisterData {
   bio: string;
 }
 
-interface AdminRegisterData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  secretCode: string;
-}
-
 export interface User {
   id: number;
   name: string;
@@ -66,8 +58,7 @@ export interface User {
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
-    const isAuthRoute = config.url?.includes('/auth/');
-    if (token && !isAuthRoute) {
+    if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -79,11 +70,7 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (
-      error.response?.status === 401 &&
-      !window.location.pathname.includes('/login') &&
-      !error.config?.url?.includes('/auth/')
-    ) {
+    if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
@@ -120,18 +107,7 @@ export const registerRunner = async (userData: RunnerRegisterData) => {
     throw new Error(error.response?.data?.message || 'Runner registration failed');
   }
 };
-export const registerAdmin = async (userData: AdminRegisterData) => {
-  try {
-    const response = await api.post('/auth/register/admin', userData);
-    if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-    }
-    return response.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Admin registration failed');
-  }
-};
+
 export const loginUser = async (credentials: LoginCredentials) => {
   try {
     const response = await api.post('/auth/login', credentials);
@@ -152,7 +128,7 @@ export const logoutUser = () => {
   localStorage.removeItem('user');
 };
 
-//  USER PROFILE FUNCTIONS 
+// ========== USER PROFILE FUNCTIONS ==========
 export const getCurrentUser = (): User | null => {
   const userStr = localStorage.getItem('user');
   if (userStr) {
@@ -165,13 +141,13 @@ export const getCurrentUser = (): User | null => {
   return null;
 };
 
-// Get user profile from API
+// 🔥 ADD THIS MISSING FUNCTION - Get user profile from API
 export const getUserProfile = async (): Promise<{ data: User }> => {
   const response = await api.get('/users/profile');
   return response.data;
 };
 
-// Update user profile
+// 🔥 ADD THIS MISSING FUNCTION - Update user profile
 export const updateUserProfile = async (profileData: Partial<User>): Promise<{ data: User }> => {
   const response = await api.put('/users/profile', profileData);
   // Update localStorage with new data
@@ -181,19 +157,19 @@ export const updateUserProfile = async (profileData: Partial<User>): Promise<{ d
   return response.data;
 };
 
-//  Get user stats
+// 🔥 ADD THIS MISSING FUNCTION - Get user stats
 export const getUserStats = async (): Promise<{ data: any }> => {
   const response = await api.get('/users/stats');
   return response.data;
 };
 
-// Get user reviews
+// 🔥 ADD THIS MISSING FUNCTION - Get user reviews
 export const getUserReviews = async (): Promise<{ data: any[] }> => {
   const response = await api.get('/users/reviews');
   return response.data;
 };
 
-//  ORDER FUNCTIONS 
+// ========== ORDER FUNCTIONS ==========
 export const getAvailableOrders = async () => {
   const response = await api.get('/orders/available');
   return response.data;
@@ -224,7 +200,7 @@ export const getOrderById = async (orderId: number) => {
   return response.data;
 };
 
-//  EARNINGS FUNCTIONS 
+// ========== EARNINGS FUNCTIONS ==========
 export const getEarnings = async () => {
   const response = await api.get('/earnings');
   return response.data;
@@ -235,7 +211,7 @@ export const getEarningsHistory = async (period: string = 'month') => {
   return response.data;
 };
 
-//  HELPER FUNCTIONS 
+// ========== HELPER FUNCTIONS ==========
 export const getUserRole = (): string => {
   const user = getCurrentUser();
   return user?.role || 'customer';

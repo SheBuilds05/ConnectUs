@@ -1,78 +1,45 @@
-// src/types/index.ts
-export interface Runner {
-  runner_id: number;
-  username: string;
-  email: string;
-  full_name?: string;
-  completed_bookings_count: number;
-  verification_status: 'PENDING' | 'VERIFIED' | 'REJECTED';
-  address: string;
-  city: string;
-  postal_code: string;
-  profile_photo: string;
-  id_document?: string;
-  id_verified: boolean;
-  bio: string;
-  languages: string[];
-  rating?: number;
-  distance?: number;
-  phone?: string;
-  created_at?: string;
-}
-
-export interface RunnerProduct {
-  product_id: number;
-  runner_id: number;
-  product_name: string;
-  product_description: string;
-  price: number;
-  category: string;
-  condition: string;
-  images: string[];
-  is_available: boolean;
-  created_at: string;
-}
-
-export interface Category {
+export interface User {
   id: number;
   name: string;
-  icon: string;
-  count?: number;
+  email: string;
+  role: string;
+  avatar_url?: string;
+  rating?: number;
+  total_trips?: number;
+  total_earnings?: number;
 }
 
 export interface Booking {
   booking_id: number;
-  runner_id: number;
   customer_id: number;
-  status: 'pending' | 'accepted' | 'completed' | 'cancelled';
-  total_amount: number;
-  booking_date: string;
-  delivery_address?: string;
-  created_at?: string;
-}
-
-export interface User {
-  user_id: number;
-  email: string;
-  full_name: string;
-  phone?: string;
-  role: 'customer' | 'runner' | 'admin';
-  created_at?: string;
-}
-
-export interface Review {
-  review_id: number;
-  booking_id: number;
-  customer_id: number;
-  runner_id: number;
-  rating: number;
-  comment: string;
+  runner_id?: number;
+  product_description?: string;
+  delivery_location: string;
+  budget?: number;
+  status: 'pending' | 'accepted' | 'in-progress' | 'completed' | 'cancelled';
+  scheduled_for?: string;
   created_at: string;
+  updated_at: string;
+  product_image_url?: string;
+  customer?: {
+    name: string;
+    email: string;
+    phone?: string;
+  };
+}
+
+export interface UserStats {
+  total_trips: number;
+  total_earnings: number;
+  average_rating: number;
+  acceptance_rate: number;
+  completion_rate: number;
+  online_hours: number;
 }
 
 export interface ApiResponse<T = any> {
   success: boolean;
-  message?: string;
   data?: T;
+  message?: string;
   error?: string;
 }

@@ -1,239 +1,113 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 export default function NotificationsScreen() {
+  const router = useRouter();
+
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Header */}
+    <View style={styles.container}>
+      {/* Custom Header with Back Button */}
       <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#1a2e1a" />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Notifications</Text>
-        <Text style={styles.headerSubtitle}>Stay updated with your orders</Text>
+        <TouchableOpacity>
+          <Text style={styles.markRead}>Clear All</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Today Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Today</Text>
-        
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <NotificationItem 
-          icon="checkmark-circle"
-          title="Delivery Completed"
-          message="You successfully delivered order #1234 to Sarah Johnson"
-          time="2 minutes ago"
-          isNew={true}
+          icon="cube-outline" 
           color="#4ade80"
+          title="New Request Nearby" 
+          message="Pick up: McDonald's Sandton. Reward: R45.00" 
+          time="2 mins ago"
+          isNew={true}
         />
-        
         <NotificationItem 
-          icon="cash"
-          title="Payment Received"
-          message="R 45.00 has been added to your wallet"
+          icon="wallet-outline" 
+          color="#3b82f6"
+          title="Payment Received" 
+          message="R120.00 has been added to your wallet for Order #2104." 
           time="1 hour ago"
           isNew={true}
-          color="#4ade80"
         />
-      </View>
-
-      {/* Yesterday Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Yesterday</Text>
-        
         <NotificationItem 
-          icon="star"
-          title="New Rating"
-          message="You received a 5-star rating from John Doe"
-          time="Yesterday, 8:30 PM"
+          icon="star-outline" 
+          color="#f59e0b"
+          title="New Rating" 
+          message="A user gave you 5 stars! 'Great service, very fast.'" 
+          time="Yesterday"
           isNew={false}
-          color="#fbbf24"
         />
-        
         <NotificationItem 
-          icon="alert-circle"
-          title="Order Cancelled"
-          message="Order #1228 has been cancelled by customer"
-          time="Yesterday, 3:15 PM"
+          icon="gift-outline" 
+          color="#a855f7"
+          title="Bonus Goal Update" 
+          message="You are 2 deliveries away from your R500 monthly bonus!" 
+          time="2 days ago"
           isNew={false}
-          color="#ef4444"
         />
-      </View>
-
-      {/* This Week Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>This Week</Text>
-        
-        <NotificationItem 
-          icon="gift"
-          title="Bonus Earned"
-          message="You earned R 150 for completing weekend deliveries"
-          time="Mar 28, 2025"
-          isNew={false}
-          color="#8b5cf6"
-        />
-        
-        <NotificationItem 
-          icon="person-add"
-          title="New Customer Request"
-          message="New delivery request from Mike Thompson"
-          time="Mar 27, 2025"
-          isNew={false}
-          color="#3b82f6"
-        />
-        
-        <NotificationItem 
-          icon="trending-up"
-          title="Weekly Summary"
-          message="You completed 25 deliveries this week"
-          time="Mar 26, 2025"
-          isNew={false}
-          color="#6366f1"
-        />
-      </View>
-
-      {/* Mark All Read Button */}
-      <TouchableOpacity style={styles.markAllButton}>
-        <Text style={styles.markAllButtonText}>Mark All as Read</Text>
-      </TouchableOpacity>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
-// ✅ FIXED: Added TypeScript interface for NotificationItem props
-interface NotificationItemProps {
-  icon: keyof typeof Ionicons.glyphMap;  // Valid Ionicons name
-  title: string;
-  message: string;
-  time: string;
-  isNew: boolean;
-  color: string;
-}
-
-// Notification Item Component with proper typing
-const NotificationItem: React.FC<NotificationItemProps> = ({ 
-  icon, 
-  title, 
-  message, 
-  time, 
-  isNew, 
-  color 
-}) => {
-  return (
-    <TouchableOpacity style={[styles.notificationItem, isNew && styles.notificationItemNew]}>
-      <View style={[styles.iconContainer, { backgroundColor: `${color}15` }]}>
-        <Ionicons name={icon} size={24} color={color} />
+// Helper Component for Notification Rows
+const NotificationItem = ({ icon, title, message, time, isNew, color }) => (
+  <TouchableOpacity style={[styles.notiBox, isNew && styles.notiUnread]}>
+    <View style={[styles.iconContainer, { backgroundColor: color + '20' }]}>
+      <Ionicons name={icon} size={22} color={color} />
+    </View>
+    <View style={styles.textContainer}>
+      <View style={styles.row}>
+        <Text style={styles.notiTitle}>{title}</Text>
+        {isNew && <View style={styles.newDot} />}
       </View>
-      
-      <View style={styles.notificationContent}>
-        <View style={styles.notificationHeader}>
-          <Text style={styles.notificationTitle}>{title}</Text>
-          {isNew && <View style={styles.newBadge} />}
-        </View>
-        <Text style={styles.notificationMessage}>{message}</Text>
-        <Text style={styles.notificationTime}>{time}</Text>
-      </View>
-    </TouchableOpacity>
-  );
-};
+      <Text style={styles.notiMessage}>{message}</Text>
+      <Text style={styles.notiTime}>{time}</Text>
+    </View>
+  </TouchableOpacity>
+);
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f9fafb',
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 60,
+  container: { flex: 1, backgroundColor: '#ffffff' },
+  header: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    paddingTop: 60, 
+    paddingHorizontal: 20, 
     paddingBottom: 20,
-    backgroundColor: '#ffffff',
     borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
+    borderBottomColor: '#f3f4f6'
   },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1a2e1a',
+  backButton: { padding: 5 },
+  headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#1a2e1a' },
+  markRead: { color: '#4ade80', fontWeight: '600', fontSize: 14 },
+  content: { flex: 1 },
+  notiBox: { 
+    flexDirection: 'row', 
+    padding: 20, 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#f9fafb' 
   },
-  headerSubtitle: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginTop: 4,
+  notiUnread: { backgroundColor: '#f0fdf4' },
+  iconContainer: { 
+    width: 45, 
+    height: 45, 
+    borderRadius: 12, 
+    alignItems: 'center', 
+    justifyContent: 'center' 
   },
-  section: {
-    marginTop: 24,
-    paddingHorizontal: 20,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#6b7280',
-    marginBottom: 12,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  notificationItem: {
-    backgroundColor: '#ffffff',
-    padding: 16,
-    borderRadius: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#f3f4f6',
-  },
-  notificationItemNew: {
-    backgroundColor: '#f0fdf4',
-    borderColor: '#dcfce7',
-  },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  notificationContent: {
-    flex: 1,
-  },
-  notificationHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  notificationTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1a2e1a',
-    flex: 1,
-  },
-  newBadge: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#ef4444',
-    marginLeft: 8,
-  },
-  notificationMessage: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginBottom: 6,
-    lineHeight: 18,
-  },
-  notificationTime: {
-    fontSize: 12,
-    color: '#9ca3af',
-  },
-  markAllButton: {
-    backgroundColor: '#1a2e1a',
-    marginHorizontal: 20,
-    marginTop: 32,
-    marginBottom: 40,
-    padding: 16,
-    borderRadius: 16,
-    alignItems: 'center',
-  },
-  markAllButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  textContainer: { flex: 1, marginLeft: 15 },
+  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  notiTitle: { fontWeight: 'bold', color: '#1a2e1a', fontSize: 15 },
+  newDot: { width: 8, height: 8, backgroundColor: '#4ade80', borderRadius: 4 },
+  notiMessage: { color: '#6b7280', fontSize: 13, marginTop: 4, lineHeight: 18 },
+  notiTime: { color: '#9ca3af', fontSize: 11, marginTop: 8 }
 });

@@ -114,18 +114,30 @@ const UserHomePage = ({ onMenuClick }) => {
           setIsLoadingLocation(false);
         }
       },
-     (error) => {
-  // Only show banner for explicit permission denial, silently fall back otherwise
-  if (error.code === error.PERMISSION_DENIED) {
-    setLocationError('Location access denied. Using default location.');
-  }
-  setIsLoadingLocation(false);
-},
-{
-  enableHighAccuracy: false,
-  timeout: 8000,
-  maximumAge: 60000
-}
+      (error) => {
+        console.error('Error getting location:', error);
+        let errorMessage = 'Unable to get your location';
+        
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Location permission denied. Using default location.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Location information unavailable. Using default location.';
+            break;
+          case error.TIMEOUT:
+            errorMessage = 'Location request timed out. Using default location.';
+            break;
+        }
+        
+        setLocationError(errorMessage);
+        setIsLoadingLocation(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
     );
   };
 

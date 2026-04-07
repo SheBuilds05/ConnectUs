@@ -1,311 +1,86 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+﻿import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Switch, TouchableOpacity } from 'react-native';
+import Icon from 'react-native-vector-icons/Feather';
+import { useAuth } from '../../src/context/AuthContext';
+import { Sidebar } from '../../src/components/Sidebar';
 
 export default function SettingsScreen() {
-  const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
-  const [darkModeEnabled, setDarkModeEnabled] = React.useState(false);
-  const [soundEnabled, setSoundEnabled] = React.useState(true);
+  const { user } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notifications, setNotifications] = useState(true);
+  const [sound, setSound] = useState(true);
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Header */}
+    <View style={styles.container}>
+      <Sidebar visible={sidebarOpen} onClose={() => setSidebarOpen(false)} userName={user?.name} />
+
+      <View style={styles.gridBackground} />
+      <View style={[styles.glowTop, { backgroundColor: '#A3B18A' }]} />
+      <View style={[styles.glowBottom, { backgroundColor: '#2D531A' }]} />
+
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Settings</Text>
-        <Text style={styles.headerSubtitle}>Manage your app preferences</Text>
-      </View>
-
-      {/* Preferences Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Preferences</Text>
-        
-        <SettingsItem 
-          icon="notifications-outline" 
-          title="Notifications" 
-          description="Receive order alerts and updates"
-          type="toggle"
-          value={notificationsEnabled}
-          onValueChange={setNotificationsEnabled}
-        />
-        
-        <SettingsItem 
-          icon="moon-outline" 
-          title="Dark Mode" 
-          description="Switch to dark theme"
-          type="toggle"
-          value={darkModeEnabled}
-          onValueChange={setDarkModeEnabled}
-        />
-        
-        <SettingsItem 
-          icon="volume-high-outline" 
-          title="Sound Effects" 
-          description="Play sounds for notifications"
-          type="toggle"
-          value={soundEnabled}
-          onValueChange={setSoundEnabled}
-        />
-      </View>
-
-      {/* Account Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Account</Text>
-        
-        <SettingsItem 
-          icon="person-outline" 
-          title="Personal Information" 
-          description="Update your profile details"
-          type="link"
-          onPress={() => console.log('Navigate to personal info')}
-        />
-        
-        <SettingsItem 
-          icon="card-outline" 
-          title="Payment Methods" 
-          description="Manage your payout options"
-          type="link"
-          onPress={() => console.log('Navigate to payment methods')}
-        />
-        
-        <SettingsItem 
-          icon="location-outline" 
-          title="Delivery Zones" 
-          description="Set your preferred delivery areas"
-          type="link"
-          onPress={() => console.log('Navigate to delivery zones')}
-        />
-      </View>
-
-      {/* Support Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Support</Text>
-        
-        <SettingsItem 
-          icon="help-circle-outline" 
-          title="Help Center" 
-          description="FAQs and troubleshooting"
-          type="link"
-          onPress={() => console.log('Navigate to help center')}
-        />
-        
-        <SettingsItem 
-          icon="chatbubble-outline" 
-          title="Contact Support" 
-          description="Get help from our team"
-          type="link"
-          onPress={() => console.log('Navigate to contact support')}
-        />
-        
-        <SettingsItem 
-          icon="document-text-outline" 
-          title="Terms & Conditions" 
-          description="Read our terms of service"
-          type="link"
-          onPress={() => console.log('Navigate to terms')}
-        />
-      </View>
-
-      {/* About Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>About</Text>
-        
-        <SettingsItem 
-          icon="information-circle-outline" 
-          title="App Version" 
-          description="Version 1.0.0"
-          type="info"
-        />
-        
-        <SettingsItem 
-          icon="shield-checkmark-outline" 
-          title="Privacy Policy" 
-          description="How we protect your data"
-          type="link"
-          onPress={() => console.log('Navigate to privacy policy')}
-        />
-      </View>
-
-      {/* Danger Zone */}
-      <View style={styles.dangerSection}>
-        <TouchableOpacity style={styles.dangerButton}>
-          <Ionicons name="log-out-outline" size={20} color="#ef4444" />
-          <Text style={styles.dangerButtonText}>Logout</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.deleteButton}>
-          <Ionicons name="trash-outline" size={20} color="#ef4444" />
-          <Text style={styles.deleteButtonText}>Delete Account</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
-  );
-}
-
-// ✅ FIXED: Added TypeScript interface for SettingsItem props
-interface SettingsItemProps {
-  icon: keyof typeof Ionicons.glyphMap;  // Valid Ionicons name
-  title: string;
-  description?: string;
-  type: 'toggle' | 'link' | 'info';
-  value?: boolean;
-  onValueChange?: (value: boolean) => void;
-  onPress?: () => void;
-}
-
-// Settings Item Component with proper typing
-const SettingsItem: React.FC<SettingsItemProps> = ({ 
-  icon, 
-  title, 
-  description, 
-  type, 
-  value, 
-  onValueChange, 
-  onPress 
-}) => {
-  return (
-    <TouchableOpacity 
-      style={styles.settingsItem} 
-      onPress={onPress}
-      disabled={type === 'toggle' || type === 'info'}
-      activeOpacity={type === 'link' ? 0.7 : 1}
-    >
-      <View style={styles.iconContainer}>
-        <Ionicons name={icon} size={24} color="#1a2e1a" />
-      </View>
-      
-      <View style={styles.itemContent}>
-        <View>
-          <Text style={styles.itemTitle}>{title}</Text>
-          {description && (
-            <Text style={styles.itemDescription}>{description}</Text>
-          )}
+        <View style={styles.headerInner}>
+          <TouchableOpacity onPress={() => setSidebarOpen(true)} style={styles.menuButton}>
+            <Icon name="menu" size={20} color="white" />
+          </TouchableOpacity>
+          <View style={styles.locationBadge}>
+            <Icon name="map-pin" size={14} color="#2D531A" />
+            <Text style={styles.locationText}>Sandton, JHB</Text>
+          </View>
+          <TouchableOpacity style={styles.notificationButton}>
+            <Icon name="bell" size={20} color="#0D330E" />
+            <View style={styles.notificationDot} />
+          </TouchableOpacity>
         </View>
-        
-        {type === 'toggle' && (
-          <Switch
-            value={value}
-            onValueChange={onValueChange}
-            trackColor={{ false: '#d1d5db', true: '#4ade80' }}
-            thumbColor={value ? '#ffffff' : '#f3f4f6'}
-          />
-        )}
-        
-        {type === 'link' && (
-          <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
-        )}
       </View>
-    </TouchableOpacity>
+
+      <ScrollView style={styles.mainContent}>
+        <View style={styles.banner}>
+          <View style={styles.bannerContent}>
+            <View style={styles.bannerLeft}>
+              <View style={styles.bannerLine} />
+              <Text style={styles.bannerLabel}>SETTINGS</Text>
+              <Text style={styles.bannerTitle}>Customize your <Text style={styles.bannerName}>experience</Text></Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Preferences</Text>
+          <View style={styles.settingItem}><Text style={styles.settingLabel}>Push Notifications</Text><Switch value={notifications} onValueChange={setNotifications} trackColor={{ false: '#ddd', true: '#6E8649' }} /></View>
+          <View style={styles.settingItem}><Text style={styles.settingLabel}>Sound Effects</Text><Switch value={sound} onValueChange={setSound} trackColor={{ false: '#ddd', true: '#6E8649' }} /></View>
+        </View>
+
+        <View style={styles.versionContainer}><Text style={styles.versionText}>ConnectUs v1.0.0</Text></View>
+      </ScrollView>
+    </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f9fafb',
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1a2e1a',
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginTop: 4,
-  },
-  section: {
-    backgroundColor: '#ffffff',
-    marginTop: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#f3f4f6',
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#6b7280',
-    marginBottom: 16,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  settingsItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: '#f3f4f6',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  itemContent: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  itemTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#1a2e1a',
-    marginBottom: 2,
-  },
-  itemDescription: {
-    fontSize: 12,
-    color: '#9ca3af',
-  },
-  dangerSection: {
-    marginTop: 30,
-    marginBottom: 40,
-    paddingHorizontal: 20,
-    gap: 12,
-  },
-  dangerButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#ffffff',
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#f3f4f6',
-  },
-  dangerButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#ef4444',
-  },
-  deleteButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#ffffff',
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#fee2e2',
-  },
-  deleteButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#ef4444',
-  },
+  container: { flex: 1, backgroundColor: '#D3D3D3' },
+  gridBackground: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.03 },
+  glowTop: { position: 'absolute', top: 0, right: -80, width: 384, height: 384, borderRadius: 192, opacity: 0.2 },
+  glowBottom: { position: 'absolute', bottom: 0, left: -80, width: 384, height: 384, borderRadius: 192, opacity: 0.1 },
+  header: { position: 'absolute', top: 0, right: 0, left: 0, zIndex: 40, padding: 16, paddingTop: 48 },
+  headerInner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 12, backgroundColor: 'rgba(255,255,255,0.4)', borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.4)' },
+  menuButton: { padding: 10, backgroundColor: '#0D330E', borderRadius: 999 },
+  locationBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: 'rgba(255,255,255,0.6)', borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,255,255,0.4)' },
+  locationText: { fontSize: 12, fontWeight: '900', color: '#333' },
+  notificationButton: { padding: 10, backgroundColor: 'white', borderRadius: 999, position: 'relative' },
+  notificationDot: { position: 'absolute', top: 8, right: 8, width: 8, height: 8, backgroundColor: 'red', borderRadius: 4, borderWidth: 2, borderColor: 'white' },
+  mainContent: { flex: 1, marginTop: 100, paddingHorizontal: 20 },
+  banner: { backgroundColor: '#0D330E', borderRadius: 32, padding: 24, marginBottom: 20 },
+  bannerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16 },
+  bannerLeft: { flex: 1, gap: 12 },
+  bannerLine: { width: 40, height: 2, backgroundColor: '#A3B18A' },
+  bannerLabel: { fontSize: 10, color: '#A3B18A', fontWeight: '900', letterSpacing: 3 },
+  bannerTitle: { fontSize: 28, fontWeight: '300', color: 'white', lineHeight: 36 },
+  bannerName: { fontWeight: '900', fontStyle: 'italic', color: '#A3B18A' },
+  section: { backgroundColor: 'rgba(255,255,255,0.6)', borderRadius: 24, marginBottom: 20, overflow: 'hidden' },
+  sectionTitle: { fontSize: 14, fontWeight: '600', color: '#666', padding: 16, paddingBottom: 8 },
+  settingItem: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.05)' },
+  settingLabel: { fontSize: 16, color: '#333' },
+  versionContainer: { padding: 24, alignItems: 'center', marginBottom: 40 },
+  versionText: { fontSize: 12, color: '#999' },
 });
