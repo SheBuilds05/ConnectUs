@@ -12,13 +12,11 @@ const app = express();
 const server = http.createServer(app); 
 
 
-
 const corsOptions = {
-  
+
   origin: [
     'http://localhost:3000', 
     'http://localhost:5173', 
-    'http://localhost:8081', 
     'https://connect-us-bice-five.vercel.app'
   ],
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -26,37 +24,23 @@ const corsOptions = {
   credentials: true
 };
 
-
 app.use(cors(corsOptions));
 app.use(express.json());
 
-
-
+// --- 2. SOCKET.IO ---
 const io = new Server(server, {
   cors: {
-    origin: [
-      "http://localhost:3000", 
-      "http://localhost:8081", 
-      "https://connect-us-bice-five.vercel.app"
-    ], 
+    origin: ["http://localhost:3000", "https://connect-us-bice-five.vercel.app"], 
     methods: ["GET", "POST"]
   }
 });
 
 io.on('connection', (socket) => {
-  console.log('A user connected:', socket.id);
-
-  socket.on('join', (userId) => {
-    socket.join(`user_${userId}`);
-    console.log(`User ${userId} joined their private room`);
-  });
-
-  socket.on('disconnect', () => {
-    console.log('User disconnected');
-  });
+  console.log('User connected:', socket.id);
+  socket.on('join', (userId) => socket.join(`user_${userId}`));
+  socket.on('disconnect', () => console.log('User disconnected'));
 });
 
-// --- ROUTES ---
 
 app.use('/api/auth', authRoutes);
 app.use('/api/runners', runnerRoutes);
@@ -65,23 +49,12 @@ app.use('/api/admin', adminRoutes);
 app.use('/api', bookingRoutes);
 
 
-app.get('/', (req, res) => {
-  res.send('ConnectUs Backend is Live and Running!');
-});
-
 app.get('/api/health', (req, res) => res.json({ status: 'OK' }));
-
-app.get('/api/test', (req, res) => {
-  res.json({ 
-    success: true, 
-    message: 'API is working!',
-    timestamp: new Date().toISOString()
-  });
-});
+app.get('/', (req, res) => res.send('ConnectUs Backend is Live!'));
 
 
 const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server & Socket.io running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
