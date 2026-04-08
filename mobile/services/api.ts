@@ -2,7 +2,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Use your deployed backend URL
-const API_URL = 'https://connectus-backend-wx08.onrender.com/api';
+const API_URL = 'https://connectus-tpyp.onrender.com/api';
 
 const api = axios.create({
   baseURL: API_URL,
