@@ -26,5 +26,6 @@ export const authenticateUser = (req: Request, res: Response, next: NextFunction
 
   console.log('Blocked: No auth provided');
   return res.status(401).json({ error: 'Unauthorized: No credentials provided' });
-  export { authenticateUser as protect };
+
 };
+export { authenticateUser as protect };
