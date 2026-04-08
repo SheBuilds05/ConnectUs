@@ -1,536 +1,194 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { 
-  LayoutDashboard, 
-  Wallet, 
-  User, 
-  ClipboardList, 
-  Settings, 
-  LogOut, 
-  ShoppingCart,
-  DollarSign, 
-  Clock, 
-  Bike, 
-  Star, 
-  TrendingUp,
-  Bell,
-  Award,
-  Calendar,
-  ChevronRight,
-  ChevronLeft,
-  Menu,
-  X
+  Wallet, Star, CheckCircle2, Menu, Zap, 
+  Clock, Bell, MapPin
 } from 'lucide-react';
-import "./Runnerdashboard.css";
+import RunnerSidebar from '../components/RunnerSidebar';
 
-const Runnerdashboard = () => {
-  const [isOpen, setIsOpen] = useState(true);
-  const [isOnline, setIsOnline] = useState(true);
-  const [activePage, setActivePage] = useState('dashboard');
+const RunnerDashboard = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
+  const [runnerName, setRunnerName] = useState("Runner");
 
-  const menuItems = [
-    { name: 'Dashboard', icon: <LayoutDashboard size={20} />, id: 'dashboard' },
-    { name: 'Profile', icon: <User size={20} />, id: 'profile' },
-    { name: 'Wallet', icon: <Wallet size={20} />, id: 'wallet' },
-    { name: 'View Requests', icon: <ClipboardList size={20} />, id: 'requests' },
-    { name: 'Settings', icon: <Settings size={20} />, id: 'settings' },
-  ];
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date();
+      setCurrentTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
-  const recentTrips = [
-    { id: 1, restaurant: "Momofuku Ko", time: "11:20 PM", earnings: 12.50, address: "162 2nd Ave, New York, NY" },
-    { id: 2, restaurant: "Oceana Grill", time: "10:30 PM", earnings: 15.75, address: "456 Oak Ave, New York, NY" },
-    { id: 3, restaurant: "Bubba Gump Shrimp Co.", time: "9:23 PM", earnings: 18.20, address: "789 Pine Rd, New York, NY" },
-    { id: 4, restaurant: "Gabriel Kreuther", time: "8:10 PM", earnings: 22.30, address: "321 Elm St, New York, NY" }
-  ];
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const storedUser = localStorage.getItem('user');
+        if (!storedUser) {
+          setLoading(false);
+          return;
+        }
+        const user = JSON.parse(storedUser);
+        setRunnerName(user.full_name || user.name || "Runner");
 
-  const handleNavigation = (pageId) => {
-    setActivePage(pageId);
+        if (user.user_id) {
+          const response = await axios.get(`https://connectus-backend-wx08.onrender.com/api/runners/dashboard/${user.user_id}`);
+          setDashboardData(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching dashboard stats:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  // BACKGROUND STYLING
+  const backgroundStyle = {
+    backgroundColor: '#F0F4EF',
+    backgroundImage: `
+      linear-gradient(rgba(194, 209, 178, 0.2) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(194, 209, 178, 0.2) 1px, transparent 1px)
+    `,
+    backgroundSize: '100px 100px',
+    backgroundAttachment: 'fixed' as const,
   };
 
-  const handleOnlineToggle = () => {
-    setIsOnline(!isOnline);
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center font-black uppercase tracking-widest text-[#0D330E]" style={backgroundStyle}>
+        Synchronizing Systems...
+      </div>
+    );
+  }
 
-  // Render different content based on active page
-  const renderContent = () => {
-    switch(activePage) {
-      case 'dashboard':
-        return (
-          <>
-            {/* Stats Grid */}
-            <div className="stats-grid">
-              <div className="stat-card">
-                <div className="stat-icon earnings">
-                  <DollarSign size={24} />
-                </div>
-                <div className="stat-details">
-                  <span className="stat-label">Today's Earnings</span>
-                  <span className="stat-value">$220.00</span>
-                  <span className="stat-trend positive">+12% from yesterday</span>
-                </div>
-              </div>
-
-              <div className="stat-card">
-                <div className="stat-icon time">
-                  <Clock size={24} />
-                </div>
-                <div className="stat-details">
-                  <span className="stat-label">Active Time</span>
-                  <span className="stat-value">5h 40m</span>
-                  <span className="stat-trend">Online now</span>
-                </div>
-              </div>
-
-              <div className="stat-card">
-                <div className="stat-icon trips">
-                  <Bike size={24} />
-                </div>
-                <div className="stat-details">
-                  <span className="stat-label">Trips Today</span>
-                  <span className="stat-value">12</span>
-                  <span className="stat-trend">4 pending</span>
-                </div>
-              </div>
-
-              <div className="stat-card">
-                <div className="stat-icon rating">
-                  <Star size={24} />
-                </div>
-                <div className="stat-details">
-                  <span className="stat-label">Rating</span>
-                  <span className="stat-value">4.92</span>
-                  <span className="stat-trend positive">Top 10%</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Main Dashboard Grid */}
-            <div className="dashboard-grid">
-              {/* Left Column - Current Delivery & Bonus */}
-              <div className="grid-left">
-                {/* Current Delivery Card */}
-                <div className="card current-delivery-card">
-                  <div className="card-header">
-                    <h3>Current Delivery</h3>
-                    <span className="badge active">In Progress</span>
-                  </div>
-
-                  <div className="delivery-timeline">
-                    <div className="timeline-item pickup">
-                      <div className="timeline-dot"></div>
-                      <div className="timeline-content">
-                        <span className="timeline-label">Pickup</span>
-                        <h4>Momofuku Ko</h4>
-                        <p className="timeline-address">162 2nd Ave, New York, NY</p>
-                        <span className="timeline-time">Ready in 5 min</span>
-                      </div>
-                    </div>
-
-                    <div className="timeline-line"></div>
-
-                    <div className="timeline-item dropoff">
-                      <div className="timeline-dot dropoff"></div>
-                      <div className="timeline-content">
-                        <span className="timeline-label">Dropoff</span>
-                        <h4>123 Main Street</h4>
-                        <p className="timeline-address">Apt 4B, New York, NY</p>
-                        <span className="timeline-time">2.4 km • 35 min</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="delivery-actions">
-                    <button className="btn-primary" onClick={() => alert('Starting delivery...')}>
-                      Start Delivery
-                      <ChevronRight size={18} />
-                    </button>
-                    <button className="btn-secondary" onClick={() => alert('Contacting customer...')}>
-                      Contact Customer
-                    </button>
-                  </div>
-                </div>
-
-                {/* Bonus Progress Card */}
-                <div className="card bonus-card">
-                  <div className="card-header">
-                    <h3>Today's Bonus Progress</h3>
-                    <span className="badge">12am - 11:59pm</span>
-                  </div>
-
-                  <div className="bonus-table">
-                    <div className="bonus-row header">
-                      <span>Bonus</span>
-                      <span>$10</span>
-                      <span>$30</span>
-                      <span>$60</span>
-                      <span>$100</span>
-                    </div>
-                    <div className="bonus-row">
-                      <span>Orders</span>
-                      <span>$100</span>
-                      <span>$140</span>
-                      <span>$230</span>
-                      <span>$340+</span>
-                    </div>
-                  </div>
-
-                  <div className="progress-section">
-                    <div className="progress-header">
-                      <span>Progress to next bonus</span>
-                      <span className="progress-value">$220 / $340</span>
-                    </div>
-                    <div className="progress-bar">
-                      <div className="progress-fill" style={{ width: '65%' }}></div>
-                    </div>
-                    <p className="progress-note">Need $120 more to unlock $60 bonus</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Column - Recent Trips */}
-              <div className="grid-right">
-                <div className="card trips-card">
-                  <div className="card-header">
-                    <h3>Recent Trips</h3>
-                    <span className="badge">Last 4 deliveries</span>
-                  </div>
-
-                  <div className="trips-list">
-                    {recentTrips.map((trip) => (
-                      <div key={trip.id} className="trip-item">
-                        <div className="trip-main">
-                          <div className="trip-icon">
-                            <Bike size={16} />
-                          </div>
-                          <div className="trip-details">
-                            <h4>{trip.restaurant}</h4>
-                            <p className="trip-address">{trip.address}</p>
-                            <span className="trip-time">{trip.time}</span>
-                          </div>
-                        </div>
-                        <div className="trip-earnings">
-                          <span className="earnings-amount">${trip.earnings}</span>
-                          <span className="trip-status">Delivered</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <button className="view-all-btn" onClick={() => setActivePage('trips')}>
-                    View All Trips
-                    <ChevronRight size={16} />
-                  </button>
-                </div>
-
-                {/* Quick Stats */}
-                <div className="quick-stats-grid">
-                  <div className="quick-stat">
-                    <span className="quick-stat-label">Acceptance Rate</span>
-                    <span className="quick-stat-value">98%</span>
-                  </div>
-                  <div className="quick-stat">
-                    <span className="quick-stat-label">On-Time</span>
-                    <span className="quick-stat-value">96%</span>
-                  </div>
-                  <div className="quick-stat">
-                    <span className="quick-stat-label">This Week</span>
-                    <span className="quick-stat-value">$1,247</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </>
-        );
-
-      case 'profile':
-        return (
-          <div className="page-content">
-            <h2 className="page-title">Profile</h2>
-            <div className="profile-card">
-              <div className="profile-header">
-                <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200" alt="Profile" />
-                <h3>Sarah Johnson</h3>
-                <p>Verified Runner · ID: #RN2473</p>
-              </div>
-              <div className="profile-stats">
-                <div className="profile-stat">
-                  <span>Rating</span>
-                  <strong>4.92 ⭐</strong>
-                </div>
-                <div className="profile-stat">
-                  <span>Total Trips</span>
-                  <strong>1,247</strong>
-                </div>
-                <div className="profile-stat">
-                  <span>Member Since</span>
-                  <strong>2023</strong>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'wallet':
-        return (
-          <div className="page-content">
-            <h2 className="page-title">Wallet</h2>
-            <div className="earnings-summary">
-              <div className="earnings-total-card">
-                <h3>Total Balance</h3>
-                <p className="earnings-amount-large">$4,892</p>
-                <span className="earnings-period">Available for withdrawal</span>
-              </div>
-              <div className="earnings-stats-grid">
-                <div className="earnings-stat-item">
-                  <span>This Week</span>
-                  <strong>$1,247</strong>
-                </div>
-                <div className="earnings-stat-item">
-                  <span>Last Week</span>
-                  <strong>$1,102</strong>
-                </div>
-                <div className="earnings-stat-item">
-                  <span>Pending</span>
-                  <strong>$350</strong>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'requests':
-        return (
-          <div className="page-content">
-            <h2 className="page-title">View Requests</h2>
-            <div className="requests-list">
-              <div className="request-card">
-                <div className="request-header">
-                  <h3>Chipotle Mexican Grill</h3>
-                  <span className="badge active">2.5 km away</span>
-                </div>
-                <p className="request-address">123 Broadway, New York, NY</p>
-                <div className="request-footer">
-                  <span className="request-payout">$12.50</span>
-                  <button className="btn-primary small" onClick={() => alert('Request accepted!')}>Accept</button>
-                </div>
-              </div>
-              <div className="request-card">
-                <div className="request-header">
-                  <h3>Starbucks</h3>
-                  <span className="badge active">1.8 km away</span>
-                </div>
-                <p className="request-address">456 Park Ave, New York, NY</p>
-                <div className="request-footer">
-                  <span className="request-payout">$8.75</span>
-                  <button className="btn-primary small" onClick={() => alert('Request accepted!')}>Accept</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'settings':
-        return (
-          <div className="page-content">
-            <h2 className="page-title">Settings</h2>
-            <div className="settings-section">
-              <h3>Account Settings</h3>
-              <div className="settings-item">
-                <span>Email Notifications</span>
-                <label className="switch">
-                  <input type="checkbox" defaultChecked />
-                  <span className="slider"></span>
-                </label>
-              </div>
-              <div className="settings-item">
-                <span>Push Notifications</span>
-                <label className="switch">
-                  <input type="checkbox" defaultChecked />
-                  <span className="slider"></span>
-                </label>
-              </div>
-              <div className="settings-item">
-                <span>Dark Mode</span>
-                <label className="switch">
-                  <input type="checkbox" />
-                  <span className="slider"></span>
-                </label>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'trips':
-        return (
-          <div className="page-content">
-            <h2 className="page-title">My Trips</h2>
-            <div className="trips-full-list">
-              {recentTrips.map((trip) => (
-                <div key={trip.id} className="trip-full-card">
-                  <div className="trip-full-header">
-                    <h3>{trip.restaurant}</h3>
-                    <span className="trip-status-badge">Completed</span>
-                  </div>
-                  <p className="trip-full-address">{trip.address}</p>
-                  <div className="trip-full-details">
-                    <span><Clock size={14} /> {trip.time}</span>
-                    <span><DollarSign size={14} /> ${trip.earnings}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-
-      default:
-        return null;
-    }
-  };
+  const profile = dashboardData?.profile || {};
+  const stats = dashboardData?.stats || { successRate: 0, level: "JUNIOR", totalTrips: 0, activeMissions: 0 };
+  const notifications = dashboardData?.notifications || [];
 
   return (
-    <div className="runner-dashboard">
-      {/* YOUR EXACT SIDEBAR CODE */}
-      <div className={`h-screen w-64 bg-[#0D330E] flex flex-col fixed left-0 top-0 shadow-2xl transition-all duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        {/* Logo Section */}
-        <div className="p-6 flex items-center justify-between border-b border-white/10">
-          <div className="flex items-center gap-3">
-            <div className="bg-[#6E8649] p-2 rounded-xl">
-              <ShoppingCart size={24} className="text-white" />
-            </div>
-            <span className="text-xl font-bold text-white tracking-tight">ConnectUs</span>
-          </div>
-        </div>
-
-        <div className={`sidebar-container ${isOpen ? 'open' : 'closed'}`}>
-  {/* Logo Section */}
-  <div className="sidebar-logo">
-    <div className="logo-wrapper">
-      <div className="logo-icon">
-        <ShoppingCart size={24} />
+    <div className="min-h-screen font-sans text-[#0D330E] flex relative overflow-x-hidden" style={backgroundStyle}>
+      
+      {/* DECORATIVE BUBBLES & SHAPES */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        {/* Large Sage Bubble */}
+        <div className="absolute top-[-10%] left-[-5%] w-[40vw] h-[40vw] bg-[#C2D1B2]/30 rounded-full blur-[80px] animate-pulse"></div>
+        {/* Medium Floating Orb */}
+        <div className="absolute bottom-[10%] right-[5%] w-[30vw] h-[30vw] bg-[#A3B18A]/20 rounded-full blur-[60px]"></div>
+        {/* Glassmorphic Bubble */}
+        <div className="absolute top-[40%] right-[15%] w-32 h-32 bg-white/20 rounded-full border border-white/30 backdrop-blur-md shadow-xl animate-bounce" style={{ animationDuration: '6s' }}></div>
+        {/* Smaller accent shape */}
+        <div className="absolute bottom-[20%] left-[10%] w-20 h-20 bg-[#0D330E]/5 rotate-45 rounded-2xl border border-[#0D330E]/10"></div>
       </div>
-      <span className="logo-text">ConnectUs</span>
-    </div>
-  </div>
 
-  {/* Navigation Links */}
-  <nav className="sidebar-nav">
-    <div className="nav-items">
-      {menuItems.map((item) => {
-        const isActive = activePage === item.id;
-        return (
-          <button
-            key={item.name}
-            onClick={() => handleNavigation(item.id)}
-            className={`nav-item ${isActive ? 'active' : ''}`}
-          >
-            <span className="nav-icon">{item.icon}</span>
-            <span className="nav-text">{item.name}</span>
+      <RunnerSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+
+      {/* TOP NAV BAR */}
+      <div className={`fixed top-0 right-0 left-0 z-40 p-4 transition-all duration-300 ${isSidebarOpen ? 'ml-72' : 'ml-0'}`}>
+        <div className="max-w-[1400px] mx-auto flex items-center justify-between px-6 py-3 bg-white/60 backdrop-blur-xl rounded-2xl border border-white/40 shadow-sm">
+          <div className="flex items-center gap-4">
+            <button onClick={() => setIsSidebarOpen(true)} className="p-2.5 bg-[#0D330E] text-white rounded-full shadow-lg hover:scale-110 transition-transform">
+              <Menu size={20} />
+            </button>
+            <h2 className="text-xs font-black text-[#0D330E] uppercase tracking-[0.2em] hidden sm:block">Operations Hub</h2>
+          </div>
+
+          <div className="flex items-center gap-2 px-5 py-2 bg-white/80 rounded-full border border-[#C2D1B2] shadow-sm">
+            <MapPin size={14} className="text-[#477023]" />
+            <span className="text-[10px] font-black text-gray-600 uppercase tracking-tighter">
+              {profile.city || "Johannesburg"}
+            </span>
+          </div>
+
+          <button onClick={() => setShowNotifications(!showNotifications)} className="p-2.5 bg-white rounded-full shadow-md relative hover:bg-gray-50">
+            <Bell size={20} className="text-[#0D330E]" />
+            {notifications.length > 0 && (
+              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
+            )}
           </button>
-        );
-      })}
-    </div>
-  </nav>
-
-  {/* User & Logout Section */}
-  <div className="sidebar-footer">
-    <div className="user-info">
-      <img 
-        src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=100" 
-        className="user-avatar"
-        alt="User"
-      />
-      <div className="user-details">
-        <p className="user-name">Sarah J.</p>
-        <p className="user-role">Verified Runner</p>
+        </div>
       </div>
-    </div>
-    
-    <button className="logout-btn" onClick={() => alert('Logging out...')}>
-      <LogOut size={20} />
-      <span className="font-medium">Logout</span>
-    </button>
-  </div>
-</div>
 
-        {/* Navigation Links */}
-        <nav className="flex-1 px-4 py-6 space-y-2">
-          {menuItems.map((item) => {
-            const isActive = activePage === item.id;
-            return (
-              <button
-                key={item.name}
-                onClick={() => handleNavigation(item.id)}
-                className={`w-full flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-200 group ${
-                  isActive 
-                    ? 'bg-[#6E8649] text-white shadow-lg shadow-[#6E8649]/20' 
-                    : 'text-white/70 hover:bg-white/10 hover:text-white'
-                }`}
-              >
-                <span className={`${isActive ? 'text-white' : 'text-[#6E8649] group-hover:text-white'}`}>
-                  {item.icon}
-                </span>
-                <span className="font-medium">{item.name}</span>
-              </button>
-            );
-          })}
-        </nav>
-
-        {/* User & Logout Section */}
-        <div className="p-4 border-t border-white/10">
-          <div className="flex items-center gap-3 px-4 py-3 mb-2">
-            <img 
-              src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=100" 
-              className="w-10 h-10 rounded-full border-2 border-[#6E8649]"
-              alt="User"
-            />
-            <div className="overflow-hidden">
-              <p className="text-white font-bold text-sm truncate">Sarah J.</p>
-              <p className="text-white/50 text-xs">Verified Runner</p>
-            </div>
-          </div>
+      {/* MAIN CONTENT */}
+      <main className={`flex-1 transition-all duration-500 pt-32 pb-20 px-8 lg:px-16 z-10 ${isSidebarOpen ? 'ml-72' : 'ml-0'}`}>
+        <div className="max-w-[1400px] mx-auto space-y-12">
           
-          <button className="w-full flex items-center gap-4 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-2xl transition-colors" onClick={() => alert('Logging out...')}>
-            <LogOut size={20} />
-            <span className="font-medium">Logout</span>
-          </button>
+          {/* BANNER WITH GLASS OVERLAY */}
+          <div className="relative bg-[#0D330E] rounded-[3rem] p-12 overflow-hidden shadow-2xl border border-white/10 group">
+            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 opacity-50"></div>
+            
+            <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-[2px] w-12 bg-[#A3B18A]"></div>
+                  <span className="text-[#A3B18A] text-[10px] font-black uppercase tracking-[0.5em]">Live Performance</span>
+                </div>
+                <h1 className="text-5xl md:text-7xl font-light text-white leading-none">
+                  Keep it up, <br />
+                  <span className="font-black italic text-[#C5D3B0] drop-shadow-sm">
+                    {runnerName.split(' ')[0]}.
+                  </span>
+                </h1>
+              </div>
+              
+              <div className="bg-white/10 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/20 flex gap-12 shadow-2xl">
+                <div className="text-center">
+                  <p className="text-[10px] font-black text-[#A3B18A] uppercase mb-1 tracking-widest">Success</p>
+                  <p className="text-4xl font-black text-white italic">{stats.successRate}%</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-[10px] font-black text-[#A3B18A] uppercase mb-1 tracking-widest">Rank</p>
+                  <p className="text-4xl font-black text-white italic">{stats.level}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* STATS GRID */}
+          <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-8">
+            {/* Wallet Card - Frosted Glass */}
+            <div className="md:col-span-2 lg:col-span-3 bg-white/40 backdrop-blur-xl rounded-[3.5rem] p-12 border border-white shadow-xl hover:translate-y-[-5px] transition-all">
+              <div className="p-4 bg-[#0D330E] w-fit rounded-2xl text-white mb-8 shadow-xl">
+                <Wallet size={28} />
+              </div>
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-[#0D330E]/40 mb-2">Wallet Balance</p>
+              <h3 className="text-7xl md:text-8xl font-black italic tracking-tighter text-[#0D330E]">
+                R {profile.wallet_balance || "0.00"}
+              </h3>
+            </div>
+
+            {/* Trust Score Card */}
+            <div className="bg-[#6E8649]/90 backdrop-blur-lg rounded-[3.5rem] p-10 text-white shadow-xl flex flex-col items-center justify-center text-center border border-white/20">
+              <Star size={48} className="mb-4 fill-[#C5D3B0] text-[#C5D3B0]" />
+              <p className="text-6xl font-black italic">4.9</p>
+              <p className="text-[11px] font-black uppercase tracking-[0.2em] opacity-70 mt-2">Runner Score</p>
+            </div>
+
+            {/* Stats Column */}
+            <div className="lg:col-span-2 grid grid-cols-1 gap-6">
+               <div className="bg-white/50 backdrop-blur-md rounded-[2.5rem] p-8 border border-white flex items-center gap-6 shadow-md hover:bg-white/60 transition-colors">
+                  <div className="p-4 bg-white rounded-2xl text-[#0D330E] shadow-sm"><CheckCircle2 size={24}/></div>
+                  <div>
+                    <p className="text-3xl font-black italic text-[#0D330E]">{stats.totalTrips}</p>
+                    <p className="text-[10px] font-black uppercase opacity-40 tracking-widest">Trips Completed</p>
+                  </div>
+               </div>
+               <div className="bg-white/50 backdrop-blur-md rounded-[2.5rem] p-8 border border-white flex items-center gap-6 shadow-md hover:bg-white/60 transition-colors">
+                  <div className="p-4 bg-white rounded-2xl text-[#6E8649] shadow-sm"><Clock size={24}/></div>
+                  <div>
+                    <p className="text-2xl font-black italic text-[#0D330E] uppercase">{currentTime}</p>
+                    <p className="text-[10px] font-black uppercase opacity-40 tracking-widest">Active Time</p>
+                  </div>
+               </div>
+            </div>
+          </div>
         </div>
-      </div>
-
-      {/* Main Content - Adjust margin to account for fixed sidebar */}
-      <main className="main-content" style={{ marginLeft: isOpen ? '16rem' : '0', transition: 'margin-left 0.3s ease' }}>
-        {/* Top Bar */}
-        <header className="top-bar">
-          <div className="top-bar-left">
-            <button className="menu-btn" onClick={() => setIsOpen(!isOpen)}>
-              <Menu size={24} />
-            </button>
-            <div className="welcome">
-              <h1>Welcome back, Sarah</h1>
-              <p>Ready for your next delivery?</p>
-            </div>
-          </div>
-
-          <div className="top-bar-right">
-            <button className="notification-btn" onClick={() => alert('You have 3 new notifications')}>
-              <Bell size={20} />
-              <span className="notification-badge">3</span>
-            </button>
-            <div className="online-toggle">
-              <button 
-                className={`toggle-btn ${isOnline ? 'online' : 'offline'}`}
-                onClick={handleOnlineToggle}
-              >
-                <span className="dot"></span>
-                {isOnline ? 'Online' : 'Offline'}
-              </button>
-            </div>
-          </div>
-        </header>
-
-        {/* Dynamic Content */}
-        {renderContent()}
       </main>
     </div>
   );
 };
 
-export default Runnerdashboard;
+export default RunnerDashboard;

@@ -1,21 +1,174 @@
-// src/pages/UserHomePage.jsx
-import React, { useState } from 'react';
+// src/pages/UserHomePage.tsx
+import React, { useState, useEffect } from 'react';
 import * as Icons from 'lucide-react'; 
-import { Search, MapPin, Bell, SlidersHorizontal, Menu, Star, Zap, Shield, Clock } from 'lucide-react';
+import { Search, MapPin, Bell, SlidersHorizontal, Menu, Star, Zap, Shield, Clock, RefreshCw, X } from 'lucide-react';
 import { RunnerCard } from '../components/RunnerCard';
-import { RunnerModal } from '../components/RunnerModal';
-import { categories, runners } from '../data/mockData';
+import RunnerModal from '../components/RunnerModal';
+import { categories } from '../data/mockData';
 import UserSidebar from '../components/UserSidebar';
 import BottomNav from '../components/BottomNav';
+import { getCurrentUser, getUserName } from '../services/api';
+import { getRunners, Runner } from '../services/runnerService';
+
+interface Location {
+  lat: number;
+  lng: number;
+  city: string;
+  error?: string;
+}
 
 const UserHomePage = ({ onMenuClick }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState(null);
-  const [selectedRunner, setSelectedRunner] = useState(null);
+  const [selectedRunner, setSelectedRunner] = useState<Runner | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [userName, setUserName] = useState('User');
+  const [userEmail, setUserEmail] = useState('');
+  const [location, setLocation] = useState<Location>({
+    lat: -26.1076,
+    lng: 28.0547,
+    city: 'Sandton, JHB'
+  });
+  const [isLoadingLocation, setIsLoadingLocation] = useState(true);
+  const [locationError, setLocationError] = useState('');
+  const [runners, setRunners] = useState<Runner[]>([]);
+  const [filteredRunners, setFilteredRunners] = useState<Runner[]>([]);
+  const [isLoadingRunners, setIsLoadingRunners] = useState(false);
+  const [runnersError, setRunnersError] = useState('');
+  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
 
   const logoUrl = "https://raw.githubusercontent.com/SheBuilds05/ConnectUs/main/dir/lOGO.png";
-  
+
+  useEffect(() => {
+    const user = getCurrentUser();
+    const name = getUserName();
+    setUserName(name);
+    setUserEmail(user?.email || '');
+    getUserLocation();
+    fetchAllRunners();
+
+    // Handle window resize for responsive grid
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (location.lat && location.lng) {
+      fetchAllRunners();
+    }
+  }, [location, activeCategory, searchTerm]);
+
+  useEffect(() => {
+    // Filter runners based on active category and search term
+    let filtered = [...runners];
+    
+    if (activeCategory) {
+      filtered = filtered.filter(r => 
+        r.bio?.toLowerCase().includes(activeCategory.toLowerCase())
+      );
+    }
+    
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(r => 
+        r.username.toLowerCase().includes(term) ||
+        r.bio?.toLowerCase().includes(term) ||
+        r.city?.toLowerCase().includes(term)
+      );
+    }
+    
+    setFilteredRunners(filtered);
+  }, [runners, activeCategory, searchTerm]);
+
+  const getUserLocation = () => {
+    setIsLoadingLocation(true);
+    setLocationError('');
+
+    if (!navigator.geolocation) {
+      setLocationError('Geolocation is not supported by your browser');
+      setIsLoadingLocation(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        
+        try {
+          const city = await getCityFromCoordinates(latitude, longitude);
+          
+          setLocation({
+            lat: latitude,
+            lng: longitude,
+            city: city
+          });
+        } catch (error) {
+          console.error('Error getting city name:', error);
+          setLocation({
+            lat: latitude,
+            lng: longitude,
+            city: 'Your Location'
+          });
+        } finally {
+          setIsLoadingLocation(false);
+        }
+      },
+     (error) => {
+  // Only show banner for explicit permission denial, silently fall back otherwise
+  if (error.code === error.PERMISSION_DENIED) {
+    setLocationError('Location access denied. Using default location.');
+  }
+  setIsLoadingLocation(false);
+},
+{
+  enableHighAccuracy: false,
+  timeout: 8000,
+  maximumAge: 60000
+}
+    );
+  };
+
+  const getCityFromCoordinates = async (lat: number, lng: number): Promise<string> => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10`
+      );
+      const data = await response.json();
+      
+      if (data.address) {
+        const city = data.address.city || data.address.town || data.address.suburb || data.address.county || 'Unknown';
+        const country = data.address.country || '';
+        return `${city}, ${country}`.substring(0, 30);
+      }
+      return 'Your Location';
+    } catch (error) {
+      console.error('Reverse geocoding failed:', error);
+      return 'Your Location';
+    }
+  };
+
+  const fetchAllRunners = async () => {
+    setIsLoadingRunners(true);
+    setRunnersError('');
+    
+    try {
+      const fetchedRunners = await getRunners({
+        lat: location.lat,
+        lng: location.lng,
+        category: activeCategory || undefined,
+        search: searchTerm || undefined
+      });
+      setRunners(fetchedRunners);
+      setFilteredRunners(fetchedRunners);
+    } catch (error: any) {
+      console.error('Error fetching runners:', error);
+      setRunnersError(error.message || 'Failed to fetch runners');
+    } finally {
+      setIsLoadingRunners(false);
+    }
+  };
+
   const scrollToRunners = () => {
     document.getElementById('runners-section')?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -24,10 +177,37 @@ const UserHomePage = ({ onMenuClick }) => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const refreshLocation = () => {
+    getUserLocation();
+  };
+
+  // Responsive grid columns based on screen width
+  const getGridColumns = () => {
+    if (windowWidth < 640) return 1;      // mobile: 1 card
+    if (windowWidth < 1024) return 2;     // tablet: 2 cards
+    return 4;                              // desktop: 4 cards
+  };
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (selectedRunner) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [selectedRunner]);
+
   return (
     <div className="min-h-screen w-full bg-[#D3D3D3] relative overflow-x-hidden">
       
-      {/* Sidebar Component - fixed position */}
+      {/* Sidebar Component */}
       <UserSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       
       {/* Overlay when sidebar is open on mobile */}
@@ -59,7 +239,7 @@ const UserHomePage = ({ onMenuClick }) => {
       
       <div className="fixed inset-0 pointer-events-none shadow-[inset_0_0_150px_rgba(0,0,0,0.1)]"></div>
       
-      {/* Main content - shrinks when sidebar opens */}
+      {/* Main content */}
       <div 
         className={`relative z-10 w-full px-4 sm:px-6 lg:px-8 py-4 space-y-8 transition-all duration-300 ease-in-out ${
           isSidebarOpen ? 'lg:max-w-[calc(100%-16rem)] lg:ml-auto lg:mr-0' : 'max-w-full mx-auto'
@@ -70,8 +250,9 @@ const UserHomePage = ({ onMenuClick }) => {
         }}
       >
         
-        {/* HEADER - Removed logo next to hamburger menu */}
+        {/* HEADER */}
         <div className="flex items-center justify-between pt-2 pb-4 border-b border-gray-400/20 bg-white/5 backdrop-blur-sm px-4 rounded-2xl">
+          {/* Left side - Hamburger menu and user greeting */}
           <div className="flex items-center gap-4">
             <button 
               onClick={toggleSidebar} 
@@ -81,23 +262,87 @@ const UserHomePage = ({ onMenuClick }) => {
               <Menu size={20} className="text-[#0D330E]" />
             </button>
             
-            {/* Logo removed - only hamburger menu remains */}
+            <div className="hidden sm:block">
+              <span className="text-sm text-gray-600">Welcome back,</span>
+              <h2 className="text-lg font-bold text-[#0D330E]">{userName}</h2>
+            </div>
           </div>
 
-          <div className="hidden md:flex items-center gap-2 px-5 py-2.5 bg-white/60 backdrop-blur-md rounded-full border border-white/40 shadow-sm">
-            <MapPin size={14} className="text-[#2D531A]" />
-            <span className="text-xs font-bold text-gray-700 uppercase">Sandton, JHB</span>
+          {/* MIDDLE - Location Display */}
+          <div className="flex-1 flex justify-center">
+            <div className="flex items-center gap-2 px-5 py-2.5 bg-white/60 backdrop-blur-md rounded-full border border-white/40 shadow-sm">
+              {isLoadingLocation ? (
+                <>
+                  <RefreshCw size={14} className="animate-spin text-[#2D531A]" />
+                  <span className="text-xs font-bold text-gray-700">Getting location...</span>
+                </>
+              ) : locationError ? (
+                <>
+                  <MapPin size={14} className="text-red-500" />
+                  <span className="text-xs font-bold text-gray-700" title={locationError}>
+                    {location.city}
+                  </span>
+                  <button 
+                    onClick={refreshLocation}
+                    className="ml-2 p-1 hover:bg-[#2D531A]/10 rounded-full transition-colors"
+                    title="Refresh location"
+                  >
+                    <RefreshCw size={12} className="text-[#2D531A]" />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <MapPin size={14} className="text-[#2D531A]" />
+                  <span className="text-xs font-bold text-gray-700">{location.city}</span>
+                  <button 
+                    onClick={refreshLocation}
+                    className="ml-2 p-1 hover:bg-[#2D531A]/10 rounded-full transition-colors"
+                    title="Refresh location"
+                  >
+                    <RefreshCw size={12} className="text-[#2D531A]" />
+                  </button>
+                </>
+              )}
+            </div>
           </div>
 
-          <button className="p-2.5 bg-white rounded-full shadow-sm relative">
-            <Bell size={20} className="text-gray-600" />
-            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-          </button>
+          {/* Right side - Notification Bell */}
+          <div className="relative group">
+            <button className="p-2.5 bg-white rounded-full shadow-sm relative">
+              <Bell size={20} className="text-gray-600" />
+              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+            </button>
+            
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 px-3 text-xs text-gray-600 hidden group-hover:block">
+              {userEmail}
+            </div>
+          </div>
         </div>
 
-        {/* BANNER */}
+        {/* Location error banner */}
+        {locationError && (
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <MapPin className="h-5 w-5 text-yellow-400" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-yellow-700">{locationError}</p>
+              </div>
+              <div className="ml-auto">
+                <button
+                  onClick={refreshLocation}
+                  className="text-sm text-yellow-700 hover:text-yellow-900 font-medium"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* BANNER - KEPT EXACTLY AS IS */}
         <div className="relative bg-gradient-to-br from-[#0D330E] to-[#1A4A1A] rounded-[2rem] overflow-hidden shadow-2xl w-full border border-[#A3B18A]/30 group">
-          {/* ... banner content remains the same ... */}
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-0 left-0 w-40 h-40 bg-[#A3B18A] rounded-full blur-3xl"></div>
             <div className="absolute bottom-0 right-0 w-60 h-60 bg-white rounded-full blur-3xl"></div>
@@ -120,7 +365,7 @@ const UserHomePage = ({ onMenuClick }) => {
               </div>
               
               <h1 className="text-4xl md:text-6xl font-light text-white mb-3 leading-tight tracking-tight">
-                Your personal assistant for <br />
+                Hey {userName.split(' ')[0]}, your personal assistant for <br />
                 <span className="font-black italic bg-gradient-to-r from-[#A3B18A] to-[#C5D3B0] text-transparent bg-clip-text text-5xl md:text-7xl">
                   everything,
                 </span>
@@ -133,7 +378,7 @@ const UserHomePage = ({ onMenuClick }) => {
               
               <p className="text-white/80 text-sm md:text-base max-w-lg mb-6 leading-relaxed flex items-start gap-3">
                 <Shield size={18} className="text-[#A3B18A] mt-0.5 flex-shrink-0" />
-                <span>Connect with trusted local runners who handle your shopping, pickups, and deliveries—so you don't have to.</span>
+                <span>Connect with trusted local runners near {location.city} who handle your shopping, pickups, and deliveries—so you don't have to.</span>
               </p>
               
               <div className="flex gap-8 mb-6">
@@ -142,8 +387,8 @@ const UserHomePage = ({ onMenuClick }) => {
                     <Star size={14} className="text-[#A3B18A]" />
                   </div>
                   <div>
-                    <div className="text-xl md:text-2xl font-bold text-[#A3B18A]">500+</div>
-                    <div className="text-white/50 text-[9px] uppercase tracking-wider">Active Runners</div>
+                    <div className="text-xl md:text-2xl font-bold text-[#A3B18A]">{runners.length}+</div>
+                    <div className="text-white/50 text-[9px] uppercase tracking-wider">Available Runners</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -216,7 +461,6 @@ const UserHomePage = ({ onMenuClick }) => {
 
         {/* SEARCH BAR */}
         <div className="w-full relative group/search z-20">
-          {/* ... search bar content remains the same ... */}
           <div className="absolute -inset-1 bg-gradient-to-r from-[#A3B18A] via-[#2D531A] to-[#0D330E] rounded-[2rem] blur-xl opacity-20 group-hover/search:opacity-30 transition-opacity duration-500 pointer-events-none"></div>
           
           <div className="relative flex gap-3 w-full">
@@ -234,10 +478,10 @@ const UserHomePage = ({ onMenuClick }) => {
                 
                 <input
                   type="text"
-                  placeholder="Search for groceries, electronics, fashion, or specific runners..."
+                  placeholder={`Search for runners near ${location.city}...`}
                   className="w-full pl-16 pr-32 py-6 bg-transparent text-gray-800 placeholder-gray-400 outline-none text-base relative z-30"
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={handleSearch}
                   autoComplete="off"
                   spellCheck="false"
                 />
@@ -285,7 +529,6 @@ const UserHomePage = ({ onMenuClick }) => {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('Filter clicked');
               }}
             >
               <div className="absolute -inset-1 bg-gradient-to-r from-[#2D531A] to-[#0D330E] rounded-[1.8rem] blur-md opacity-0 group-hover/filter:opacity-50 transition-opacity pointer-events-none"></div>
@@ -307,7 +550,7 @@ const UserHomePage = ({ onMenuClick }) => {
           </div>
         </div>
 
-        {/* CATEGORIES SECTION */}
+        {/* CATEGORIES SECTION - KEPT EXACTLY AS IS */}
         <div className="space-y-8 py-8">
           <div className="flex flex-col items-center gap-4">
             <div className="flex items-center gap-4">
@@ -408,28 +651,90 @@ const UserHomePage = ({ onMenuClick }) => {
           )}
         </div>
 
-        {/* Runners Grid */}
+        {/* RUNNERS GRID - FIXED with 4 cards per row */}
         <div id="runners-section" className="space-y-5">
           <div className="flex justify-between items-center px-1">
-            <h3 className="font-bold text-[#0D330E] text-lg md:text-xl tracking-tight uppercase tracking-widest">Available Runners</h3>
-            <button className="text-[#2D531A] font-bold text-xs hover:underline tracking-widest">View All</button>
+            <h3 className="font-bold text-[#0D330E] text-lg md:text-xl tracking-tight uppercase tracking-widest">
+              Available Runners Near You
+              {!isLoadingLocation && !locationError && (
+                <span className="text-sm font-normal text-gray-500 ml-2">
+                  within 5km of {location.city}
+                </span>
+              )}
+            </h3>
+            <button 
+              onClick={fetchAllRunners}
+              className="text-[#2D531A] font-bold text-xs hover:underline tracking-widest flex items-center gap-1"
+            >
+              <RefreshCw size={14} />
+              Refresh
+            </button>
           </div>
-          <div className="grid !grid-cols-4 gap-2 sm:gap-4 md:gap-6 w-full">
-            {runners
-              .filter(r => !activeCategory || r.specialties.includes(activeCategory))
-              .filter(r => r.name.toLowerCase().includes(searchTerm.toLowerCase()))
-              .map(runner => (
-                <div key={runner.id} className="w-full min-w-0">
-                  <RunnerCard runner={runner} onClick={() => setSelectedRunner(runner)} />
+
+          {/* Loading State */}
+          {isLoadingRunners && (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2D531A]"></div>
+            </div>
+          )}
+
+          {/* Error State */}
+          {runnersError && !isLoadingRunners && (
+            <div className="text-center py-12">
+              <p className="text-red-500 mb-4">{runnersError}</p>
+              <button 
+                onClick={fetchAllRunners}
+                className="bg-[#2D531A] text-white px-6 py-2 rounded-full text-sm hover:bg-[#0D330E] transition-colors"
+              >
+                Try Again
+              </button>
+            </div>
+          )}
+
+          {/* Runners Grid - 4 cards per row with inline style */}
+          {!isLoadingRunners && !runnersError && (
+            <div 
+              style={{
+                display: 'grid',
+                gridTemplateColumns: `repeat(${getGridColumns()}, 1fr)`,
+                gap: '1.5rem',
+                width: '100%'
+              }}
+            >
+              {filteredRunners.length > 0 ? (
+                filteredRunners.map(runner => (
+                  <div key={runner.runner_id} style={{ width: '100%' }}>
+                    <RunnerCard 
+                      runner={runner} 
+                      onClick={() => setSelectedRunner(runner)} 
+                    />
+                  </div>
+                ))
+              ) : (
+                <div style={{ gridColumn: '1 / -1' }} className="text-center py-12">
+                  <p className="text-gray-500">No runners found in your area</p>
+                  <button 
+                    onClick={fetchAllRunners}
+                    className="mt-4 text-[#2D531A] hover:text-[#0D330E] font-medium"
+                  >
+                    Refresh
+                  </button>
                 </div>
-            ))}
-          </div>
+              )}
+            </div>
+          )}
         </div>
 
-        <RunnerModal runner={selectedRunner} isOpen={!!selectedRunner} onClose={() => setSelectedRunner(null)} />
+        {/* Runner Modal - Now with proper overlay that doesn't move the page */}
+        <RunnerModal 
+          runner={selectedRunner} 
+          isOpen={!!selectedRunner} 
+          onClose={() => setSelectedRunner(null)} 
+          userLocation={location}
+        />
       </div>
 
-      {/* Bottom Navigation - Conditionally sized based on sidebar state */}
+      {/* Bottom Navigation */}
       <div 
         className={`fixed bottom-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${
           isSidebarOpen ? 'lg:ml-64 lg:w-[calc(100%-16rem)]' : 'ml-0 w-full'
