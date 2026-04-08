@@ -13,21 +13,18 @@ const server = http.createServer(app);
 
 
 const corsOptions = {
-
   origin: [
-    'http://localhost:3000', 
-    'http://localhost:5173', 
-    'https://connect-us-bice-five.vercel.app'
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'https://connect-us-bice-five.vercel.app' 
   ],
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id'],
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 };
 
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// --- 2. SOCKET.IO ---
 const io = new Server(server, {
   cors: {
     origin: ["http://localhost:3000", "https://connect-us-bice-five.vercel.app"], 
