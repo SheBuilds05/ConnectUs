@@ -1,4 +1,4 @@
-const BASE = 'http://localhost:5000/api/admin';
+const BASE = 'https://connectus-tpyp.onrender.com/api/admin';
 
 const authHeaders = () => ({
   'Content-Type': 'application/json',
