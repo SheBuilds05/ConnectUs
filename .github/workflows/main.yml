@@ -59,6 +59,12 @@ jobs:
        # env:
           #DATABASE_URL: postgres://user:password@localhost:5432/booking_db
 
+      - name: Run Backend Tests
+        run: npm test
+        working-directory: ./backend
+        env:
+          DATABASE_URL: postgres://user:password@localhost:5432/booking_db
+
   mobile-ci:
     runs-on: ubuntu-latest # Switched to Ubuntu for standard React Native builds
     steps:
