@@ -23,7 +23,7 @@ const getStoredUser = () => {
 const getAuthToken = () =>
   localStorage.getItem('token') || sessionStorage.getItem('token') || '';
 
-const API = 'http://localhost:5000/api';
+const API = 'https://connectus-backend-wx08.onrender.com/api';
 
 // ─── Wallet persistence helpers ──────────────────────────────────────────────
 // Key is per-user so different accounts don't share wallets

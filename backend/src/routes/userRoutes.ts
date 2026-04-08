@@ -11,6 +11,7 @@ import {
   withdrawFunds,
   getRunnerById
 } from '../controllers/userController';
+import { getAvailableOrders } from '../controllers/orderController';
 import { authenticateUser } from '../middleware/authMiddleware';
 
 const router = Router();
