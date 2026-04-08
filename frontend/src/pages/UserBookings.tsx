@@ -78,14 +78,14 @@ const preSelectedRunner = location.state?.selectedRunner || null;
       if (imageFile) {
         const formData = new FormData();
         formData.append('file', imageFile);
-const uploadRes = await fetch('https://connectus-backend-wx08.onrender.com/api/upload', {
+const uploadRes = await fetch('https://connectus-tpyp.onrender.com/api/upload', {
   method: 'POST',
   body: formData,
   headers: { 
     'Authorization': `Bearer ${localStorage.getItem('token')}`
   }
 });
-        // const uploadRes = await fetch('https://connectus-backend-wx08.onrender.com/api/upload', { method: 'POST', body: formData });
+        // const uploadRes = await fetch('https://connectus-tpyp.onrender.com/api/upload', { method: 'POST', body: formData });
         // const uploadData = await uploadRes.json();
         // uploadedImageUrl = uploadData.url;
       }
@@ -105,7 +105,7 @@ const token = localStorage.getItem('token');
 console.log('Token being sent:', token ? 'EXISTS' : 'MISSING');
 console.log('User ID:', user?.id);
 
-      const response = await fetch('https://connectus-backend-wx08.onrender.com/api/users/bookings', {
+      const response = await fetch('https://connectus-tpyp.onrender.com/api/users/bookings', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
