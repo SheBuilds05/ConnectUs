@@ -14,7 +14,7 @@ const server = http.createServer(app);
 
 //MIDDLEWARE (Order matters!)
 const corsOptions = {
-  origin: 'http://localhost:3000',
+  origin: ['http://localhost:3000', 'http://localhost:8081'],
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id'],
   credentials: true
@@ -27,7 +27,7 @@ app.use(express.json());
 // SOCKET.IO INITIALIZATION
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000", 
+    origin: ["http://localhost:3000", "http://localhost:8081"], 
     methods: ["GET", "POST"]
   }
 });
