@@ -8,9 +8,9 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
-    "moduleResolution": "node"
-    "noImplicitAny": false
-    "types": ["node", "express"]
+    "moduleResolution": "node",
+    "noImplicitAny": false,
+    "types": ["node", "express"],
   },
   "include": ["src/**/*"]
 }
