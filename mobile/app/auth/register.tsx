@@ -224,7 +224,6 @@ export default function RegisterScreen() {
     <View style={styles.typeSelection}>
       <Text style={styles.sectionTitle}>I want to register as:</Text>
       <View style={styles.typeGrid}>
-        {/* Customer Card */}
         <TouchableOpacity
           style={styles.typeCard}
           onPress={() => setSelectedType('customer')}
@@ -235,7 +234,6 @@ export default function RegisterScreen() {
           <Text style={styles.typeDesc}>I need items delivered to me</Text>
         </TouchableOpacity>
 
-        {/* Runner Card */}
         <TouchableOpacity
           style={styles.typeCard}
           onPress={() => setSelectedType('runner')}
@@ -246,7 +244,6 @@ export default function RegisterScreen() {
           <Text style={styles.typeDesc}>I want to deliver items to others</Text>
         </TouchableOpacity>
 
-        {/* Admin Card (full width) */}
         <TouchableOpacity
           style={[styles.typeCard, styles.typeCardFull]}
           onPress={() => setSelectedType('admin')}
@@ -648,14 +645,14 @@ const styles = StyleSheet.create({
   label: { fontSize: 14, fontWeight: '500', color: colors.forest, marginBottom: 6 },
   input: {
     backgroundColor: colors.white,
-    borderRadius: 12,
-    paddingHorizontal: 16,
+    borderRadius: 30, // ✅ Changed from 12 to 30 for rounder corners
+    paddingHorizontal: 18,
     paddingVertical: 12,
     fontSize: 14,
     borderWidth: 1,
     borderColor: colors.sage + '30',
   },
-  textArea: { minHeight: 80, textAlignVertical: 'top' },
+  textArea: { minHeight: 80, textAlignVertical: 'top', borderRadius: 20 },
   submitButton: { borderRadius: 50, overflow: 'hidden', marginTop: 8, marginBottom: 16 },
   submitGradient: { paddingVertical: 14, alignItems: 'center' },
   submitText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },

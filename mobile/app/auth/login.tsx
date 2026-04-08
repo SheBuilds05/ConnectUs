@@ -54,10 +54,10 @@ export default function LoginScreen() {
       if (response.user?.role === 'runner') {
         console.log('Redirecting to runner dashboard');
         router.replace('/runner/dashboard');
-      } else if (response.user?.role === 'admin') {
-        console.log('Redirecting to admin dashboard');
-        router.replace('/admin/dashboard');
-      } else {
+     } else if (response.user?.role === 'admin') {
+  console.log('Redirecting to admin dashboard');
+  router.replace('/admin/dashboard');
+} else {
         // customer or default
         console.log('Redirecting to customer dashboard');
         router.replace('/(tabs)');
@@ -216,10 +216,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.white,
-    borderRadius: 12,
+    borderRadius: 30, // ✅ Changed from 12 to 30 for rounder corners
     borderWidth: 1,
     borderColor: colors.sage + '30',
-    paddingHorizontal: 16,
+    paddingHorizontal: 18, // Slightly more padding for better look
     height: 52,
   },
   inputIcon: { marginRight: 12 },
