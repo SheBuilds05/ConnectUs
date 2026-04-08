@@ -52,12 +52,13 @@ export const getRunners = async (params: GetRunnersParams = {}): Promise<Runner[
   }
 };
 
+// Add this function to your existing runnerService.ts
 export const getRunnerById = async (runnerId: number): Promise<Runner> => {
   try {
     const response = await api.get(`/runners/${runnerId}`);
     return response.data;
   } catch (error: any) {
-    console.error('Error fetching runner:', error);
+    console.error('Error fetching runner by ID:', error);
     throw new Error(error.response?.data?.message || 'Failed to fetch runner details');
   }
 };
@@ -167,3 +168,7 @@ const getMockRunners = (): Runner[] => {
     }
   ];
 };
+
+function getAuthToken() {
+  throw new Error('Function not implemented.');
+}

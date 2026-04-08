@@ -6,10 +6,12 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext'; // Import your Auth Hook
 import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
 const UserBookings = () => {
   const { user } = useAuth(); // Access the logged-in user
   const navigate = useNavigate();
+const routerLocation = useLocation();
 
   // Form State
   const [activeTab, setActiveTab] = useState(1);
@@ -20,6 +22,8 @@ const UserBookings = () => {
   const [budget, setBudget] = useState<string>(''); // Changed from number to string to allow empty
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
+const preSelectedRunner = location.state?.selectedRunner || null;
+  const [selectedRunner, setSelectedRunner] = useState(preSelectedRunner);
   
   // UI State
   const [isProcessing, setIsProcessing] = useState(false);
@@ -74,6 +78,13 @@ const UserBookings = () => {
       if (imageFile) {
         const formData = new FormData();
         formData.append('file', imageFile);
+const uploadRes = await fetch('http://localhost:5000/api/upload', {
+  method: 'POST',
+  body: formData,
+  headers: { 
+    'Authorization': `Bearer ${localStorage.getItem('token')}`
+  }
+});
         // const uploadRes = await fetch('http://localhost:5000/api/upload', { method: 'POST', body: formData });
         // const uploadData = await uploadRes.json();
         // uploadedImageUrl = uploadData.url;
@@ -81,23 +92,27 @@ const UserBookings = () => {
 
       // 2. Create the Booking
       const bookingData = {
-        user_id: user.id, // Live ID from Context
         product_description: description,
         delivery_location: location,
         budget: budget ? Number(budget) : 0, // Convert to number for API
         status: 'CREATED',
         image_url: uploadedImageUrl,
-        is_priority: isPriority
+        is_priority: isPriority,
+runner_id: selectedRunner?.runner_id || null 
       };
 
+const token = localStorage.getItem('token');
+console.log('Token being sent:', token ? 'EXISTS' : 'MISSING');
+console.log('User ID:', user?.id);
+
       const response = await fetch('http://localhost:5000/api/users/bookings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': user.id // For our Auth Middleware
-        },
-        body: JSON.stringify(bookingData),
-      });
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${localStorage.getItem('token')}`
+  },
+  body: JSON.stringify(bookingData),
+});
 
       if (!response.ok) throw new Error('Failed to create booking.');
 
@@ -210,13 +225,37 @@ const UserBookings = () => {
                   <label className="block text-xl font-black text-[#0D330E] text-center">
                     What do you need?
                   </label>
-                  <textarea 
-                    className="w-full p-5 rounded-2xl border-2 border-[#D3D3D3]/20 bg-white/50 outline-none focus:border-[#477023] transition-all" 
-                    rows={4} 
-                    value={description} 
-                    onChange={(e) => setDescription(e.target.value)} 
-                    placeholder="E.g. 2L Milk, Bread, and a newspaper..." 
-                  />
+                  {/* ← ADD THE RUNNER BLOCK HERE */}
+    {selectedRunner && (
+      <div className="flex items-center gap-3 p-3 bg-[#0D330E]/5 rounded-2xl border border-[#A3B18A]/30">
+        <div className="w-10 h-10 rounded-full overflow-hidden bg-[#A3B18A]">
+          {selectedRunner.profile_photo ? (
+            <img src={selectedRunner.profile_photo} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-white font-black">
+              {selectedRunner.full_name?.charAt(0) || selectedRunner.username?.charAt(0)}
+            </div>
+          )}
+        </div>
+        <div className="flex-1">
+          <p className="font-black text-[#0D330E] text-sm">{selectedRunner.full_name || selectedRunner.username}</p>
+          <p className="text-xs text-gray-500">Assigned runner</p>
+        </div>
+        <button onClick={() => setSelectedRunner(null)} className="text-gray-400 hover:text-red-500">
+          <X size={16} />
+        </button>
+      </div>
+    )}
+
+    {/* ← THEN THE TEXTAREA */}
+    <textarea 
+      className="w-full p-5 rounded-2xl border-2 border-gray-200 outline-none focus:border-[#477023]" 
+      rows={4} 
+      value={description} 
+      onChange={(e) => setDescription(e.target.value)}
+      placeholder="List the items you need..." 
+    />
+    
                   
                   {/* Image Upload Area */}
                   <div className="relative border-2 border-dashed rounded-[24px] p-8 text-center border-[#477023]/30 bg-[#477023]/5 hover:bg-[#477023]/10 transition-colors">

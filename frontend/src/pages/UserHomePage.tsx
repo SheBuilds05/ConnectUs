@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import * as Icons from 'lucide-react'; 
 import { Search, MapPin, Bell, SlidersHorizontal, Menu, Star, Zap, Shield, Clock, RefreshCw, X } from 'lucide-react';
 import { RunnerCard } from '../components/RunnerCard';
-import { RunnerModal } from '../components/RunnerModal';
+import RunnerModal from '../components/RunnerModal';
 import { categories } from '../data/mockData';
 import UserSidebar from '../components/UserSidebar';
 import BottomNav from '../components/BottomNav';
@@ -114,30 +114,18 @@ const UserHomePage = ({ onMenuClick }) => {
           setIsLoadingLocation(false);
         }
       },
-      (error) => {
-        console.error('Error getting location:', error);
-        let errorMessage = 'Unable to get your location';
-        
-        switch(error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = 'Location permission denied. Using default location.';
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Location information unavailable. Using default location.';
-            break;
-          case error.TIMEOUT:
-            errorMessage = 'Location request timed out. Using default location.';
-            break;
-        }
-        
-        setLocationError(errorMessage);
-        setIsLoadingLocation(false);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      }
+     (error) => {
+  // Only show banner for explicit permission denial, silently fall back otherwise
+  if (error.code === error.PERMISSION_DENIED) {
+    setLocationError('Location access denied. Using default location.');
+  }
+  setIsLoadingLocation(false);
+},
+{
+  enableHighAccuracy: false,
+  timeout: 8000,
+  maximumAge: 60000
+}
     );
   };
 
