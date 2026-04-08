@@ -8,31 +8,41 @@ import userRoutes from './routes/userRoutes';
 import adminRoutes from './routes/adminRoutes';
 import bookingRoutes from './routes/bookingRoutes';
 
-
 const app = express();
 const server = http.createServer(app); 
 
-//MIDDLEWARE (Order matters!)
+
+
 const corsOptions = {
-  origin: ['http://localhost:3000', 'http://localhost:8081'],
+  
+  origin: [
+    'http://localhost:3000', 
+    'http://localhost:5173', 
+    'http://localhost:8081', 
+    'https://connect-us-bice-five.vercel.app'
+  ],
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id'],
   credentials: true
 };
-app.use(cors(corsOptions));
-app.use((req, res, next) => { if (req.method === 'OPTIONS') { res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000'); res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS'); res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,x-user-id'); res.setHeader('Access-Control-Allow-Credentials', 'true'); return res.sendStatus(200); } next(); });
 
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
-// SOCKET.IO INITIALIZATION
+
+
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:3000", "http://localhost:8081"], 
+    origin: [
+      "http://localhost:3000", 
+      "http://localhost:8081", 
+      "https://connect-us-bice-five.vercel.app"
+    ], 
     methods: ["GET", "POST"]
   }
 });
 
-//SOCKET.IO LOGIC
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
 
@@ -46,15 +56,21 @@ io.on('connection', (socket) => {
   });
 });
 
-// ROUTES
+// --- ROUTES ---
+
 app.use('/api/auth', authRoutes);
 app.use('/api/runners', runnerRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', bookingRoutes);
 
-// Test endpoints
+
+app.get('/', (req, res) => {
+  res.send('ConnectUs Backend is Live and Running!');
+});
+
 app.get('/api/health', (req, res) => res.json({ status: 'OK' }));
+
 app.get('/api/test', (req, res) => {
   res.json({ 
     success: true, 
@@ -63,10 +79,9 @@ app.get('/api/test', (req, res) => {
   });
 });
 
-// START SERVER
-const PORT = 5000;
+
+const PORT = process.env.PORT || 5000;
+
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server & Socket.io running on http://localhost:${PORT}`);
+  console.log(`🚀 Server & Socket.io running on port ${PORT}`);
 });
-
-
