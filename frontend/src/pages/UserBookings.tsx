@@ -81,7 +81,7 @@ const UserBookings = () => {
 
       // 2. Create the Booking
       const bookingData = {
-        customer_id: user.id, // Live ID from Context
+        user_id: user.id, // Live ID from Context
         product_description: description,
         delivery_location: location,
         budget: budget ? Number(budget) : 0, // Convert to number for API

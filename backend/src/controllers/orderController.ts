@@ -4,9 +4,10 @@ import { query } from '../config/db';
 
 export const getAvailableOrders = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    // Schema: table is 'bookings', status is 'CREATED'
     const result = await query(
-      `SELECT * FROM orders 
-       WHERE status = 'available' 
+      `SELECT * FROM bookings 
+       WHERE status = 'CREATED' 
        ORDER BY created_at DESC 
        LIMIT 20`
     );
@@ -17,123 +18,92 @@ export const getAvailableOrders = async (req: AuthRequest, res: Response): Promi
     });
   } catch (error) {
     console.error('Get available orders error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Server error'
-    });
+    res.status(500).json({ success: false, error: 'Server error' });
   }
 };
 
 export const getActiveOrders = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id;
-
     if (!userId) {
-      res.status(401).json({
-        success: false,
-        error: 'Not authorized'
-      });
+      res.status(401).json({ success: false, error: 'Not authorized' });
       return;
     }
 
+    // Schema: 'runner_id' links to the runner, status matches Enum: 'ACCEPTED' or 'IN_PROGRESS'
     const result = await query(
-      `SELECT * FROM orders 
-       WHERE assigned_to = $1 AND status IN ('accepted', 'picking-up', 'delivering')
+      `SELECT * FROM bookings 
+       WHERE runner_id = $1 AND status IN ('ACCEPTED', 'IN_PROGRESS')
        ORDER BY created_at DESC`,
       [userId]
     );
 
-    res.json({
-      success: true,
-      data: result.rows
-    });
+    res.json({ success: true, data: result.rows });
   } catch (error) {
     console.error('Get active orders error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Server error'
-    });
+    res.status(500).json({ success: false, error: 'Server error' });
   }
 };
 
 export const getCompletedOrders = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id;
-
     if (!userId) {
-      res.status(401).json({
-        success: false,
-        error: 'Not authorized'
-      });
+      res.status(401).json({ success: false, error: 'Not authorized' });
       return;
     }
 
+    // Schema: status 'COMPLETED'
     const result = await query(
-      `SELECT * FROM orders 
-       WHERE assigned_to = $1 AND status = 'delivered'
-       ORDER BY delivered_at DESC 
+      `SELECT * FROM bookings 
+       WHERE runner_id = $1 AND status = 'COMPLETED'
+       ORDER BY created_at DESC 
        LIMIT 20`,
       [userId]
     );
 
-    res.json({
-      success: true,
-      data: result.rows
-    });
+    res.json({ success: true, data: result.rows });
   } catch (error) {
     console.error('Get completed orders error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Server error'
-    });
+    res.status(500).json({ success: false, error: 'Server error' });
   }
 };
 
 export const acceptOrder = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const orderId = req.params.id;
+    const bookingId = req.params.id; 
     const userId = req.user?.id;
 
     if (!userId) {
-      res.status(401).json({
-        success: false,
-        error: 'Not authorized'
-      });
+      res.status(401).json({ success: false, error: 'Not authorized' });
       return;
     }
 
-    // Check if order exists and is available
+    // Schema Check: Use 'booking_id' and 'CREATED' status
     const orderCheck = await query(
-      'SELECT status FROM orders WHERE id = $1',
-      [orderId]
+      'SELECT status FROM bookings WHERE booking_id = $1',
+      [bookingId]
     );
 
     if (orderCheck.rows.length === 0) {
-      res.status(404).json({
-        success: false,
-        error: 'Order not found'
-      });
+      res.status(404).json({ success: false, error: 'Order not found' });
       return;
     }
 
-    if (orderCheck.rows[0].status !== 'available') {
-      res.status(400).json({
-        success: false,
-        error: 'Order is no longer available'
-      });
+    if (orderCheck.rows[0].status !== 'CREATED') {
+      res.status(400).json({ success: false, error: 'Order is no longer available' });
       return;
     }
 
-    // Accept order
+    // Schema: Update status to 'ACCEPTED' and set 'runner_id'
     const result = await query(
-      `UPDATE orders 
-       SET status = 'accepted', 
-           assigned_to = $1, 
-           assigned_at = CURRENT_TIMESTAMP,
+      `UPDATE bookings 
+       SET status = 'ACCEPTED', 
+           runner_id = $1, 
            updated_at = CURRENT_TIMESTAMP
-       WHERE id = $2 AND status = 'available'
+       WHERE booking_id = $2 AND status = 'CREATED'
        RETURNING *`,
-      [userId, orderId]
+      [userId, bookingId]
     );
 
     res.json({
@@ -143,76 +113,49 @@ export const acceptOrder = async (req: AuthRequest, res: Response): Promise<void
     });
   } catch (error) {
     console.error('Accept order error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Server error'
-    });
+    res.status(500).json({ success: false, error: 'Server error' });
   }
 };
 
 export const updateOrderStatus = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const orderId = req.params.id;
-    const { status } = req.body;
+    const bookingId = req.params.id;
+    const { status } = req.body; 
     const userId = req.user?.id;
 
     if (!userId) {
-      res.status(401).json({
-        success: false,
-        error: 'Not authorized'
-      });
+      res.status(401).json({ success: false, error: 'Not authorized' });
       return;
     }
 
-    const validStatuses = ['picking-up', 'delivering', 'delivered'];
+    // Valid Enum values from image_9b4cc6.png
+    const validStatuses = ['IN_PROGRESS', 'COMPLETED', 'REJECTED', 'CANCELED'];
     if (!validStatuses.includes(status)) {
-      res.status(400).json({
-        success: false,
-        error: 'Invalid status'
-      });
+      res.status(400).json({ success: false, error: 'Invalid status' });
       return;
     }
 
-    let updateQuery = 'UPDATE orders SET status = $1, updated_at = CURRENT_TIMESTAMP';
-    const params: any[] = [status];
-
-    // Add timestamp based on status
-    if (status === 'picking-up') {
-      updateQuery += ', picked_up_at = CURRENT_TIMESTAMP';
-    } else if (status === 'delivered') {
-      updateQuery += ', delivered_at = CURRENT_TIMESTAMP';
-    }
-
-    updateQuery += ' WHERE id = $2 AND assigned_to = $3 RETURNING *';
-    params.push(orderId, userId);
-
-    const result = await query(updateQuery, params);
+    const result = await query(
+      `UPDATE bookings 
+       SET status = $1, updated_at = CURRENT_TIMESTAMP 
+       WHERE booking_id = $2 AND runner_id = $3 
+       RETURNING *`,
+      [status, bookingId, userId]
+    );
 
     if (result.rows.length === 0) {
-      res.status(404).json({
-        success: false,
-        error: 'Order not found or not assigned to you'
-      });
+      res.status(404).json({ success: false, error: 'Order not found or not assigned to you' });
       return;
     }
 
-    // If delivered, update runner stats and add earnings
-    if (status === 'delivered') {
-      const order = result.rows[0];
-      
-      await query(
-        `UPDATE users 
-         SET total_trips = total_trips + 1,
-             total_earnings = total_earnings + $1
-         WHERE id = $2`,
-        [order.payout, userId]
-      );
-
-      await query(
-        `INSERT INTO earnings (user_id, order_id, amount, type, status)
-         VALUES ($1, $2, $3, 'order', 'completed')`,
-        [userId, orderId, order.payout]
-      );
+    // If COMPLETED, record payment in the 'payments' table
+    if (status === 'COMPLETED') {
+        const order = result.rows[0];
+        await query(
+            `INSERT INTO payments (user_id, booking_id, amount, status)
+             VALUES ($1, $2, $3, 'completed')`,
+            [userId, bookingId, order.budget || 0]
+        );
     }
 
     res.json({
@@ -222,39 +165,26 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response): Promis
     });
   } catch (error) {
     console.error('Update order status error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Server error'
-    });
+    res.status(500).json({ success: false, error: 'Server error' });
   }
 };
 
 export const getOrderById = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const orderId = req.params.id;
-
+    const bookingId = req.params.id;
     const result = await query(
-      'SELECT * FROM orders WHERE id = $1',
-      [orderId]
+      'SELECT * FROM bookings WHERE booking_id = $1',
+      [bookingId]
     );
 
     if (result.rows.length === 0) {
-      res.status(404).json({
-        success: false,
-        error: 'Order not found'
-      });
+      res.status(404).json({ success: false, error: 'Order not found' });
       return;
     }
 
-    res.json({
-      success: true,
-      data: result.rows[0]
-    });
+    res.json({ success: true, data: result.rows[0] });
   } catch (error) {
     console.error('Get order error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Server error'
-    });
+    res.status(500).json({ success: false, error: 'Server error' });
   }
 };

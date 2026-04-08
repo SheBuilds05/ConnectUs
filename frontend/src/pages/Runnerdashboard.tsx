@@ -1,184 +1,189 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { 
-  Wallet, Star, CheckCircle2, Package, TrendingUp, 
-  Menu, Zap, Shield, Clock, RefreshCw, ArrowRight, Bell, MapPin
+  Wallet, Star, CheckCircle2, Menu, Zap, 
+  Clock, Bell, MapPin
 } from 'lucide-react';
 import RunnerSidebar from '../components/RunnerSidebar';
 
 const RunnerDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [userName, setUserName] = useState("Khensani"); // Using your name from profile
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
+  const [runnerName, setRunnerName] = useState("Runner");
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date();
+      setCurrentTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const storedUser = localStorage.getItem('user');
+        if (!storedUser) {
+          setLoading(false);
+          return;
+        }
+        const user = JSON.parse(storedUser);
+        setRunnerName(user.full_name || user.name || "Runner");
+
+        if (user.user_id) {
+          const response = await axios.get(`http://localhost:5000/api/runners/dashboard/${user.user_id}`);
+          setDashboardData(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching dashboard stats:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  // BACKGROUND STYLING
+  const backgroundStyle = {
+    backgroundColor: '#F0F4EF',
+    backgroundImage: `
+      linear-gradient(rgba(194, 209, 178, 0.2) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(194, 209, 178, 0.2) 1px, transparent 1px)
+    `,
+    backgroundSize: '100px 100px',
+    backgroundAttachment: 'fixed' as const,
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center font-black uppercase tracking-widest text-[#0D330E]" style={backgroundStyle}>
+        Synchronizing Systems...
+      </div>
+    );
+  }
+
+  const profile = dashboardData?.profile || {};
+  const stats = dashboardData?.stats || { successRate: 0, level: "JUNIOR", totalTrips: 0, activeMissions: 0 };
+  const notifications = dashboardData?.notifications || [];
 
   return (
-    <div className="min-h-screen bg-[#D3D3D3] font-sans text-[#0D330E] flex relative overflow-x-hidden">
+    <div className="min-h-screen font-sans text-[#0D330E] flex relative overflow-x-hidden" style={backgroundStyle}>
       
-      {/* 1. STOLEN BACKGROUND EFFECTS (Grid & Glows) */}
-      <div className="fixed inset-0 pointer-events-none opacity-[0.03]" style={{
-        backgroundImage: `linear-gradient(rgba(13,51,14,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(13,51,14,0.1) 1px, transparent 1px)`,
-        backgroundSize: '40px 40px'
-      }}></div>
-      <div className="fixed top-0 -right-20 w-96 h-96 bg-[#A3B18A]/20 rounded-full blur-[120px] pointer-events-none"></div>
-      <div className="fixed bottom-0 -left-20 w-96 h-96 bg-[#2D531A]/10 rounded-full blur-[120px] pointer-events-none"></div>
+      {/* DECORATIVE BUBBLES & SHAPES */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        {/* Large Sage Bubble */}
+        <div className="absolute top-[-10%] left-[-5%] w-[40vw] h-[40vw] bg-[#C2D1B2]/30 rounded-full blur-[80px] animate-pulse"></div>
+        {/* Medium Floating Orb */}
+        <div className="absolute bottom-[10%] right-[5%] w-[30vw] h-[30vw] bg-[#A3B18A]/20 rounded-full blur-[60px]"></div>
+        {/* Glassmorphic Bubble */}
+        <div className="absolute top-[40%] right-[15%] w-32 h-32 bg-white/20 rounded-full border border-white/30 backdrop-blur-md shadow-xl animate-bounce" style={{ animationDuration: '6s' }}></div>
+        {/* Smaller accent shape */}
+        <div className="absolute bottom-[20%] left-[10%] w-20 h-20 bg-[#0D330E]/5 rotate-45 rounded-2xl border border-[#0D330E]/10"></div>
+      </div>
 
-      {/* SIDEBAR */}
       <RunnerSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
-      {/* 2. STOLEN FLOATING HEADER PATTERN */}
+      {/* TOP NAV BAR */}
       <div className={`fixed top-0 right-0 left-0 z-40 p-4 transition-all duration-300 ${isSidebarOpen ? 'ml-72' : 'ml-0'}`}>
-        <div className="max-w-[1400px] mx-auto flex items-center justify-between px-6 py-3 bg-white/40 backdrop-blur-md rounded-2xl border border-white/40 shadow-sm">
+        <div className="max-w-[1400px] mx-auto flex items-center justify-between px-6 py-3 bg-white/60 backdrop-blur-xl rounded-2xl border border-white/40 shadow-sm">
           <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setIsSidebarOpen(true)}
-              className="p-2.5 bg-[#0D330E] text-white rounded-full shadow-lg hover:scale-105 transition-all"
-            >
+            <button onClick={() => setIsSidebarOpen(true)} className="p-2.5 bg-[#0D330E] text-white rounded-full shadow-lg hover:scale-110 transition-transform">
               <Menu size={20} />
             </button>
-            <div className="hidden sm:block">
-              <span className="text-[10px] text-gray-600 uppercase font-bold tracking-tighter">Duty Status:</span>
-              <h2 className="text-sm font-black text-[#0D330E] uppercase flex items-center gap-2">
-                Active Now <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              </h2>
-            </div>
+            <h2 className="text-xs font-black text-[#0D330E] uppercase tracking-[0.2em] hidden sm:block">Operations Hub</h2>
           </div>
 
-          <div className="flex items-center gap-2 px-5 py-2 bg-white/60 rounded-full border border-white/40 shadow-inner">
-            <MapPin size={14} className="text-[#2D531A]" />
-            <span className="text-xs font-black text-gray-700 uppercase tracking-tighter">Sandton, JHB</span>
+          <div className="flex items-center gap-2 px-5 py-2 bg-white/80 rounded-full border border-[#C2D1B2] shadow-sm">
+            <MapPin size={14} className="text-[#477023]" />
+            <span className="text-[10px] font-black text-gray-600 uppercase tracking-tighter">
+              {profile.city || "Johannesburg"}
+            </span>
           </div>
 
-          <div className="relative">
-            <button className="p-2.5 bg-white rounded-full shadow-sm">
-              <Bell size={20} className="text-[#0D330E]" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-            </button>
-          </div>
+          <button onClick={() => setShowNotifications(!showNotifications)} className="p-2.5 bg-white rounded-full shadow-md relative hover:bg-gray-50">
+            <Bell size={20} className="text-[#0D330E]" />
+            {notifications.length > 0 && (
+              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
+            )}
+          </button>
         </div>
       </div>
 
       {/* MAIN CONTENT */}
-      <main className={`flex-1 transition-all duration-500 pt-32 pb-20 px-8 lg:px-16 ${isSidebarOpen ? 'ml-72' : 'ml-0'}`}>
+      <main className={`flex-1 transition-all duration-500 pt-32 pb-20 px-8 lg:px-16 z-10 ${isSidebarOpen ? 'ml-72' : 'ml-0'}`}>
         <div className="max-w-[1400px] mx-auto space-y-12">
           
-          {/* 3. STOLEN BANNER STYLE (Runner Version) */}
-          <div className="relative bg-gradient-to-br from-[#0D330E] to-[#1A4A1A] rounded-[2.5rem] p-10 overflow-hidden shadow-2xl border border-[#A3B18A]/30">
-            <div className="absolute top-0 right-0 p-8 opacity-10">
-              <Zap size={200} className="text-white rotate-12" />
-            </div>
+          {/* BANNER WITH GLASS OVERLAY */}
+          <div className="relative bg-[#0D330E] rounded-[3rem] p-12 overflow-hidden shadow-2xl border border-white/10 group">
+            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 opacity-50"></div>
             
-            <div className="relative z-10 flex flex-col md:flex-row justify-between items-end gap-8">
+            <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="h-[2px] w-12 bg-[#A3B18A]"></div>
-                  <span className="text-[#A3B18A] text-[10px] font-black uppercase tracking-[0.4em]">Runner Performance</span>
+                  <span className="text-[#A3B18A] text-[10px] font-black uppercase tracking-[0.5em]">Live Performance</span>
                 </div>
                 <h1 className="text-5xl md:text-7xl font-light text-white leading-none">
                   Keep it up, <br />
-                  <span className="font-black italic bg-gradient-to-r from-[#A3B18A] to-[#C5D3B0] text-transparent bg-clip-text">
-                    {userName}.
+                  <span className="font-black italic text-[#C5D3B0] drop-shadow-sm">
+                    {runnerName.split(' ')[0]}.
                   </span>
                 </h1>
-                <p className="text-white/60 text-sm max-w-md font-medium">
-                  You are in the top 5% of runners in Sandton today. Higher demand expected in 20 minutes.
-                </p>
               </div>
               
-              <div className="bg-white/10 backdrop-blur-md p-6 rounded-[2rem] border border-white/10 flex gap-10">
+              <div className="bg-white/10 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/20 flex gap-12 shadow-2xl">
                 <div className="text-center">
-                  <p className="text-[9px] font-black text-[#A3B18A] uppercase tracking-widest mb-1">Success Rate</p>
-                  <p className="text-3xl font-black text-white italic">98%</p>
+                  <p className="text-[10px] font-black text-[#A3B18A] uppercase mb-1 tracking-widest">Success</p>
+                  <p className="text-4xl font-black text-white italic">{stats.successRate}%</p>
                 </div>
-                <div className="w-[1px] bg-white/10"></div>
                 <div className="text-center">
-                  <p className="text-[9px] font-black text-[#A3B18A] uppercase tracking-widest mb-1">Level</p>
-                  <p className="text-3xl font-black text-white italic">PRO</p>
+                  <p className="text-[10px] font-black text-[#A3B18A] uppercase mb-1 tracking-widest">Rank</p>
+                  <p className="text-4xl font-black text-white italic">{stats.level}</p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* 4. UPGRADED BENTO GRID */}
-          <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-6">
-            
-            {/* LARGE EARNINGS TILE */}
-            <div className="md:col-span-2 lg:col-span-3 bg-white/60 backdrop-blur-xl rounded-[3rem] p-10 border border-white/50 shadow-xl group hover:scale-[1.02] transition-all">
-              <div className="flex justify-between items-start mb-6">
-                <div className="p-4 bg-[#0D330E] rounded-2xl text-white">
-                  <Wallet size={24} />
-                </div>
-                <div className="px-4 py-1.5 bg-[#6E8649]/20 rounded-full text-[#0D330E] text-[10px] font-black uppercase italic tracking-widest">
-                  +12% vs last week
-                </div>
+          {/* STATS GRID */}
+          <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-8">
+            {/* Wallet Card - Frosted Glass */}
+            <div className="md:col-span-2 lg:col-span-3 bg-white/40 backdrop-blur-xl rounded-[3.5rem] p-12 border border-white shadow-xl hover:translate-y-[-5px] transition-all">
+              <div className="p-4 bg-[#0D330E] w-fit rounded-2xl text-white mb-8 shadow-xl">
+                <Wallet size={28} />
               </div>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#0D330E]/40">Balance Available</p>
-              <h3 className="text-7xl font-black italic tracking-tighter text-[#0D330E]">R 4,250</h3>
-              <button className="mt-8 w-full py-4 bg-[#0D330E] text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl hover:bg-[#2D531A] transition-colors">
-                Withdraw Earnings
-              </button>
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-[#0D330E]/40 mb-2">Wallet Balance</p>
+              <h3 className="text-7xl md:text-8xl font-black italic tracking-tighter text-[#0D330E]">
+                R {profile.wallet_balance || "0.00"}
+              </h3>
             </div>
 
-            {/* RATING TILE */}
-            <div className="bg-[#6E8649] rounded-[3rem] p-10 text-white shadow-xl flex flex-col items-center justify-center text-center border border-white/10 relative group">
-              <div className="absolute top-4 right-4 animate-pulse">
-                <Shield size={20} className="text-white/30" />
-              </div>
-              <Star size={40} className="mb-4 fill-white" />
-              <p className="text-5xl font-black italic">4.9</p>
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mt-1">Trust Score</p>
+            {/* Trust Score Card */}
+            <div className="bg-[#6E8649]/90 backdrop-blur-lg rounded-[3.5rem] p-10 text-white shadow-xl flex flex-col items-center justify-center text-center border border-white/20">
+              <Star size={48} className="mb-4 fill-[#C5D3B0] text-[#C5D3B0]" />
+              <p className="text-6xl font-black italic">4.9</p>
+              <p className="text-[11px] font-black uppercase tracking-[0.2em] opacity-70 mt-2">Runner Score</p>
             </div>
 
-            {/* QUICK STATS */}
+            {/* Stats Column */}
             <div className="lg:col-span-2 grid grid-cols-1 gap-6">
-               <div className="bg-white/40 backdrop-blur-md rounded-[2.5rem] p-6 border border-white/50 flex items-center gap-6 shadow-sm">
-                  <div className="p-3 bg-white rounded-xl text-[#0D330E] shadow-sm"><CheckCircle2 size={20}/></div>
+               <div className="bg-white/50 backdrop-blur-md rounded-[2.5rem] p-8 border border-white flex items-center gap-6 shadow-md hover:bg-white/60 transition-colors">
+                  <div className="p-4 bg-white rounded-2xl text-[#0D330E] shadow-sm"><CheckCircle2 size={24}/></div>
                   <div>
-                    <p className="text-2xl font-black italic text-[#0D330E]">124</p>
-                    <p className="text-[9px] font-bold uppercase tracking-widest opacity-40">Total Trips</p>
+                    <p className="text-3xl font-black italic text-[#0D330E]">{stats.totalTrips}</p>
+                    <p className="text-[10px] font-black uppercase opacity-40 tracking-widest">Trips Completed</p>
                   </div>
                </div>
-               <div className="bg-white/40 backdrop-blur-md rounded-[2.5rem] p-6 border border-white/50 flex items-center gap-6 shadow-sm">
-                  <div className="p-3 bg-white rounded-xl text-[#6E8649] shadow-sm"><Clock size={20}/></div>
+               <div className="bg-white/50 backdrop-blur-md rounded-[2.5rem] p-8 border border-white flex items-center gap-6 shadow-md hover:bg-white/60 transition-colors">
+                  <div className="p-4 bg-white rounded-2xl text-[#6E8649] shadow-sm"><Clock size={24}/></div>
                   <div>
-                    <p className="text-2xl font-black italic text-[#0D330E]">06h 12m</p>
-                    <p className="text-[9px] font-bold uppercase tracking-widest opacity-40">Online Today</p>
+                    <p className="text-2xl font-black italic text-[#0D330E] uppercase">{currentTime}</p>
+                    <p className="text-[10px] font-black uppercase opacity-40 tracking-widest">Active Time</p>
                   </div>
                </div>
             </div>
-
-            {/* LIVE MISSIONS - Grid Style stolen from User's Runner Cards */}
-            <div className="md:col-span-4 lg:col-span-6 space-y-6">
-              <div className="flex items-center gap-4">
-                <div className="h-[1px] flex-1 bg-gray-400/20"></div>
-                <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-[#0D330E] opacity-60">Live Missions</h3>
-                <div className="h-[1px] flex-1 bg-gray-400/20"></div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {[1, 2].map((i) => (
-                  <div key={i} className="group relative bg-white/40 backdrop-blur-md border border-white/50 rounded-[2.5rem] p-8 flex items-center justify-between hover:bg-white transition-all duration-500 shadow-sm overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#A3B18A]/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700"></div>
-                    <div className="flex items-center gap-6 relative z-10">
-                      <div className="w-16 h-16 bg-[#0D330E] rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:rotate-6 transition-transform">
-                        <Package size={28} />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-[9px] font-black px-2 py-0.5 bg-[#6E8649] text-white rounded-full uppercase italic">Pick n Pay</span>
-                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Sandton Hub</span>
-                        </div>
-                        <h4 className="text-xl font-black italic uppercase text-[#0D330E]">Grocery Delivery</h4>
-                        <p className="text-xs font-bold text-[#6E8649] flex items-center gap-1 mt-1">
-                          <Zap size={12} fill="currentColor" /> R 85.00 Earning
-                        </p>
-                      </div>
-                    </div>
-                    <button className="relative z-10 h-14 w-14 rounded-full border-2 border-[#0D330E]/10 flex items-center justify-center text-[#0D330E] group-hover:bg-[#0D330E] group-hover:text-white transition-all shadow-md">
-                      <ArrowRight size={24} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
           </div>
         </div>
       </main>

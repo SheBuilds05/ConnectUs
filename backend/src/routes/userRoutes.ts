@@ -1,16 +1,22 @@
 import { Router } from 'express';
 import { 
-  createBooking,      // Added: to handle new bookings from UserBookings.tsx
+  createBooking, 
   getUserBookings, 
-  getUserProfile,     // Added: to load initial data in UserSettings.tsx
-  updateUserProfile,  // Updated: renamed to match the Settings logic
+  getUserProfile, 
+  updateUserProfile, 
   cancelBooking,
-  getBookingStatus
+  getBookingStatus,
+  getAvailableOrders // Imported from the controller
 } from '../controllers/userController';
 import { authenticateUser } from '../middleware/authMiddleware';
 
 const router = Router();
+
+// This protects all routes below it
 router.use(authenticateUser);
+
+// This matches http://localhost:5000/api/bookings/pending
+router.get('/pending', getAvailableOrders); 
 
 router.post('/bookings', createBooking); 
 router.get('/:userId/bookings', getUserBookings);

@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
-import http from 'http'; // Add this
-import { Server } from 'socket.io'; // Add this
+import http from 'http'; 
+import { Server } from 'socket.io'; 
 import authRoutes from './routes/authRoutes';
 import runnerRoutes from './routes/runnerRoutes'; 
 import userRoutes from './routes/userRoutes';

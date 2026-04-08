@@ -35,7 +35,7 @@ const RunnerSidebar = ({ isOpen, onClose }: RunnerSidebarProps) => {
 
   const menuItems = [
     { name: 'Dashboard', path: '/runner', icon: LayoutDashboard },
-    { name: 'Active Tasks', path: '/runner/tasks', icon: Package },
+    { name: 'Active Tasks', path: '/runner/activities', icon: Package },
     { name: 'Wallet', path: '/runner/wallet', icon: Wallet },
     { name: 'Profile', path: '/runner/profile', icon: User },
     { name: 'Settings', path: '/runner/settings', icon: Settings },

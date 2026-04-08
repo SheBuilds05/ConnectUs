@@ -6,23 +6,26 @@ import pool from '../db';
  * Triggered by handlePayment in UserBookings.tsx
  */
 export const createBooking = async (req: Request, res: Response) => {
-  const { customer_id, product_description, delivery_location, budget, status } = req.body;
+  const { user_id, product_description, delivery_location, budget, status } = req.body;
   try {
+    // Ensure status is uppercase 'CREATED' to match your Enum
+    const finalStatus = status ? status.toUpperCase() : 'CREATED';
+    
     const result = await pool.query(
-      `INSERT INTO bookings (customer_id, product_description, delivery_location, budget, status) 
+      `INSERT INTO bookings (user_id, product_description, delivery_location, budget, status) 
        VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [customer_id, product_description, delivery_location, budget, status]
+      [user_id, product_description, delivery_location, budget, finalStatus]
     );
     res.status(201).json(result.rows[0]);
-  } catch (err) {
-    console.error(err);
+  } catch (err: any) {
+    console.error("Booking Creation Error:", err.message);
     res.status(500).json({ error: "Failed to create booking" });
   }
 };
 
 /**
- * 2. FETCH ALL BOOKINGS
- * Updated to include runner object structure for UserTrackOrder.tsx
+ * 2. FETCH ALL BOOKINGS (For User History)
+ * Fixed: Changed assigned_runner_id to runner_id to match your schema
  */
 export const getUserBookings = async (req: Request, res: Response) => {
   const { userId } = req.params;
@@ -36,38 +39,35 @@ export const getUserBookings = async (req: Request, res: Response) => {
         b.created_at,
         u.full_name as runner_name, 
         u.phone as runner_phone
-        /* Removed u.profile_pic because it doesn't exist in your DB */
        FROM bookings b 
-       LEFT JOIN users u ON b.assigned_runner_id = u.user_id 
-       WHERE b.customer_id = $1 
+       LEFT JOIN users u ON b.runner_id = u.user_id 
+       WHERE b.user_id = $1 
        ORDER BY b.created_at DESC`,
       [userId]
     );
 
     const formattedBookings = result.rows.map(row => ({
-  id: row.id,
-  status: row.status,
-  product_description: row.product_description,
-  delivery_location: row.delivery_location,
-  created_at: row.created_at,
-  runner: row.runner_name ? {
-    name: row.runner_name,
-    phone: row.runner_phone,
-    // Use the name as the seed so the avatar is unique to that runner
-    avatar: row.runner_name.replace(/\s+/g, '').toLowerCase() 
-  } : null
-}));
+      id: row.id,
+      status: row.status,
+      product_description: row.product_description,
+      delivery_location: row.delivery_location,
+      created_at: row.created_at,
+      runner: row.runner_name ? {
+        name: row.runner_name,
+        phone: row.runner_phone,
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(row.runner_name)}&background=random`
+      } : null
+    }));
 
     res.json(formattedBookings);
   } catch (error: any) {
     console.error("DATABASE ERROR:", error.message);
-    res.status(500).json({ error: "Failed to fetch bookings", details: error.message });
+    res.status(500).json({ error: "Failed to fetch bookings" });
   }
 };
 
 /**
  * 3. GET USER PROFILE
- * Loads initial data for UserSettings.tsx
  */
 export const getUserProfile = async (req: Request, res: Response) => {
   const { userId } = req.params;
@@ -77,14 +77,13 @@ export const getUserProfile = async (req: Request, res: Response) => {
       [userId]
     );
     res.json(result.rows[0]);
-  } catch (err) {
+  } catch (err: any) {
     res.status(500).json({ error: "Failed to fetch profile" });
   }
 };
 
 /**
  * 4. UPDATE USER PROFILE
- * Handles updates from UserSettings.tsx
  */
 export const updateUserProfile = async (req: Request, res: Response) => {
   const { userId } = req.params;
@@ -98,12 +97,14 @@ export const updateUserProfile = async (req: Request, res: Response) => {
       [full_name, email, JSON.stringify(notifications), userId]
     );
     res.json(result.rows[0]);
-  } catch (err) {
+  } catch (err: any) {
     res.status(500).json({ error: "Failed to update profile" });
   }
 };
 
-// Existing Tracking Logic
+/**
+ * 5. GET BOOKING STATUS (Tracking)
+ */
 export const getBookingStatus = async (req: Request, res: Response) => {
   const { bookingId } = req.params;
   try {
@@ -112,12 +113,15 @@ export const getBookingStatus = async (req: Request, res: Response) => {
       [bookingId]
     );
     res.json(result.rows[0]);
-  } catch (err) {
+  } catch (err: any) {
     res.status(500).json({ error: "Tracking failed" });
   }
 };
 
-// Existing Cancellation Logic
+/**
+ * 6. CANCEL BOOKING
+ * Fixed: status set to uppercase 'CANCELED'
+ */
 export const cancelBooking = async (req: Request, res: Response) => {
   const { bookingId } = req.params;
   try {
@@ -126,7 +130,22 @@ export const cancelBooking = async (req: Request, res: Response) => {
       [bookingId]
     );
     res.json({ message: "Booking canceled successfully" });
-  } catch (err) {
+  } catch (err: any) {
     res.status(500).json({ error: "Cancellation failed" });
+  }
+};
+
+export const getAvailableOrders = async (req: Request, res: Response) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM bookings 
+       WHERE status = 'CREATED' 
+       ORDER BY created_at DESC`
+    );
+    // Returning result.rows directly matches what your frontend expects
+    res.json(result.rows);
+  } catch (err: any) {
+    console.error("Error fetching available orders:", err.message);
+    res.status(500).json({ error: "Server error" });
   }
 };

@@ -17,6 +17,7 @@ import AccountPage from "./pages/AccountPage";
 import RunnerWallet from "./pages/RunnerWallet";
 // REPLACED: Imported your RunnerProfile component
 import RunnerProfile from './pages/RunnerProfile'; 
+import RunnerActivities from './pages/RunnerActivities'; 
 
 import "./App.css";
 import SettingsPage from './pages/SettingsPage';
@@ -104,6 +105,7 @@ function App() {
               <Route path="profile" element={<RunnerProfile />} />
               <Route path="wallet" element={<RunnerWallet />} />
               <Route path="Settings" element={<SettingsPage />} />
+              <Route path="Activities" element={<RunnerActivities />} />
               
               <Route path="*" element={<Navigate to="/runner" replace />} />
             </Routes>
