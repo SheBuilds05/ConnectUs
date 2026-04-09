@@ -18,7 +18,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id']
 }));
 
-app.options('*', cors());
+// New way - compatible with Express 5 / path-to-regexp 8
+app.options('(.*)', cors());
 app.use(express.json());
 
 const io = new Server(server, {
