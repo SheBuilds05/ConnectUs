@@ -12,18 +12,13 @@ const app = express();
 const server = http.createServer(app); 
 
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || origin.includes('vercel.app') || origin.includes('localhost')) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: ["https://connect-us-bice-five.vercel.app", "http://localhost:5173"],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id']
 }));
 
+app.options('*', cors());
 app.use(express.json());
 
 const io = new Server(server, {
