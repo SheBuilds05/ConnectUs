@@ -20,6 +20,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createBooking } from '../services/bookingService';
 import { getCurrentUser } from '../services/api';
+import { createHold } from '../services/walletService';
 
 export default function CreateBookingScreen() {
   const router = useRouter();
@@ -37,6 +38,7 @@ export default function CreateBookingScreen() {
   const [error, setError] = useState<string | null>(null);
   const [bookingData, setBookingData] = useState<any>({ runnerId: 0, runnerName: '' });
   const [isReady, setIsReady] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<number | undefined>();
 
   const baseFee = 25;
   const priorityFee = isPriority ? 100 : 0;
@@ -66,12 +68,19 @@ export default function CreateBookingScreen() {
           return;
         }
 
+        // Get userId
+        const userId = user.id || user.user_id;
+        if (userId) {
+          setCurrentUserId(userId);
+          console.log('✅ Current userId:', userId);
+        }
+
         const debugStorage = async () => {
           const allKeys = await AsyncStorage.getAllKeys();
           console.log('🔑 All AsyncStorage keys:', allKeys);
           const pending = await AsyncStorage.getItem('pendingBooking');
           console.log('📦 Direct check - pendingBooking:', pending);
-          console.log('📦 Router params:', router.query);
+          console.log('📦 Router params:', router);
         };
         debugStorage();
 
@@ -137,7 +146,6 @@ export default function CreateBookingScreen() {
     setIsProcessing(true);
     setError(null);
     
-    // ✅ runner_id is optional - send undefined to make it null in backend
     const payload = {
       product_description: description,
       delivery_location: location,
@@ -147,16 +155,22 @@ export default function CreateBookingScreen() {
       special_instructions: specialInstructions,
     };
 
-    console.log('5. Payload being sent (no runner_id required):', payload);
+    console.log('5. Payload being sent:', payload);
 
     try {
       console.log('6. Calling createBooking...');
       const booking = await createBooking(payload);
       console.log('7. Booking created:', booking);
+      
+      // ✅ Create a hold for the booking amount
+      console.log('8. Creating hold for amount:', total);
+      await createHold(booking.booking_id, total);
+      console.log('9. Hold created successfully');
+      
       setIsPaid(true);
-      console.log('8. isPaid set to true');
+      console.log('10. Booking completed successfully');
     } catch (err: any) {
-      console.log('9. Error caught:', err);
+      console.log('11. Error caught:', err);
       const msg = err.message || 'Failed to create booking';
       setError(msg);
       Alert.alert('Booking Failed', msg);
@@ -165,7 +179,6 @@ export default function CreateBookingScreen() {
     }
   };
 
-  // ✅ Fixed exit handler - always go to home screen
   const handleExit = () => {
     console.log('Exit button pressed - navigating to home');
     router.replace('/(tabs)');

@@ -176,7 +176,14 @@ export const registerCustomer = async (userData: {
   
   if (response.data.token) {
     await AsyncStorage.setItem('token', response.data.token);
-    await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
+    const user = response.data.user;
+    if (user) {
+      await AsyncStorage.setItem('user', JSON.stringify(user));
+      const userId = user.user_id || user.id;
+      if (userId) {
+        await AsyncStorage.setItem('userId', userId.toString());
+      }
+    }
   }
   
   return response.data;
@@ -198,7 +205,14 @@ export const registerRunner = async (userData: {
   
   if (response.data.token) {
     await AsyncStorage.setItem('token', response.data.token);
-    await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
+    const user = response.data.user;
+    if (user) {
+      await AsyncStorage.setItem('user', JSON.stringify(user));
+      const userId = user.user_id || user.id;
+      if (userId) {
+        await AsyncStorage.setItem('userId', userId.toString());
+      }
+    }
   }
   
   return response.data;
@@ -216,7 +230,14 @@ export const registerAdmin = async (userData: {
   
   if (response.data.token) {
     await AsyncStorage.setItem('token', response.data.token);
-    await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
+    const user = response.data.user;
+    if (user) {
+      await AsyncStorage.setItem('user', JSON.stringify(user));
+      const userId = user.user_id || user.id;
+      if (userId) {
+        await AsyncStorage.setItem('userId', userId.toString());
+      }
+    }
   }
   
   return response.data;

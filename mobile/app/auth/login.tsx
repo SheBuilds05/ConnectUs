@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { loginUser } from '../../services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const colors = {
   forest: '#0D330E',
@@ -50,17 +51,37 @@ export default function LoginScreen() {
       console.log('Login successful:', response);
       console.log('User role:', response.user?.role);
       
-      // Redirect based on user role
+      // Extract user ID from response
+      const user = response.user;
+      const userId = user?.id || user?.user_id;
+      console.log('User ID:', userId);
+      
+      // Store user ID in AsyncStorage for persistence
+      if (userId) {
+        await AsyncStorage.setItem('userId', userId.toString());
+        console.log('Stored userId in AsyncStorage:', userId);
+      }
+      
+      // Redirect based on user role with userId param
       if (response.user?.role === 'runner') {
         console.log('Redirecting to runner dashboard');
-        router.replace('/runner/dashboard');
-     } else if (response.user?.role === 'admin') {
-  console.log('Redirecting to admin dashboard');
-  router.replace('/admin/dashboard');
-} else {
+        router.replace({
+          pathname: '/runner/dashboard',
+          params: { userId: userId?.toString() }
+        });
+      } else if (response.user?.role === 'admin') {
+        console.log('Redirecting to admin dashboard');
+        router.replace({
+          pathname: '/admin/dashboard',
+          params: { userId: userId?.toString() }
+        });
+      } else {
         // customer or default
         console.log('Redirecting to customer dashboard');
-        router.replace('/(tabs)');
+        router.replace({
+          pathname: '/(tabs)',
+          params: { userId: userId?.toString() }
+        });
       }
       
     } catch (err: any) {
@@ -216,10 +237,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.white,
-    borderRadius: 30, // ✅ Changed from 12 to 30 for rounder corners
+    borderRadius: 30,
     borderWidth: 1,
     borderColor: colors.sage + '30',
-    paddingHorizontal: 18, // Slightly more padding for better look
+    paddingHorizontal: 18,
     height: 52,
   },
   inputIcon: { marginRight: 12 },
