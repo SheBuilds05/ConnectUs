@@ -11,23 +11,24 @@ import bookingRoutes from './routes/bookingRoutes';
 const app = express();
 const server = http.createServer(app); 
 
-
-const corsOptions = {
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'https://connect-us-bice-five.vercel.app' 
-  ],
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || origin.includes('vercel.app') || origin.includes('localhost')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
-};
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id']
+}));
 
-app.use(cors(corsOptions));
 app.use(express.json());
 
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:3000", "https://connect-us-bice-five.vercel.app"], 
+    origin: "*", 
     methods: ["GET", "POST"]
   }
 });
@@ -45,13 +46,10 @@ app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', bookingRoutes);
 
-
 app.get('/api/health', (req, res) => res.json({ status: 'OK' }));
 app.get('/', (req, res) => res.send('ConnectUs Backend is Live!'));
 
-
 const PORT = process.env.PORT || 5000;
-
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
