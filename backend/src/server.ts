@@ -7,6 +7,7 @@ import runnerRoutes from './routes/runnerRoutes';
 import userRoutes from './routes/userRoutes';
 import adminRoutes from './routes/adminRoutes';
 import bookingRoutes from './routes/bookingRoutes';
+import walletRoutes from './routes/walletRoutes';
 
 const app = express();
 const server = http.createServer(app); 
@@ -40,6 +41,7 @@ app.use('/api/runners', runnerRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', bookingRoutes);
+app.use('/api', walletRoutes);
 
 app.get('/api/health', (req, res) => res.json({ status: 'OK' }));
 app.get('/', (req, res) => res.send('ConnectUs Backend is Live!'));
