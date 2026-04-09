@@ -13,15 +13,7 @@ import {
 import { useRouter, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-
-// Type definitions
-interface User {
-  id: string;
-  full_name: string;
-  email: string;
-  role?: string;
-  phone?: string;
-}
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface RunnerSidebarProps {
   isOpen: boolean;
@@ -31,7 +23,7 @@ interface RunnerSidebarProps {
 export default function RunnerSidebar({ isOpen, onClose }: RunnerSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const [userData, setUserData] = useState<User | null>(null);
+  const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -44,19 +36,17 @@ export default function RunnerSidebar({ isOpen, onClose }: RunnerSidebarProps) {
   const loadUserData = async () => {
     try {
       setLoading(true);
-      // Get user from localStorage/AsyncStorage
-      const storedUser = localStorage.getItem('user');
+      // ✅ FIXED: Use AsyncStorage instead of localStorage
+      const storedUser = await AsyncStorage.getItem('user');
+      console.log('Sidebar - Raw stored user:', storedUser);
+      
       if (storedUser) {
         const user = JSON.parse(storedUser);
+        console.log('Sidebar - Parsed user:', user);
         setUserData(user);
       } else {
-        // Fallback to default if no user found
-        setUserData({
-          id: '1',
-          full_name: 'Runner User',
-          email: 'runner@connectus.com',
-          role: 'runner',
-        });
+        console.log('Sidebar - No user found in storage');
+        setUserData(null);
       }
     } catch (error) {
       console.error('Error loading user data:', error);
@@ -87,17 +77,15 @@ export default function RunnerSidebar({ isOpen, onClose }: RunnerSidebarProps) {
           onPress: async () => {
             try {
               setIsLoggingOut(true);
-              // Clear user data from storage
-              localStorage.removeItem('user');
-              localStorage.removeItem('token');
-              
+              // ✅ FIXED: Use AsyncStorage
+              await AsyncStorage.removeItem('user');
+              await AsyncStorage.removeItem('token');
               onClose();
               setTimeout(() => {
-                router.replace('/landing');
+                router.replace('/auth/login');
               }, 100);
             } catch (error) {
               console.error('Logout error:', error);
-              Alert.alert('Error', 'Failed to logout. Please try again.');
             } finally {
               setIsLoggingOut(false);
             }
@@ -109,7 +97,7 @@ export default function RunnerSidebar({ isOpen, onClose }: RunnerSidebarProps) {
 
   const menuItems = [
     { name: 'Dashboard', path: '/runner/dashboard', icon: 'grid-outline' },
-    { name: 'Active Tasks', path: '/runner/tasks', icon: 'cube-outline' },
+    { name: 'Active Tasks', path: '/runner/active-tasks', icon: 'cube-outline' },
     { name: 'Wallet', path: '/runner/wallet', icon: 'wallet-outline' },
     { name: 'Profile', path: '/runner/profile', icon: 'person-outline' },
     { name: 'Settings', path: '/runner/settings', icon: 'settings-outline' },
@@ -117,16 +105,20 @@ export default function RunnerSidebar({ isOpen, onClose }: RunnerSidebarProps) {
 
   if (!isOpen) return null;
 
+  // Get display values
+  const displayName = userData?.full_name || userData?.name || 'Runner';
+  const displayEmail = userData?.email || 'runner@connectus.com';
+
   return (
-    <Modal 
-      visible={isOpen} 
-      transparent 
-      animationType="slide" 
+    <Modal
+      visible={isOpen}
+      transparent
+      animationType="slide"
       onRequestClose={onClose}
     >
-      <TouchableOpacity 
-        style={styles.modalOverlay} 
-        activeOpacity={1} 
+      <TouchableOpacity
+        style={styles.modalOverlay}
+        activeOpacity={1}
         onPress={onClose}
       >
         <LinearGradient
@@ -163,15 +155,15 @@ export default function RunnerSidebar({ isOpen, onClose }: RunnerSidebarProps) {
             <View style={styles.userSection}>
               <View style={styles.avatarCircle}>
                 <Text style={styles.avatarText}>
-                  {getInitials(userData?.full_name || 'Runner')}
+                  {getInitials(displayName)}
                 </Text>
               </View>
               <View style={styles.userInfo}>
                 <Text style={styles.userName} numberOfLines={1}>
-                  {userData?.full_name || 'Runner User'}
+                  {displayName}
                 </Text>
                 <Text style={styles.userEmail} numberOfLines={1}>
-                  {userData?.email || 'runner@connectus.com'}
+                  {displayEmail}
                 </Text>
                 <View style={styles.userTierContainer}>
                   <Ionicons name="star" size={10} color="#A3B18A" />
@@ -212,16 +204,12 @@ export default function RunnerSidebar({ isOpen, onClose }: RunnerSidebarProps) {
           </View>
 
           {/* Logout Button */}
-          <TouchableOpacity 
-            onPress={handleLogout} 
+          <TouchableOpacity
+            onPress={handleLogout}
             style={styles.logoutButton}
             disabled={isLoggingOut}
           >
-            <Ionicons 
-              name="log-out-outline" 
-              size={20} 
-              color="#f87171" 
-            />
+            <Ionicons name="log-out-outline" size={20} color="#f87171" />
             <Text style={styles.logoutText}>
               {isLoggingOut ? 'Logging out...' : 'Logout'}
             </Text>

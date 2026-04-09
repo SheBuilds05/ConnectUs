@@ -8,8 +8,9 @@ const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
   },
-  timeout: 15000,
+  timeout: 30000,
 });
 
 // ========== TYPES ==========
@@ -71,6 +72,8 @@ api.interceptors.request.use(
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
+      console.log(`📤 API Request: ${config.method?.toUpperCase()} ${config.url}`);
+      console.log('Request data:', config.data);
     } catch (error) {
       console.error('Error getting token:', error);
     }
@@ -80,11 +83,19 @@ api.interceptors.request.use(
 );
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log(`📥 API Response: ${response.status} ${response.config.url}`);
+    return response;
+  },
   async (error) => {
+    console.error('API Error:', error.response?.status, error.response?.data);
     if (error.response?.status === 401) {
-      await AsyncStorage.removeItem('token');
-      await AsyncStorage.removeItem('user');
+      // Don't auto-clear token on login attempts
+      const isLoginAttempt = error.config?.url?.includes('/login');
+      if (!isLoginAttempt) {
+        await AsyncStorage.removeItem('token');
+        await AsyncStorage.removeItem('user');
+      }
     }
     return Promise.reject(error);
   }
@@ -92,23 +103,62 @@ api.interceptors.response.use(
 
 // ========== AUTH FUNCTIONS ==========
 
+// ✅ FIXED: Try multiple login endpoint formats
 export const loginUser = async (email: string, password: string, rememberMe: boolean = false) => {
   try {
-    const response = await api.post('/auth/login', { email, password, rememberMe });
+    console.log('Attempting login with email:', email);
     
-    if (response.data.token) {
-      await AsyncStorage.setItem('token', response.data.token);
-      await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
+    // Try different possible login endpoints
+    const endpoints = [
+      { url: '/users/login', body: { email, password, rememberMe } },
+      { url: '/auth/login', body: { email, password, rememberMe } },
+      { url: '/login', body: { email, password, rememberMe } },
+      { url: '/users/login', body: { email, password } },
+      { url: '/auth/login', body: { email, password } },
+    ];
+    
+    let lastError = null;
+    
+    for (const endpoint of endpoints) {
+      try {
+        console.log(`Trying endpoint: ${endpoint.url}`);
+        const response = await api.post(endpoint.url, endpoint.body);
+        
+        if (response.data && (response.data.token || response.data.access_token)) {
+          const token = response.data.token || response.data.access_token;
+          const user = response.data.user || response.data;
+          
+          await AsyncStorage.setItem('token', token);
+          await AsyncStorage.setItem('user', JSON.stringify(user));
+          console.log('✅ Login successful on:', endpoint.url);
+          return response.data;
+        }
+      } catch (err: any) {
+        console.log(`Failed on ${endpoint.url}:`, err.response?.status);
+        lastError = err;
+      }
     }
     
-    return response.data;
+    // If all endpoints fail, throw the last error
+    throw lastError || new Error('No working login endpoint found');
+    
   } catch (error: any) {
     console.error('Login API error:', error.response?.data || error.message);
-    throw new Error(error.response?.data?.message || 'Login failed');
+    
+    if (error.response?.status === 401) {
+      throw new Error('Invalid email or password');
+    }
+    if (error.code === 'ECONNABORTED') {
+      throw new Error('Connection timeout. Please try again.');
+    }
+    if (!error.response) {
+      throw new Error('Network error. Please check your connection.');
+    }
+    throw new Error(error.response?.data?.message || error.response?.data?.error || 'Login failed');
   }
 };
 
-// Customer registration (with firstName, lastName, id_num)
+// Customer registration
 export const registerCustomer = async (userData: {
   firstName: string;
   lastName: string;
@@ -173,8 +223,21 @@ export const registerAdmin = async (userData: {
 };
 
 export const logoutUser = async () => {
-  await AsyncStorage.removeItem('token');
-  await AsyncStorage.removeItem('user');
+  try {
+    const token = await AsyncStorage.getItem('token');
+    if (token) {
+      try {
+        await api.post('/auth/logout');
+      } catch (error) {
+        console.error('Logout endpoint error:', error);
+      }
+    }
+  } catch (error) {
+    console.error('Error during logout:', error);
+  } finally {
+    await AsyncStorage.removeItem('token');
+    await AsyncStorage.removeItem('user');
+  }
 };
 
 export const getCurrentUser = async (): Promise<User | null> => {
@@ -192,7 +255,7 @@ export const getCurrentUser = async (): Promise<User | null> => {
 
 export const getUserId = async (): Promise<number | null> => {
   const user = await getCurrentUser();
-  return user?.user_id || null;
+  return user?.user_id || user?.id || null;
 };
 
 export const getUserName = async (): Promise<string> => {
@@ -203,6 +266,23 @@ export const getUserName = async (): Promise<string> => {
 export const getUserEmail = async (): Promise<string> => {
   const user = await getCurrentUser();
   return user?.email || '';
+};
+
+// ========== RUNNER PROFILE FUNCTIONS ==========
+
+export const getRunnerProfile = async (runnerId: number): Promise<RunnerProfile | null> => {
+  try {
+    const response = await api.get(`/runners/profile/${runnerId}`);
+    return response.data?.data || response.data;
+  } catch (error) {
+    console.error('Error fetching runner profile:', error);
+    return null;
+  }
+};
+
+export const updateRunnerProfile = async (runnerId: number, profileData: Partial<RunnerProfile>) => {
+  const response = await api.put(`/runners/profile/${runnerId}`, profileData);
+  return response.data;
 };
 
 // ========== WALLET FUNCTIONS ==========
@@ -251,6 +331,43 @@ export const getRunnerById = async (runnerId: number) => {
 
 export const getRunnerProducts = async (runnerId: number) => {
   const response = await api.get(`/runners/${runnerId}/products`);
+  return response.data;
+};
+
+// ========== RUNNER DASHBOARD FUNCTIONS ==========
+
+export const getRunnerDashboard = async (runnerId: number) => {
+  try {
+    const response = await api.get(`/runners/dashboard/${runnerId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching dashboard:', error);
+    return null;
+  }
+};
+
+export const getRunnerStats = async (runnerId: number) => {
+  try {
+    const response = await api.get(`/runners/stats/${runnerId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching stats:', error);
+    return null;
+  }
+};
+
+export const getRunnerSettings = async (runnerId: number) => {
+  try {
+    const response = await api.get(`/runners/settings/${runnerId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching settings:', error);
+    return null;
+  }
+};
+
+export const updateRunnerSettings = async (runnerId: number, settingsData: any) => {
+  const response = await api.put(`/runners/settings/${runnerId}`, settingsData);
   return response.data;
 };
 
