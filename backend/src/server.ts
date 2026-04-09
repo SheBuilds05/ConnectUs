@@ -12,8 +12,8 @@ const app = express();
 const server = http.createServer(app); 
 
 app.use(cors({
-  origin: ["https://connect-us-bice-five.vercel.app", "http://localhost:5173"],
-  credentials: true,
+  origin: true, 
+  credentials: true, 
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id']
 }));
