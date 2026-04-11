@@ -193,6 +193,17 @@ export const getUserReviews = async (): Promise<{ data: any[] }> => {
   return response.data;
 };
 
+// BOOKINGS
+export const createBooking = async (bookingData: any) => {
+  const response = await api.post('/bookings', bookingData);
+  return response.data;
+};
+
+export const getUserBookings = async (userId: number) => {
+  const response = await api.get(`/users/${userId}/bookings`);
+  return response.data;
+};
+
 //  ORDER FUNCTIONS 
 export const getAvailableOrders = async () => {
   const response = await api.get('/orders/available');
