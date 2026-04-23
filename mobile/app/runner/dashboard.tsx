@@ -8,97 +8,148 @@ import {
   RefreshControl,
   SafeAreaView,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 import RunnerSidebar from '../../components/RunnerSidebar';
-import { getCurrentUser } from '../../services/api';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
+
+const API_BASE_URL = 'https://connectus-tpyp.onrender.com';
+
+interface DashboardData {
+  profile: {
+    full_name?: string;
+    name?: string;
+    city?: string;
+    wallet_balance?: number;
+  };
+  stats: {
+    successRate: number;
+    level: string;
+    totalTrips: number;
+    activeMissions: number;
+  };
+  notifications: any[];
+}
 
 export default function RunnerDashboard() {
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [userName, setUserName] = useState('Runner');
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [stats, setStats] = useState({
-    balance: 4250,
-    rating: 4.9,
-    totalTrips: 124,
-    onlineHours: '06h 12m',
-    successRate: 98,
-    level: 'PRO',
-  });
+  const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
+  const [runnerName, setRunnerName] = useState("Runner");
 
-  const loadUserData = async () => {
-    const user = await getCurrentUser();
-    if (user) {
-      const name = user.full_name || 'Runner';
-      setUserName(name);
+  // Update current time every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date();
+      setCurrentTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const fetchDashboardStats = async () => {
+    try {
+      const storedUser = await AsyncStorage.getItem('user');
+      if (!storedUser) {
+        setLoading(false);
+        return;
+      }
+      const user = JSON.parse(storedUser);
+      setRunnerName(user.full_name || user.name || "Runner");
+
+      if (user.user_id) {
+        const response = await axios.get(`${API_BASE_URL}/api/runners/dashboard/${user.user_id}`);
+        setDashboardData(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching dashboard stats:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
   };
 
   useFocusEffect(
     useCallback(() => {
-      loadUserData();
+      fetchDashboardStats();
     }, [])
   );
 
   const onRefresh = async () => {
     setRefreshing(true);
-    // Simulate refresh – replace with actual API call
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
+    await fetchDashboardStats();
   };
 
-  const liveMissions = [
-    {
-      id: 1,
-      store: 'Pick n Pay',
-      location: 'Sandton Hub',
-      type: 'Grocery Delivery',
-      earnings: 85,
-    },
-    {
-      id: 2,
-      store: 'Woolworths',
-      location: 'Rosebank',
-      type: 'Food Delivery',
-      earnings: 65,
-    },
-  ];
+  const profile = dashboardData?.profile || {};
+  const stats = dashboardData?.stats || { 
+    successRate: 0, 
+    level: "JUNIOR", 
+    totalTrips: 0, 
+    activeMissions: 0 
+  };
+  const notifications = dashboardData?.notifications || [];
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0D330E" />
+        <Text style={styles.loadingText}>Synchronizing Systems...</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
-      <LinearGradient colors={['#D3D3D3', '#C0C0C0']} style={styles.gradient}>
-        {/* Fixed Header */}
+      {/* Background Gradient */}
+      <LinearGradient
+        colors={['#F0F4EF', '#E8EDE4']}
+        style={styles.gradient}
+      >
+        {/* Decorative Background Elements */}
+        <View style={styles.decorativeBubble1} />
+        <View style={styles.decorativeBubble2} />
+        <View style={styles.decorativeGlassBubble} />
+        <View style={styles.decorativeShape} />
+
+        {/* Sidebar */}
+        <RunnerSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+
+        {/* Header */}
         <View style={[styles.header, isSidebarOpen && styles.headerShifted]}>
           <View style={styles.headerTop}>
             <TouchableOpacity onPress={() => setIsSidebarOpen(true)} style={styles.menuButton}>
-              <Ionicons name="menu" size={24} color="#0D330E" />
+              <Ionicons name="menu" size={20} color="#fff" />
             </TouchableOpacity>
+            
             <View style={styles.locationContainer}>
-              <Ionicons name="location" size={14} color="#2D531A" />
-              <Text style={styles.locationText}>Sandton, JHB</Text>
+              <Ionicons name="location" size={14} color="#477023" />
+              <Text style={styles.locationText}>{profile.city || "Johannesburg"}</Text>
             </View>
-            <TouchableOpacity style={styles.notificationButton}>
-              <Ionicons name="notifications" size={22} color="#666" />
-              <View style={styles.notificationBadge} />
+
+            <TouchableOpacity onPress={() => setShowNotifications(!showNotifications)} style={styles.notificationButton}>
+              <Ionicons name="notifications" size={20} color="#0D330E" />
+              {notifications.length > 0 && <View style={styles.notificationBadge} />}
             </TouchableOpacity>
           </View>
-          <View style={styles.statusRow}>
-            <Text style={styles.statusLabel}>Duty Status:</Text>
-            <Text style={styles.statusActive}>Active Now</Text>
-            <View style={styles.activeDot} />
+          
+          <View style={styles.operationsHub}>
+            <Text style={styles.operationsHubText}>Operations Hub</Text>
           </View>
         </View>
 
+        {/* Main Content */}
         <ScrollView
           showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#0D330E']} />}
           contentContainerStyle={styles.scrollContent}
         >
           {/* Banner */}
@@ -111,265 +162,404 @@ export default function RunnerDashboard() {
             <View style={styles.bannerContent}>
               <View style={styles.bannerTag}>
                 <View style={styles.bannerLine} />
-                <Text style={styles.bannerTagText}>Runner Performance</Text>
+                <Text style={styles.bannerTagText}>Live Performance</Text>
               </View>
               <Text style={styles.bannerTitle}>
-                Keep it up,{' '}
-                <Text style={styles.bannerTitleAccent}>{userName.split(' ')[0]}.</Text>
-              </Text>
-              <Text style={styles.bannerSubtitle}>
-                You are in the top 5% of runners in Sandton today. Higher demand expected in 20 minutes.
+                Keep it up,{"\n"}
+                <Text style={styles.bannerTitleAccent}>{runnerName.split(' ')[0]}.</Text>
               </Text>
             </View>
+            
             <View style={styles.bannerStats}>
               <View style={styles.bannerStatItem}>
-                <Text style={styles.bannerStatLabel}>Success Rate</Text>
+                <Text style={styles.bannerStatLabel}>Success</Text>
                 <Text style={styles.bannerStatValue}>{stats.successRate}%</Text>
               </View>
               <View style={styles.bannerStatDivider} />
               <View style={styles.bannerStatItem}>
-                <Text style={styles.bannerStatLabel}>Level</Text>
+                <Text style={styles.bannerStatLabel}>Rank</Text>
                 <Text style={styles.bannerStatValue}>{stats.level}</Text>
               </View>
             </View>
           </LinearGradient>
 
-          {/* Earnings Tile */}
-          <TouchableOpacity style={styles.earningsTile} onPress={() => router.push('/runner/earnings')}>
-            <View style={styles.earningsHeader}>
-              <View style={styles.earningsIcon}>
-                <Ionicons name="wallet" size={24} color="#fff" />
+          {/* Stats Grid */}
+          <View style={styles.statsGrid}>
+            {/* Wallet Card */}
+            <LinearGradient
+              colors={['rgba(255,255,255,0.6)', 'rgba(255,255,255,0.4)']}
+              style={styles.walletTile}
+            >
+              <View style={styles.walletIcon}>
+                <Ionicons name="wallet" size={28} color="#fff" />
               </View>
-              <View style={styles.earningsBadge}>
-                <Text style={styles.earningsBadgeText}>+12% vs last week</Text>
-              </View>
-            </View>
-            <Text style={styles.earningsLabel}>Balance Available</Text>
-            <Text style={styles.earningsAmount}>R {stats.balance.toLocaleString()}</Text>
-            <TouchableOpacity style={styles.withdrawButton}>
-              <Text style={styles.withdrawButtonText}>Withdraw Earnings</Text>
-            </TouchableOpacity>
-          </TouchableOpacity>
+              <Text style={styles.walletLabel}>Wallet Balance</Text>
+              <Text style={styles.walletAmount}>
+                R {profile.wallet_balance?.toFixed(2) || "0.00"}
+              </Text>
+            </LinearGradient>
 
-          {/* Rating and Quick Stats */}
-          <View style={styles.statsRow}>
+            {/* Trust Score Card */}
             <LinearGradient
               colors={['#6E8649', '#5a7340']}
               style={styles.ratingTile}
             >
-              <Ionicons name="star" size={40} color="#fff" style={styles.ratingIcon} />
-              <Text style={styles.ratingValue}>{stats.rating}</Text>
-              <Text style={styles.ratingLabel}>Trust Score</Text>
+              <Ionicons name="star" size={48} color="#C5D3B0" style={styles.ratingIcon} />
+              <Text style={styles.ratingValue}>4.9</Text>
+              <Text style={styles.ratingLabel}>Runner Score</Text>
             </LinearGradient>
 
-            <View style={styles.quickStats}>
-              <View style={styles.quickStatItem}>
+            {/* Quick Stats Column */}
+            <View style={styles.quickStatsColumn}>
+              <LinearGradient
+                colors={['rgba(255,255,255,0.5)', 'rgba(255,255,255,0.3)']}
+                style={styles.quickStatItem}
+              >
                 <View style={styles.quickStatIcon}>
-                  <Ionicons name="checkmark-circle" size={20} color="#0D330E" />
+                  <Ionicons name="checkmark-circle" size={24} color="#0D330E" />
                 </View>
-                <Text style={styles.quickStatValue}>{stats.totalTrips}</Text>
-                <Text style={styles.quickStatLabel}>Total Trips</Text>
-              </View>
-              <View style={styles.quickStatItem}>
+                <View>
+                  <Text style={styles.quickStatValue}>{stats.totalTrips}</Text>
+                  <Text style={styles.quickStatLabel}>Trips Completed</Text>
+                </View>
+              </LinearGradient>
+
+              <LinearGradient
+                colors={['rgba(255,255,255,0.5)', 'rgba(255,255,255,0.3)']}
+                style={styles.quickStatItem}
+              >
                 <View style={styles.quickStatIcon}>
-                  <Ionicons name="time" size={20} color="#6E8649" />
+                  <Ionicons name="time" size={24} color="#6E8649" />
                 </View>
-                <Text style={styles.quickStatValue}>{stats.onlineHours}</Text>
-                <Text style={styles.quickStatLabel}>Online Today</Text>
-              </View>
+                <View>
+                  <Text style={styles.quickStatValue}>{currentTime}</Text>
+                  <Text style={styles.quickStatLabel}>Active Time</Text>
+                </View>
+              </LinearGradient>
             </View>
-          </View>
-
-          {/* Live Missions */}
-          <View style={styles.missionsSection}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.sectionLine} />
-              <Text style={styles.sectionTitle}>Live Missions</Text>
-              <View style={styles.sectionLine} />
-            </View>
-
-            {liveMissions.map((mission) => (
-              <TouchableOpacity key={mission.id} style={styles.missionCard}>
-                <LinearGradient
-                  colors={['rgba(255,255,255,0.4)', 'rgba(255,255,255,0.2)']}
-                  style={styles.missionCardGradient}
-                >
-                  <View style={styles.missionLeft}>
-                    <View style={styles.missionIcon}>
-                      <Ionicons name="cube" size={28} color="#0D330E" />
-                    </View>
-                    <View>
-                      <View style={styles.missionTags}>
-                        <Text style={styles.missionStore}>{mission.store}</Text>
-                        <Text style={styles.missionLocation}>{mission.location}</Text>
-                      </View>
-                      <Text style={styles.missionType}>{mission.type}</Text>
-                      <Text style={styles.missionEarnings}>
-                        <Ionicons name="flash" size={12} color="#6E8649" /> R {mission.earnings} Earning
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.missionArrow}>
-                    <Ionicons name="arrow-forward" size={24} color="#0D330E" />
-                  </View>
-                </LinearGradient>
-              </TouchableOpacity>
-            ))}
           </View>
         </ScrollView>
-
-        <RunnerSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       </LinearGradient>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  gradient: { flex: 1 },
+  container: {
+    flex: 1,
+  },
+  gradient: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F0F4EF',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#0D330E',
+    textTransform: 'uppercase',
+    letterSpacing: 2,
+  },
+  // Decorative elements
+  decorativeBubble1: {
+    position: 'absolute',
+    top: -height * 0.05,
+    left: -width * 0.05,
+    width: width * 0.4,
+    height: width * 0.4,
+    borderRadius: width * 0.2,
+    backgroundColor: '#C2D1B2',
+    opacity: 0.3,
+  },
+  decorativeBubble2: {
+    position: 'absolute',
+    bottom: height * 0.1,
+    right: -width * 0.05,
+    width: width * 0.3,
+    height: width * 0.3,
+    borderRadius: width * 0.15,
+    backgroundColor: '#A3B18A',
+    opacity: 0.2,
+  },
+  decorativeGlassBubble: {
+    position: 'absolute',
+    top: '40%',
+    right: '15%',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  decorativeShape: {
+    position: 'absolute',
+    bottom: '20%',
+    left: '10%',
+    width: 50,
+    height: 50,
+    transform: [{ rotate: '45deg' }],
+    backgroundColor: 'rgba(13,51,14,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(13,51,14,0.1)',
+    borderRadius: 12,
+  },
   header: {
-    paddingTop: 12,
-    paddingHorizontal: 16,
-    backgroundColor: 'rgba(255,255,255,0.4)',
-    backdropFilter: 'blur(10px)',
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    marginHorizontal: 16,
-    marginTop: 8,
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    left: 0,
+    zIndex: 40,
+    padding: 16,
+    paddingTop: 48,
   },
   headerShifted: {
-    marginLeft: 260,
+    marginLeft: 280,
   },
   headerTop: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(255,255,255,0.6)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.4)',
   },
-  menuButton: { padding: 8 },
+  menuButton: {
+    padding: 10,
+    backgroundColor: '#0D330E',
+    borderRadius: 999,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
   locationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(255,255,255,0.6)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#C2D1B2',
   },
-  locationText: { fontSize: 11, fontWeight: 'bold', color: '#333' },
-  notificationButton: { padding: 8, position: 'relative' },
+  locationText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#666',
+    textTransform: 'uppercase',
+  },
+  notificationButton: {
+    padding: 10,
+    backgroundColor: '#fff',
+    borderRadius: 999,
+    position: 'relative',
+  },
   notificationBadge: {
     position: 'absolute',
     top: 8,
     right: 8,
     width: 8,
     height: 8,
-    backgroundColor: 'red',
     borderRadius: 4,
+    backgroundColor: '#ef4444',
+    borderWidth: 2,
+    borderColor: '#fff',
   },
-  statusRow: {
+  operationsHub: {
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  operationsHubText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#0D330E',
+    textTransform: 'uppercase',
+    letterSpacing: 2,
+    backgroundColor: 'rgba(255,255,255,0.5)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  scrollContent: {
+    paddingTop: 140,
+    paddingBottom: 40,
+    paddingHorizontal: 16,
+  },
+  banner: {
+    borderRadius: 48,
+    padding: 24,
+    overflow: 'hidden',
+    marginBottom: 20,
+  },
+  bannerContent: {
+    marginBottom: 20,
+  },
+  bannerTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
     gap: 8,
+    marginBottom: 12,
   },
-  statusLabel: { fontSize: 10, color: '#666', fontWeight: 'bold', textTransform: 'uppercase' },
-  statusActive: { fontSize: 12, fontWeight: 'bold', color: '#0D330E' },
-  activeDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#4CAF50' },
-  scrollContent: { paddingBottom: 40 },
-  banner: {
-    margin: 16,
-    borderRadius: 30,
-    overflow: 'hidden',
-    padding: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
+  bannerLine: {
+    width: 40,
+    height: 2,
+    backgroundColor: '#A3B18A',
   },
-  bannerContent: { flex: 1 },
-  bannerTag: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
-  bannerLine: { width: 30, height: 2, backgroundColor: '#A3B18A' },
-  bannerTagText: { fontSize: 10, fontWeight: 'bold', color: '#A3B18A', letterSpacing: 2 },
-  bannerTitle: { fontSize: 24, fontWeight: '300', color: '#fff', marginBottom: 8 },
-  bannerTitleAccent: { fontWeight: 'bold', fontStyle: 'italic', color: '#A3B18A' },
-  bannerSubtitle: { fontSize: 11, color: 'rgba(255,255,255,0.6)', maxWidth: '80%' },
+  bannerTagText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#A3B18A',
+    textTransform: 'uppercase',
+    letterSpacing: 4,
+  },
+  bannerTitle: {
+    fontSize: 28,
+    fontWeight: '300',
+    color: '#fff',
+    lineHeight: 38,
+  },
+  bannerTitleAccent: {
+    fontWeight: 'bold',
+    fontStyle: 'italic',
+    color: '#C5D3B0',
+  },
   bannerStats: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 24,
-    padding: 12,
     flexDirection: 'row',
-    gap: 12,
-  },
-  bannerStatItem: { alignItems: 'center' },
-  bannerStatLabel: { fontSize: 8, fontWeight: 'bold', color: '#A3B18A', letterSpacing: 1 },
-  bannerStatValue: { fontSize: 20, fontWeight: 'bold', color: '#fff', fontStyle: 'italic' },
-  bannerStatDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.2)' },
-  earningsTile: {
-    backgroundColor: 'rgba(255,255,255,0.6)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 32,
-    margin: 16,
-    padding: 20,
+    padding: 16,
+    gap: 16,
+  },
+  bannerStatItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  bannerStatLabel: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    color: '#A3B18A',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
+  bannerStatValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    fontStyle: 'italic',
+  },
+  bannerStatDivider: {
+    width: 1,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  statsGrid: {
+    gap: 16,
+  },
+  walletTile: {
+    borderRadius: 56,
+    padding: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.5)',
+    borderColor: '#fff',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.1,
     shadowRadius: 12,
-    elevation: 2,
+    elevation: 3,
   },
-  earningsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  earningsIcon: { backgroundColor: '#0D330E', padding: 12, borderRadius: 16 },
-  earningsBadge: { backgroundColor: 'rgba(110,134,73,0.2)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
-  earningsBadgeText: { fontSize: 9, fontWeight: 'bold', color: '#0D330E' },
-  earningsLabel: { fontSize: 10, fontWeight: 'bold', color: 'rgba(13,51,14,0.4)', letterSpacing: 2, marginBottom: 4 },
-  earningsAmount: { fontSize: 40, fontWeight: 'bold', color: '#0D330E', marginBottom: 20 },
-  withdrawButton: { backgroundColor: '#0D330E', paddingVertical: 14, borderRadius: 16, alignItems: 'center' },
-  withdrawButtonText: { color: '#fff', fontSize: 10, fontWeight: 'bold', letterSpacing: 1 },
-  statsRow: { flexDirection: 'row', marginHorizontal: 16, gap: 12 },
+  walletIcon: {
+    padding: 14,
+    backgroundColor: '#0D330E',
+    borderRadius: 20,
+    width: 56,
+    marginBottom: 16,
+  },
+  walletLabel: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    letterSpacing: 3,
+    color: 'rgba(13,51,14,0.4)',
+    marginBottom: 4,
+  },
+  walletAmount: {
+    fontSize: 44,
+    fontWeight: 'bold',
+    fontStyle: 'italic',
+    color: '#0D330E',
+  },
   ratingTile: {
-    flex: 1,
-    borderRadius: 28,
-    padding: 20,
+    borderRadius: 56,
+    padding: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'relative',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 3,
   },
-  ratingIcon: { marginBottom: 12 },
-  ratingValue: { fontSize: 36, fontWeight: 'bold', color: '#fff', fontStyle: 'italic' },
-  ratingLabel: { fontSize: 10, fontWeight: 'bold', color: 'rgba(255,255,255,0.6)', marginTop: 4 },
-  quickStats: { flex: 1.2, gap: 12 },
+  ratingIcon: {
+    marginBottom: 12,
+  },
+  ratingValue: {
+    fontSize: 40,
+    fontWeight: 'bold',
+    fontStyle: 'italic',
+    color: '#fff',
+  },
+  ratingLabel: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    letterSpacing: 2,
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 4,
+  },
+  quickStatsColumn: {
+    gap: 12,
+  },
   quickStatItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.4)',
-    borderRadius: 24,
-    padding: 12,
-    gap: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.5)',
-  },
-  quickStatIcon: { backgroundColor: '#fff', padding: 8, borderRadius: 12 },
-  quickStatValue: { fontSize: 20, fontWeight: 'bold', color: '#0D330E', fontStyle: 'italic' },
-  quickStatLabel: { fontSize: 9, fontWeight: 'bold', color: 'rgba(13,51,14,0.4)', letterSpacing: 1, marginLeft: 'auto' },
-  missionsSection: { marginHorizontal: 16, marginTop: 24 },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
-  sectionLine: { flex: 1, height: 1, backgroundColor: 'rgba(0,0,0,0.1)' },
-  sectionTitle: { fontSize: 10, fontWeight: 'bold', color: '#0D330E', letterSpacing: 3 },
-  missionCard: { marginBottom: 12, borderRadius: 28, overflow: 'hidden' },
-  missionCardGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 16,
+    borderRadius: 40,
     padding: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.5)',
-    borderRadius: 28,
+    borderColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  missionLeft: { flexDirection: 'row', alignItems: 'center', gap: 16, flex: 1 },
-  missionIcon: { backgroundColor: '#0D330E', padding: 12, borderRadius: 20 },
-  missionTags: { flexDirection: 'row', gap: 8, marginBottom: 4 },
-  missionStore: { fontSize: 9, fontWeight: 'bold', backgroundColor: '#6E8649', color: '#fff', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12 },
-  missionLocation: { fontSize: 9, color: '#666' },
-  missionType: { fontSize: 16, fontWeight: 'bold', color: '#0D330E', marginBottom: 4 },
-  missionEarnings: { fontSize: 11, color: '#6E8649', fontWeight: 'bold' },
-  missionArrow: { backgroundColor: 'rgba(13,51,14,0.05)', padding: 12, borderRadius: 30 },
+  quickStatIcon: {
+    padding: 10,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+  },
+  quickStatValue: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    fontStyle: 'italic',
+    color: '#0D330E',
+  },
+  quickStatLabel: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    color: 'rgba(13,51,14,0.4)',
+  },
 });

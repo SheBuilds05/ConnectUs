@@ -8,11 +8,12 @@ import {
   Image,
   Modal,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { getCurrentUser, logoutUser } from '../services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface RunnerSidebarProps {
   isOpen: boolean;
@@ -22,52 +23,104 @@ interface RunnerSidebarProps {
 export default function RunnerSidebar({ isOpen, onClose }: RunnerSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const [userData, setUserData] = useState({
-    initials: 'R',
-    name: 'Runner',
-    email: '',
-  });
+  const [userData, setUserData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
-    loadUserData();
-  }, []);
+    if (isOpen) {
+      loadUserData();
+    }
+  }, [isOpen]);
 
   const loadUserData = async () => {
-    const user = await getCurrentUser();
-    if (user) {
-      const name = user.full_name || 'Runner';
-      const email = user.email || '';
-      const initials = name
-        .split(' ')
-        .map((n: string) => n[0])
-        .join('')
-        .toUpperCase()
-        .substring(0, 2);
-      setUserData({ initials: initials || 'R', name, email });
+    try {
+      setLoading(true);
+      // ✅ FIXED: Use AsyncStorage instead of localStorage
+      const storedUser = await AsyncStorage.getItem('user');
+      console.log('Sidebar - Raw stored user:', storedUser);
+      
+      if (storedUser) {
+        const user = JSON.parse(storedUser);
+        console.log('Sidebar - Parsed user:', user);
+        setUserData(user);
+      } else {
+        console.log('Sidebar - No user found in storage');
+        setUserData(null);
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const getInitials = (name: string): string => {
+    if (!name) return 'R';
+    return name
+      .split(' ')
+      .map((n: string) => n[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
+  const handleLogout = async () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setIsLoggingOut(true);
+              // ✅ FIXED: Use AsyncStorage
+              await AsyncStorage.removeItem('user');
+              await AsyncStorage.removeItem('token');
+              onClose();
+              setTimeout(() => {
+                router.replace('/auth/login');
+              }, 100);
+            } catch (error) {
+              console.error('Logout error:', error);
+            } finally {
+              setIsLoggingOut(false);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const menuItems = [
     { name: 'Dashboard', path: '/runner/dashboard', icon: 'grid-outline' },
-    { name: 'Active Tasks', path: '/runner/tasks', icon: 'cube-outline' },
+    { name: 'Active Tasks', path: '/runner/active-tasks', icon: 'cube-outline' },
     { name: 'Wallet', path: '/runner/wallet', icon: 'wallet-outline' },
     { name: 'Profile', path: '/runner/profile', icon: 'person-outline' },
     { name: 'Settings', path: '/runner/settings', icon: 'settings-outline' },
   ];
 
-const handleLogout = async () => {
-  console.log('Logging out...');
-  await logoutUser();
-  onClose();
-  setTimeout(() => {
-    router.replace('/landing');
-  }, 100);
-};
   if (!isOpen) return null;
 
+  // Get display values
+  const displayName = userData?.full_name || userData?.name || 'Runner';
+  const displayEmail = userData?.email || 'runner@connectus.com';
+
   return (
-    <Modal visible={isOpen} transparent animationType="slide" onRequestClose={onClose}>
-      <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={onClose}>
+    <Modal
+      visible={isOpen}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <TouchableOpacity
+        style={styles.modalOverlay}
+        activeOpacity={1}
+        onPress={onClose}
+      >
         <LinearGradient
           colors={['#1A3A1A', '#0D1F0D']}
           start={{ x: 0, y: 0 }}
@@ -93,15 +146,32 @@ const handleLogout = async () => {
           </View>
 
           {/* User Info Section */}
-          <View style={styles.userSection}>
-            <View style={styles.avatarCircle}>
-              <Text style={styles.avatarText}>{userData.initials}</Text>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#A3B18A" />
+              <Text style={styles.loadingText}>Loading profile...</Text>
             </View>
-            <View style={styles.userInfo}>
-              <Text style={styles.userName}>{userData.name}</Text>
-              <Text style={styles.userTier}>Runner Tier: Pro</Text>
+          ) : (
+            <View style={styles.userSection}>
+              <View style={styles.avatarCircle}>
+                <Text style={styles.avatarText}>
+                  {getInitials(displayName)}
+                </Text>
+              </View>
+              <View style={styles.userInfo}>
+                <Text style={styles.userName} numberOfLines={1}>
+                  {displayName}
+                </Text>
+                <Text style={styles.userEmail} numberOfLines={1}>
+                  {displayEmail}
+                </Text>
+                <View style={styles.userTierContainer}>
+                  <Ionicons name="star" size={10} color="#A3B18A" />
+                  <Text style={styles.userTier}>Pro Runner</Text>
+                </View>
+              </View>
             </View>
-          </View>
+          )}
 
           {/* Navigation Menu */}
           <View style={styles.navMenu}>
@@ -118,22 +188,31 @@ const handleLogout = async () => {
                 >
                   <Ionicons
                     name={item.icon as any}
-                    size={18}
+                    size={20}
                     color={isActive ? '#A3B18A' : 'rgba(255,255,255,0.6)'}
                     style={styles.navIcon}
                   />
                   <Text style={[styles.navText, isActive && styles.navTextActive]}>
                     {item.name}
                   </Text>
+                  {isActive && (
+                    <View style={styles.activeIndicator} />
+                  )}
                 </TouchableOpacity>
               );
             })}
           </View>
 
           {/* Logout Button */}
-          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-            <Ionicons name="log-out-outline" size={18} color="#f87171" />
-            <Text style={styles.logoutText}>Logout</Text>
+          <TouchableOpacity
+            onPress={handleLogout}
+            style={styles.logoutButton}
+            disabled={isLoggingOut}
+          >
+            <Ionicons name="log-out-outline" size={20} color="#f87171" />
+            <Text style={styles.logoutText}>
+              {isLoggingOut ? 'Logging out...' : 'Logout'}
+            </Text>
           </TouchableOpacity>
         </LinearGradient>
       </TouchableOpacity>
@@ -192,6 +271,21 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 10,
   },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 20,
+    padding: 24,
+    marginBottom: 32,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  loadingText: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.5)',
+    marginTop: 8,
+  },
   userSection: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -204,9 +298,9 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.1)',
   },
   avatarCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     backgroundColor: '#A3B18A',
     alignItems: 'center',
     justifyContent: 'center',
@@ -217,7 +311,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   avatarText: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#1A3A1A',
   },
@@ -225,18 +319,29 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   userName: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 2,
   },
+  userEmail: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.5)',
+    marginBottom: 4,
+  },
+  userTierContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
   userTier: {
     fontSize: 10,
-    color: 'rgba(255,255,255,0.5)',
+    color: '#A3B18A',
+    fontWeight: '500',
   },
   navMenu: {
     flex: 1,
-    gap: 8,
+    gap: 4,
   },
   navItem: {
     flexDirection: 'row',
@@ -246,28 +351,38 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 16,
     backgroundColor: 'transparent',
+    position: 'relative',
   },
   navItemActive: {
-    backgroundColor: 'rgba(163,177,138,0.2)',
+    backgroundColor: 'rgba(163,177,138,0.15)',
     borderWidth: 1,
     borderColor: 'rgba(163,177,138,0.3)',
   },
   navIcon: {
-    width: 20,
+    width: 22,
   },
   navText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
     color: 'rgba(255,255,255,0.6)',
   },
   navTextActive: {
     color: '#fff',
+    fontWeight: '600',
+  },
+  activeIndicator: {
+    position: 'absolute',
+    right: 12,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#A3B18A',
   },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    paddingVertical: 16,
+    paddingVertical: 14,
     paddingHorizontal: 16,
     borderRadius: 16,
     marginTop: 16,

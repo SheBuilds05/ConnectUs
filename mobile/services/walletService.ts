@@ -1,77 +1,113 @@
-import api, { getUserId } from './api';
+import api from './api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface WalletBalance {
   balance: number;
   total_credited: number;
   total_debited: number;
+  total_held?: number;
 }
 
 export interface Transaction {
   id: number;
-  transaction_id: string;
-  user_id: number;
   amount: number;
-  type: 'credit' | 'debit';
-  status: 'pending' | 'completed' | 'failed';
+  type: 'credit' | 'debit' | 'hold';
+  status: string;
   description: string;
-  reference_id?: string;
   created_at: string;
 }
+
+// Helper to get user ID
+const getUserId = async (): Promise<string | null> => {
+  try {
+    // First try to get from AsyncStorage
+    let userId = await AsyncStorage.getItem('userId');
+    if (userId) return userId;
+    
+    // Fallback to getting from user object
+    const userStr = await AsyncStorage.getItem('user');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      userId = user.user_id || user.id;
+      if (userId) return userId.toString();
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting userId:', error);
+    return null;
+  }
+};
+
+// Create a hold for a booking
+export const createHold = async (bookingId: number, amount: number): Promise<{ hold_id: number; message: string }> => {
+  try {
+    const userId = await getUserId();
+    console.log('📦 Creating hold for userId:', userId, 'bookingId:', bookingId, 'amount:', amount);
+    
+    const response = await api.post('/wallet/hold', 
+      { booking_id: bookingId, amount },
+      { headers: { 'x-user-id': userId || '' } }
+    );
+    console.log('✅ Hold created:', response.data);
+    return response.data?.data || response.data;
+  } catch (error: any) {
+    console.error('❌ Error creating hold:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.error || 'Failed to create hold');
+  }
+};
+
+// Capture hold (when runner accepts)
+export const captureHold = async (holdId: number): Promise<{ message: string }> => {
+  const userId = await getUserId();
+  const response = await api.post(`/wallet/capture/${holdId}`, {}, { headers: { 'x-user-id': userId || '' } });
+  return response.data;
+};
+
+// Release hold (when runner rejects)
+export const releaseHold = async (holdId: number): Promise<{ message: string }> => {
+  const userId = await getUserId();
+  const response = await api.post(`/wallet/release/${holdId}`, {}, { headers: { 'x-user-id': userId || '' } });
+  return response.data;
+};
 
 // Get wallet balance
 export const getWalletBalance = async (): Promise<WalletBalance> => {
   try {
-    const response = await api.get('/wallet/balance');
+    const userId = await getUserId();
+    console.log('📦 Getting wallet balance for userId:', userId);
+    
+    const response = await api.get('/wallet/balance', {
+      headers: { 'x-user-id': userId || '' }
+    });
     return response.data?.data || response.data || { balance: 0, total_credited: 0, total_debited: 0 };
   } catch (error) {
     console.error('Error fetching wallet balance:', error);
-    // Return mock data for development
-    return { balance: 250.00, total_credited: 500.00, total_debited: 250.00 };
+    return { balance: 0, total_credited: 0, total_debited: 0 };
   }
 };
 
 // Get transaction history
 export const getTransactionHistory = async (): Promise<Transaction[]> => {
   try {
-    const response = await api.get('/wallet/transactions');
+    const userId = await getUserId();
+    console.log('📦 Getting transaction history for userId:', userId);
+    
+    const response = await api.get('/wallet/transactions', {
+      headers: { 'x-user-id': userId || '' }
+    });
     return response.data?.data || response.data || [];
   } catch (error) {
     console.error('Error fetching transactions:', error);
-    // Mock transactions for development
-    return [
-      {
-        id: 1,
-        transaction_id: 'TXN001',
-        user_id: 1,
-        amount: 250.00,
-        type: 'credit',
-        status: 'completed',
-        description: 'Wallet top-up',
-        created_at: new Date().toISOString()
-      },
-      {
-        id: 2,
-        transaction_id: 'TXN002',
-        user_id: 1,
-        amount: -25.00,
-        type: 'debit',
-        status: 'completed',
-        description: 'Payment for Order #12345',
-        reference_id: '12345',
-        created_at: new Date(Date.now() - 86400000).toISOString()
-      }
-    ];
+    return [];
   }
 };
 
-// Add funds to wallet – returns a checkout URL or payment intent
-export const addFunds = async (amount: number): Promise<{ checkout_url: string; payment_id: string }> => {
-  try {
-    const response = await api.post('/wallet/add-funds', { amount });
-    return response.data?.data || response.data;
-  } catch (error) {
-    console.error('Error adding funds:', error);
-    // Mock response for development
-    return { checkout_url: 'https://example.com/pay', payment_id: 'pay_123' };
-  }
+// Add funds to wallet
+export const addFunds = async (amount: number): Promise<{ success: boolean; payment_id: number; message: string }> => {
+  const userId = await getUserId();
+  const response = await api.post('/wallet/add-funds', 
+    { amount },
+    { headers: { 'x-user-id': userId || '' } }
+  );
+  return response.data?.data || response.data;
 };

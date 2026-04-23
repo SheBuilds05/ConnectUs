@@ -1,9 +1,11 @@
 // src/pages/UserHomePage.tsx
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // Add this import
 import * as Icons from 'lucide-react'; 
 import { Search, MapPin, Bell, SlidersHorizontal, Menu, Star, Zap, Shield, Clock, RefreshCw, X } from 'lucide-react';
 import { RunnerCard } from '../components/RunnerCard';
-import RunnerModal from '../components/RunnerModal';
+// Remove RunnerModal import
+// import RunnerModal from '../components/RunnerModal';
 import { categories } from '../data/mockData';
 import UserSidebar from '../components/UserSidebar';
 import BottomNav from '../components/BottomNav';
@@ -17,10 +19,11 @@ interface Location {
   error?: string;
 }
 
-const UserHomePage = ({ onMenuClick }) => {
+const UserHomePage = ({ onMenuClick }: { onMenuClick?: () => void }) => {
+  const navigate = useNavigate(); // Add navigate hook
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeCategory, setActiveCategory] = useState(null);
-  const [selectedRunner, setSelectedRunner] = useState<Runner | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [selectedRunner, setSelectedRunner] = useState<Runner | null>(null); // Keep but might remove
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userName, setUserName] = useState('User');
   const [userEmail, setUserEmail] = useState('');
@@ -47,7 +50,6 @@ const UserHomePage = ({ onMenuClick }) => {
     getUserLocation();
     fetchAllRunners();
 
-    // Handle window resize for responsive grid
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -60,7 +62,6 @@ const UserHomePage = ({ onMenuClick }) => {
   }, [location, activeCategory, searchTerm]);
 
   useEffect(() => {
-    // Filter runners based on active category and search term
     let filtered = [...runners];
     
     if (activeCategory) {
@@ -114,18 +115,17 @@ const UserHomePage = ({ onMenuClick }) => {
           setIsLoadingLocation(false);
         }
       },
-     (error) => {
-  // Only show banner for explicit permission denial, silently fall back otherwise
-  if (error.code === error.PERMISSION_DENIED) {
-    setLocationError('Location access denied. Using default location.');
-  }
-  setIsLoadingLocation(false);
-},
-{
-  enableHighAccuracy: false,
-  timeout: 8000,
-  maximumAge: 60000
-}
+      (error) => {
+        if (error.code === error.PERMISSION_DENIED) {
+          setLocationError('Location access denied. Using default location.');
+        }
+        setIsLoadingLocation(false);
+      },
+      {
+        enableHighAccuracy: false,
+        timeout: 8000,
+        maximumAge: 60000
+      }
     );
   };
 
@@ -173,8 +173,17 @@ const UserHomePage = ({ onMenuClick }) => {
     document.getElementById('runners-section')?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // ADD THIS: Handle runner card click - navigate to details page
+  const handleRunnerClick = (runner: Runner) => {
+    navigate(`/runner/${runner.runner_id}`);
+  };
+
   const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
+    setIsSidebarOpen(prev => !prev);
+  };
+
+  const closeSidebar = () => {
+    setIsSidebarOpen(false);
   };
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -185,16 +194,29 @@ const UserHomePage = ({ onMenuClick }) => {
     getUserLocation();
   };
 
-  // Responsive grid columns based on screen width
   const getGridColumns = () => {
-    if (windowWidth < 640) return 1;      // mobile: 1 card
-    if (windowWidth < 1024) return 2;     // tablet: 2 cards
-    return 4;                              // desktop: 4 cards
+    if (windowWidth < 640) return 1;
+    if (windowWidth < 1024) return 2;
+    return 4;
   };
 
-  // Lock body scroll when modal is open
+  // Remove the modal-related useEffect
+  // Remove the selectedRunner useEffect that locks body scroll
+
+  // Handle escape key to close sidebar
   useEffect(() => {
-    if (selectedRunner) {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isSidebarOpen) {
+        closeSidebar();
+      }
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [isSidebarOpen]);
+
+  // Prevent body scroll when sidebar is open on mobile
+  useEffect(() => {
+    if (isSidebarOpen && window.innerWidth < 1024) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -202,19 +224,22 @@ const UserHomePage = ({ onMenuClick }) => {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [selectedRunner]);
+  }, [isSidebarOpen]);
 
   return (
     <div className="min-h-screen w-full bg-[#D3D3D3] relative overflow-x-hidden">
       
-      {/* Sidebar Component */}
-      <UserSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      <UserSidebar 
+        isOpen={isSidebarOpen} 
+        onClose={closeSidebar}
+      />
       
-      {/* Overlay when sidebar is open on mobile */}
       {isSidebarOpen && (
         <div 
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={() => setIsSidebarOpen(false)}
+          onClick={closeSidebar}
+          style={{ cursor: 'pointer' }}
+          aria-label="Close menu"
         />
       )}
       
@@ -242,22 +267,18 @@ const UserHomePage = ({ onMenuClick }) => {
       {/* Main content */}
       <div 
         className={`relative z-10 w-full px-4 sm:px-6 lg:px-8 py-4 space-y-8 transition-all duration-300 ease-in-out ${
-          isSidebarOpen ? 'lg:max-w-[calc(100%-16rem)] lg:ml-auto lg:mr-0' : 'max-w-full mx-auto'
+          isSidebarOpen ? 'lg:ml-64 lg:w-[calc(100%-16rem)]' : ''
         }`}
-        style={{
-          transform: isSidebarOpen ? 'scale(0.98)' : 'scale(1)',
-          transformOrigin: 'center right'
-        }}
       >
         
         {/* HEADER */}
         <div className="flex items-center justify-between pt-2 pb-4 border-b border-gray-400/20 bg-white/5 backdrop-blur-sm px-4 rounded-2xl">
-          {/* Left side - Hamburger menu and user greeting */}
           <div className="flex items-center gap-4">
             <button 
               onClick={toggleSidebar} 
               className="p-2.5 bg-white rounded-full shadow-sm border border-gray-100 hover:scale-105 transition-all"
               aria-label="Toggle menu"
+              type="button"
             >
               <Menu size={20} className="text-[#0D330E]" />
             </button>
@@ -268,7 +289,6 @@ const UserHomePage = ({ onMenuClick }) => {
             </div>
           </div>
 
-          {/* MIDDLE - Location Display */}
           <div className="flex-1 flex justify-center">
             <div className="flex items-center gap-2 px-5 py-2.5 bg-white/60 backdrop-blur-md rounded-full border border-white/40 shadow-sm">
               {isLoadingLocation ? (
@@ -306,7 +326,6 @@ const UserHomePage = ({ onMenuClick }) => {
             </div>
           </div>
 
-          {/* Right side - Notification Bell */}
           <div className="relative group">
             <button className="p-2.5 bg-white rounded-full shadow-sm relative">
               <Bell size={20} className="text-gray-600" />
@@ -319,7 +338,6 @@ const UserHomePage = ({ onMenuClick }) => {
           </div>
         </div>
 
-        {/* Location error banner */}
         {locationError && (
           <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
             <div className="flex items-center">
@@ -341,7 +359,7 @@ const UserHomePage = ({ onMenuClick }) => {
           </div>
         )}
 
-        {/* BANNER - KEPT EXACTLY AS IS */}
+        {/* BANNER */}
         <div className="relative bg-gradient-to-br from-[#0D330E] to-[#1A4A1A] rounded-[2rem] overflow-hidden shadow-2xl w-full border border-[#A3B18A]/30 group">
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-0 left-0 w-40 h-40 bg-[#A3B18A] rounded-full blur-3xl"></div>
@@ -355,7 +373,6 @@ const UserHomePage = ({ onMenuClick }) => {
           
           <div className="flex flex-col md:flex-row min-h-[350px] md:min-h-[400px] relative">
             
-            {/* Left Content */}
             <div className="flex-[1.5] p-8 md:p-12 flex flex-col justify-center z-20 relative">
               <div className="flex items-center gap-3 mb-6">
                 <div className="h-[3px] w-12 bg-[#A3B18A]"></div>
@@ -426,7 +443,6 @@ const UserHomePage = ({ onMenuClick }) => {
               </div>
             </div>
             
-            {/* Right: Logo */}
             <div className="flex-1 relative flex items-center justify-center md:justify-end p-6 md:pr-16">
               <div className="absolute top-1/2 left-1/2 md:left-auto md:right-20 -translate-x-1/2 -translate-y-1/2 md:translate-x-0">
                 <div className="relative w-56 h-56 md:w-64 md:h-64">
@@ -550,7 +566,7 @@ const UserHomePage = ({ onMenuClick }) => {
           </div>
         </div>
 
-        {/* CATEGORIES SECTION - KEPT EXACTLY AS IS */}
+        {/* CATEGORIES SECTION */}
         <div className="space-y-8 py-8">
           <div className="flex flex-col items-center gap-4">
             <div className="flex items-center gap-4">
@@ -564,7 +580,7 @@ const UserHomePage = ({ onMenuClick }) => {
           <div className="flex justify-center w-full px-4">
             <div className="flex flex-wrap justify-center gap-6 md:gap-8 lg:gap-10">
               {categories.map((cat) => {
-                const IconComponent = Icons[cat.iconName] || Icons.HelpCircle;
+                const IconComponent = Icons[cat.iconName as keyof typeof Icons] as React.ComponentType<any>;
                 const isActive = activeCategory === cat.name;
                 
                 const inactiveBg = 'bg-[#D9E5D6]';
@@ -593,14 +609,16 @@ const UserHomePage = ({ onMenuClick }) => {
                         </>
                       )}
                       
-                      <IconComponent 
-                        size={36} 
-                        className={`
-                          relative z-10 transition-all duration-300
-                          ${isActive ? 'text-white scale-110' : 'text-[#2D531A] group-hover:scale-110'}
-                        `} 
-                        strokeWidth={1.2} 
-                      />
+                      {IconComponent && (
+                        <IconComponent 
+                          size={36} 
+                          className={`
+                            relative z-10 transition-all duration-300
+                            ${isActive ? 'text-white scale-110' : 'text-[#2D531A] group-hover:scale-110'}
+                          `} 
+                          strokeWidth={1.2} 
+                        />
+                      )}
                       
                       {!isActive && (
                         <>
@@ -651,7 +669,7 @@ const UserHomePage = ({ onMenuClick }) => {
           )}
         </div>
 
-        {/* RUNNERS GRID - FIXED with 4 cards per row */}
+        {/* RUNNERS GRID - MODIFIED: Use handleRunnerClick */}
         <div id="runners-section" className="space-y-5">
           <div className="flex justify-between items-center px-1">
             <h3 className="font-bold text-[#0D330E] text-lg md:text-xl tracking-tight uppercase tracking-widest">
@@ -671,14 +689,12 @@ const UserHomePage = ({ onMenuClick }) => {
             </button>
           </div>
 
-          {/* Loading State */}
           {isLoadingRunners && (
             <div className="flex justify-center items-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2D531A]"></div>
             </div>
           )}
 
-          {/* Error State */}
           {runnersError && !isLoadingRunners && (
             <div className="text-center py-12">
               <p className="text-red-500 mb-4">{runnersError}</p>
@@ -691,7 +707,6 @@ const UserHomePage = ({ onMenuClick }) => {
             </div>
           )}
 
-          {/* Runners Grid - 4 cards per row with inline style */}
           {!isLoadingRunners && !runnersError && (
             <div 
               style={{
@@ -706,7 +721,7 @@ const UserHomePage = ({ onMenuClick }) => {
                   <div key={runner.runner_id} style={{ width: '100%' }}>
                     <RunnerCard 
                       runner={runner} 
-                      onClick={() => setSelectedRunner(runner)} 
+                      onClick={() => handleRunnerClick(runner)} // CHANGED: Navigate to details page
                     />
                   </div>
                 ))
@@ -725,23 +740,11 @@ const UserHomePage = ({ onMenuClick }) => {
           )}
         </div>
 
-        {/* Runner Modal - Now with proper overlay that doesn't move the page */}
-        <RunnerModal 
-          runner={selectedRunner} 
-          isOpen={!!selectedRunner} 
-          onClose={() => setSelectedRunner(null)} 
-          userLocation={location}
-        />
+        {/* REMOVED: RunnerModal component */}
       </div>
 
       {/* Bottom Navigation */}
-      <div 
-        className={`fixed bottom-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${
-          isSidebarOpen ? 'lg:ml-64 lg:w-[calc(100%-16rem)]' : 'ml-0 w-full'
-        }`}
-      >
-        <BottomNav />
-      </div>
+      <BottomNav />
     </div>
   );
 };

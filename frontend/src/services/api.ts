@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL ='http://localhost:5000/api';
+const API_URL ='https://connectus-tpyp.onrender.com/api';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -190,6 +190,17 @@ export const getUserStats = async (): Promise<{ data: any }> => {
 // Get user reviews
 export const getUserReviews = async (): Promise<{ data: any[] }> => {
   const response = await api.get('/users/reviews');
+  return response.data;
+};
+
+// BOOKINGS
+export const createBooking = async (bookingData: any) => {
+  const response = await api.post('/bookings', bookingData);
+  return response.data;
+};
+
+export const getUserBookings = async (userId: number) => {
+  const response = await api.get(`/users/${userId}/bookings`);
   return response.data;
 };
 

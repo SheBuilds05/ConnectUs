@@ -25,7 +25,7 @@ const RunnerActivities = () => {
 
   const fetchOrders = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/runners/available');
+      const res = await axios.get(':/https://connectus-backend-wx08.onrender.com/api/runners/available');
       setPendingOrders(res.data); 
     } catch (err) {
       console.error("Failed to fetch orders", err);
@@ -35,7 +35,7 @@ const RunnerActivities = () => {
   const handleReject = async (id) => {
     if (window.confirm("Reject this order?")) {
       try {
-        await axios.put(`http://localhost:5000/api/runners/reject/${id}`);
+        await axios.put(`https://connectus-backend-wx08.onrender.com/api/runners/reject/${id}`);
         fetchOrders();
       } catch (err) {
         alert("Failed to reject order");
@@ -54,7 +54,7 @@ const RunnerActivities = () => {
             return;
         }
 
-        await axios.put(`http://localhost:5000/api/runners/accept/${selectedOrder.booking_id}`, {
+        await axios.put(`https://connectus-backend-wx08.onrender.com/api/runners/accept/${selectedOrder.booking_id}`, {
             runnerId, 
             purchaseDate: dates.purchase,
             deliveryDate: dates.delivery
