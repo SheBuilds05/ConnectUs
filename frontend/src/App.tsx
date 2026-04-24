@@ -87,7 +87,7 @@ function App() {
 
       {/* FIXED: Move RunnerDetailsPage to a separate route outside the nested structure */}
       <Route
-        path="/runner/:runnerId"
+        path="/view-runner/:runnerId"
         element={
           <ProtectedRoute allowedRoles={['customer']}>
             <RunnerDetailsPage />
