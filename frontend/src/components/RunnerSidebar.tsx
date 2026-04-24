@@ -78,21 +78,26 @@ const RunnerSidebar = ({ isOpen, onClose }: RunnerSidebarProps) => {
           </div>
         </div>
 
-        <nav className="flex-1 space-y-1">
-          {menuItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              onClick={() => { if(window.innerWidth < 1024) onClose(); }}
-              className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all group ${
-                location.pathname === item.path ? 'bg-[#A3B18A]/20 text-white border border-[#A3B18A]/30' : 'text-white/60 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <item.icon size={18} className={location.pathname === item.path ? 'text-[#A3B18A]' : 'text-white/40 group-hover:text-white'} />
-              <span className="font-bold text-sm">{item.name}</span>
-            </Link>
-          ))}
-        </nav>
+        // Inside your RunnerSidebar component...
+
+<nav className="flex-1 space-y-1">
+  {menuItems.map((item) => (
+    <Link
+      key={item.path}
+      to={item.path}
+      // REMOVE the window.innerWidth check to ensure it always closes
+      onClick={onClose} 
+      className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all group ${
+        location.pathname === item.path 
+          ? 'bg-[#A3B18A]/20 text-white border border-[#A3B18A]/30' 
+          : 'text-white/60 hover:text-white hover:bg-white/5'
+      }`}
+    >
+      <item.icon size={18} className={location.pathname === item.path ? 'text-[#A3B18A]' : 'text-white/40 group-hover:text-white'} />
+      <span className="font-bold text-sm">{item.name}</span>
+    </Link>
+  ))}
+</nav>
 
         <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-4 w-full text-red-400 hover:bg-red-500/10 rounded-2xl transition-all font-bold mt-auto border-t border-white/10">
           <LogOut size={18} />
