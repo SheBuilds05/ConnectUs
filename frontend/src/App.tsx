@@ -71,117 +71,33 @@ function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<Register />} />
 
-      {/* Customer Routes */}
-      <Route
-        path="/user/*"
-        element={
-          <ProtectedRoute allowedRoles={['customer']}>
-            <Routes>
-              <Route index element={<UserHomePage onMenuClick={() => {}} />} />
-              {/* FIXED: Move runner details route outside the nested structure */}
-              <Route path="*" element={<Navigate to="/user" replace />} />
-            </Routes>
-          </ProtectedRoute>
-        }
-      />
+      {/* Customer Protected Group */}
+      <Route element={<ProtectedRoute allowedRoles={['customer']} />}>
+        <Route path="/user" element={<UserHomePage onMenuClick={() => {}} />} />
+        <Route path="/user/bookings" element={<UserBookings />} />
+        <Route path="/user/track" element={<UserTrackOrder />} />
+        <Route path="/user/settings" element={<UserSettings />} />
+        <Route path="/user/favorites" element={<FavoritesPage />} />
+        <Route path="/user/messages" element={<MessagesPage />} />
+        <Route path="/user/account" element={<AccountPage />} />
+        {/* Dynamic Detail Routes */}
+        <Route path="/view-runner/:runnerId" element={<RunnerDetailsPage />} />
+        <Route path="/book-runner/:runnerId" element={<UserBookings />} />
+      </Route>
 
-      {/* FIXED: Move RunnerDetailsPage to a separate route outside the nested structure */}
-      <Route
-        path="/view-runner/:runnerId"
-        element={
-          <ProtectedRoute allowedRoles={['customer']}>
-            <RunnerDetailsPage />
-          </ProtectedRoute>
-        }
-      />
+      {/* Runner Protected Group */}
+      <Route path="/runner" element={<ProtectedRoute allowedRoles={['runner']} />}>
+        <Route index element={<RunnerDashboard />} />
+        <Route path="profile" element={<RunnerProfile />} />
+        <Route path="wallet" element={<RunnerWallet />} />
+        <Route path="settings" element={<SettingsPage />} />
+        <Route path="activities" element={<RunnerActivities />} />
+      </Route>
 
-      <Route
-        path="/book-runner/:runnerId"
-        element={
-          <ProtectedRoute allowedRoles={['customer']}>
-            <UserBookings />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Keep other customer routes as separate routes */}
-      <Route
-        path="/user/bookings"
-        element={
-          <ProtectedRoute allowedRoles={['customer']}>
-            <UserBookings />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/user/track"
-        element={
-          <ProtectedRoute allowedRoles={['customer']}>
-            <UserTrackOrder />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/user/settings"
-        element={
-          <ProtectedRoute allowedRoles={['customer']}>
-            <UserSettings />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/user/favorites"
-        element={
-          <ProtectedRoute allowedRoles={['customer']}>
-            <FavoritesPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/user/messages"
-        element={
-          <ProtectedRoute allowedRoles={['customer']}>
-            <MessagesPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/user/account"
-        element={
-          <ProtectedRoute allowedRoles={['customer']}>
-            <AccountPage />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Runner Routes */}
-      <Route
-        path="/runner/*"
-        element={
-          <ProtectedRoute allowedRoles={['runner']}>
-            <Routes>
-              <Route index element={<RunnerDashboard />} />
-              <Route path="dashboard" element={<RunnerDashboard />} />
-              <Route path="profile" element={<RunnerProfile />} />
-              <Route path="wallet" element={<RunnerWallet />} />
-              <Route path="settings" element={<SettingsPage />} />
-               <Route path="activities" element={<RunnerActivities />} />
-              <Route path="*" element={<Navigate to="/runner" replace />} />
-            </Routes>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route path="/admin/*" element={
-        <ProtectedRoute allowedRoles={['admin']}>
-          <AdminDashboard />
-        </ProtectedRoute>
-      } />
+      {/* Admin Protected Group */}
+      <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']} />}>
+        <Route index element={<AdminDashboard />} />
+      </Route>
 
       <Route path="*" element={<Navigate to="/landing" replace />} />
     </Routes>
