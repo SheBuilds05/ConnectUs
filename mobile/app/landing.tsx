@@ -1,18 +1,19 @@
-import React, { useState, useRef } from 'react';
+// app/landing.tsx
+import React, { useState } from 'react';
 import {
-  View,
-  Text,
   StyleSheet,
+  Text,
+  View,
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Modal,
   Dimensions,
-  Linking,
+  Modal,
+  SafeAreaView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 
@@ -24,18 +25,12 @@ const colors = {
   gray: '#D3D3D3',
   white: '#FFFFFF',
   text: '#0D330E',
+  background: '#F2F2F2',
 };
 
-export default function LandingPage() {
+export default function LandingScreen() {
   const router = useRouter();
-  const scrollViewRef = useRef<ScrollView>(null);
   const [showAbout, setShowAbout] = useState(false);
-
-  const scrollToSection = (section: string) => {
-    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
-    // In a real app, you would measure the position of each section and scroll to it.
-    // For simplicity, we'll just scroll to top for now.
-  };
 
   const stats = [
     { value: '10k+', label: 'Runners' },
@@ -44,222 +39,138 @@ export default function LandingPage() {
     { value: '100+', label: 'Cities' },
   ];
 
-  const features = [
-    {
-      icon: 'cloud-upload-outline',
-      title: 'Upload Photos',
-      desc: 'Take photos of the items you need and upload them.',
-    },
-    {
-      icon: 'bulb-outline',
-      title: 'AI Matching',
-      desc: 'Our AI matches you with the perfect local runner.',
-    },
-    {
-      icon: 'shield-checkmark-outline',
-      title: 'Secure Payments',
-      desc: 'Pay securely with our protected escrow system.',
-    },
-  ];
-
-  const footerLinks = [
-    {
-      title: 'Company',
-      links: ['About Our Mission', 'Our Story', 'Press & Media', 'Careers'],
-    },
-    {
-      title: 'Services',
-      links: ['Find a Runner', 'Become a Runner', 'Business Solutions', 'Pricing'],
-    },
-    {
-      title: 'Support',
-      links: ['Help Center', 'Safety Standards', 'Terms of Service', 'Privacy Policy'],
-    },
-  ];
-
   return (
-    <LinearGradient colors={[colors.gray, colors.gray]} style={styles.container}>
-      {/* Sticky Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.push('/')} style={styles.logoContainer}>
-          <LinearGradient
-            colors={[colors.pakistanGreen, colors.resedaGreen]}
-            style={styles.logoBox}
-          >
-            <Text style={styles.logoText}>C</Text>
-          </LinearGradient>
-          <Text style={styles.logoTitle}>
-            ConnectUs<Text style={styles.logoAccent}>.</Text>
-          </Text>
-        </TouchableOpacity>
-
-        <View style={styles.headerButtons}>
-          <TouchableOpacity onPress={() => router.push('/auth/login')}>
-            <Text style={styles.loginBtn}>Login</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.signupBtn}
-            onPress={() => router.push('/auth/register')}
-          >
-            <Text style={styles.signupBtnText}>Sign Up</Text>
+    <SafeAreaView style={styles.container}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Navigation Header */}
+        <View style={styles.nav}>
+          <View style={styles.logoContainer}>
+            <LinearGradient
+              colors={[colors.pakistanGreen, colors.resedaGreen]}
+              style={styles.logoBadge}
+            >
+              <Text style={styles.logoChar}>C</Text>
+            </LinearGradient>
+            <Text style={styles.logoText}>
+              ConnectUs<Text style={{ color: colors.resedaGreen }}>.</Text>
+            </Text>
+          </View>
+          <TouchableOpacity onPress={() => setShowAbout(true)}>
+            <Ionicons name="information-circle-outline" size={28} color={colors.pakistanGreen} />
           </TouchableOpacity>
         </View>
-      </View>
 
-      <ScrollView
-        ref={scrollViewRef}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {/* Welcome Banner */}
+        {/* Hero Banner */}
         <LinearGradient
           colors={[colors.pakistanGreen, colors.darkMoss]}
-          style={styles.banner}
+          style={styles.heroBanner}
         >
-          <Text style={styles.bannerTitle}>Your Local Items, Delivered</Text>
-          <Text style={styles.bannerSubtitle}>
-            Connect with trusted local runners in your area
+          <View style={styles.trustedBadge}>
+            <Text style={styles.trustedText}>⚡ Trusted by 10,000+ users</Text>
+          </View>
+          <Text style={styles.heroTitle}>
+            Your Local Items,
+            {'\n'}
+            <Text style={{ color: colors.resedaGreen }}>Delivered Instantly</Text>
+          </Text>
+          <Text style={styles.heroSubtitle}>
+            Connect with trusted local runners who shop for you.
           </Text>
         </LinearGradient>
 
-        {/* Hero Section */}
-        <View style={styles.hero}>
-          <View style={styles.heroLeft}>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>⚡ Trusted by 10,000+ users</Text>
-            </View>
-            <Text style={styles.heroTitle}>
-              Your Local Items,{' '}
-              <Text style={styles.heroTitleAccent}>Delivered Instantly</Text>
-            </Text>
-            <Text style={styles.heroDesc}>
-              Connect with trusted local runners who can shop and deliver anything
-              you need. Fast, reliable, and secure.
-            </Text>
-
-            <View style={styles.searchBar}>
-              <TextInput
-                style={styles.searchInput}
-                placeholder="What would you like delivered?"
-                placeholderTextColor={colors.resedaGreen + '80'}
-              />
-              <TouchableOpacity style={styles.searchButton}>
-                <Text style={styles.searchButtonText}>Search</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.heroButtons}>
-              <TouchableOpacity
-                style={styles.findRunnerBtn}
-                onPress={() => router.push('/(tabs)')}
-              >
-                <Text style={styles.findRunnerBtnText}>Find a Runner</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.becomeRunnerBtn}
-                onPress={() => router.push('/auth/register')}
-              >
-                <Text style={styles.becomeRunnerBtnText}>Become a Runner</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Stats Card */}
-          <View style={styles.statsCard}>
-            <View style={styles.statsGrid}>
-              {stats.map((stat, idx) => (
-                <View key={idx} style={styles.statItem}>
-                  <Text style={styles.statValue}>{stat.value}</Text>
-                  <Text style={styles.statLabel}>{stat.label}</Text>
-                </View>
-              ))}
-            </View>
+        {/* Search Bar - Floating Style */}
+        <View style={styles.searchSection}>
+          <View style={styles.searchBar}>
+            <TextInput
+              placeholder="What do you need?"
+              style={styles.searchInput}
+              placeholderTextColor="#999"
+            />
+            <TouchableOpacity style={styles.searchBtn}>
+              <Ionicons name="search" size={20} color={colors.white} />
+            </TouchableOpacity>
           </View>
         </View>
 
-        {/* How It Works */}
-        <View style={styles.howItWorks}>
+        {/* Quick Actions */}
+        <View style={styles.actionGrid}>
+          <TouchableOpacity
+            style={styles.primaryAction}
+            onPress={() => router.push('/auth/register')}
+          >
+            <Text style={styles.primaryActionText}>Find a Runner</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.secondaryAction}
+            onPress={() => router.push('/auth/register')}
+          >
+            <Text style={styles.secondaryActionText}>Become a Runner</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Stats Row */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.statsRow}
+        >
+          {stats.map((stat, index) => (
+            <View key={index} style={styles.statCard}>
+              <Text style={styles.statValue}>{stat.value}</Text>
+              <Text style={styles.statLabel}>{stat.label}</Text>
+            </View>
+          ))}
+        </ScrollView>
+
+        {/* How It Works Section */}
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>How It Works</Text>
-          <View style={styles.featuresGrid}>
-            {features.map((feature, idx) => (
-              <View key={idx} style={styles.featureCard}>
-                <Ionicons
-                  name={feature.icon as any}
-                  size={40}
-                  color={colors.resedaGreen}
-                  style={styles.featureIcon}
-                />
-                <Text style={styles.featureTitle}>{feature.title}</Text>
-                <Text style={styles.featureDesc}>{feature.desc}</Text>
-              </View>
-            ))}
+
+          <View style={styles.stepCard}>
+            <Ionicons name="camera-outline" size={32} color={colors.resedaGreen} />
+            <View style={styles.stepTextContent}>
+              <Text style={styles.stepTitle}>Upload Photos</Text>
+              <Text style={styles.stepDesc}>
+                Snap the items you need and upload them instantly.
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.stepCard}>
+            <Ionicons name="git-network-outline" size={32} color={colors.fernGreen} />
+            <View style={styles.stepTextContent}>
+              <Text style={styles.stepTitle}>AI Matching</Text>
+              <Text style={styles.stepDesc}>
+                Our AI finds the perfect local runner near you.
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.stepCard}>
+            <Ionicons name="shield-checkmark-outline" size={32} color={colors.pakistanGreen} />
+            <View style={styles.stepTextContent}>
+              <Text style={styles.stepTitle}>Secure Payments</Text>
+              <Text style={styles.stepDesc}>
+                Pay safely through our protected escrow system.
+              </Text>
+            </View>
           </View>
         </View>
 
-        {/* CTA Section */}
-        <LinearGradient
-          colors={[colors.pakistanGreen, colors.darkMoss]}
-          style={styles.cta}
-        >
-          <Text style={styles.ctaTitle}>Ready to Get Started?</Text>
-          <Text style={styles.ctaSubtitle}>
-            Join thousands of users who trust ConnectUs today.
-          </Text>
+        {/* Auth Footer */}
+        <View style={styles.authFooter}>
           <TouchableOpacity
-            style={styles.ctaButton}
+            style={styles.loginBtn}
+            onPress={() => router.push('/auth/login')}
+          >
+            <Text style={styles.loginBtnText}>Already a member? Login</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.signUpBtn}
             onPress={() => router.push('/auth/register')}
           >
-            <Text style={styles.ctaButtonText}>Create Free Account</Text>
+            <Text style={styles.signUpBtnText}>Sign Up Now</Text>
           </TouchableOpacity>
-        </LinearGradient>
-
-        {/* Footer */}
-        <View style={styles.footer}>
-          <View style={styles.footerTop}>
-            <View style={styles.footerBrand}>
-              <Text style={styles.footerBrandTitle}>ConnectUs</Text>
-              <Text style={styles.footerBrandDesc}>
-                The most trusted local runner network. We make getting items from
-                your favorite local shops easier and faster than ever before.
-              </Text>
-              <View style={styles.socialIcons}>
-                {['FB', 'TW', 'IG', 'LN'].map((social) => (
-                  <View key={social} style={styles.socialIcon}>
-                    <Text style={styles.socialIconText}>{social}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-
-            {footerLinks.map((section, idx) => (
-              <View key={idx} style={styles.footerSection}>
-                <Text style={styles.footerSectionTitle}>{section.title}</Text>
-                {section.links.map((link, linkIdx) => (
-                  <TouchableOpacity
-                    key={linkIdx}
-                    onPress={() => {
-                      if (link === 'About Our Mission') setShowAbout(true);
-                      else if (link === 'Find a Runner')
-                        router.push('/(tabs)');
-                      else if (link === 'Become a Runner')
-                        router.push('/auth/register');
-                      else if (link === 'Help Center')
-                        Linking.openURL('mailto:support@connectus.com');
-                      // other links can be implemented similarly
-                    }}
-                  >
-                    <Text style={styles.footerLink}>{link}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            ))}
-          </View>
-
-          <View style={styles.footerBottom}>
-            <Text style={styles.copyright}>
-              © 2026 ConnectUs Marketplace Inc. All rights reserved.
-            </Text>
-          </View>
         </View>
       </ScrollView>
 
@@ -267,189 +178,247 @@ export default function LandingPage() {
       <Modal visible={showAbout} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <TouchableOpacity
-              style={styles.modalClose}
-              onPress={() => setShowAbout(false)}
-            >
-              <Ionicons name="close" size={24} color={colors.pakistanGreen} />
-            </TouchableOpacity>
             <Text style={styles.modalTitle}>About ConnectUs</Text>
-            <Text style={styles.modalText}>
+            <Text style={styles.modalDesc}>
               ConnectUs is a professional marketplace connecting people with local
               shopping assistants (Runners) using AI and secure escrow payments.
             </Text>
-            <TouchableOpacity
-              style={styles.modalButton}
-              onPress={() => setShowAbout(false)}
-            >
-              <Text style={styles.modalButtonText}>Close</Text>
+            <TouchableOpacity style={styles.modalClose} onPress={() => setShowAbout(false)}>
+              <Text style={styles.modalCloseText}>Close</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
-    </LinearGradient>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  scrollContent: { paddingBottom: 40 },
-  header: {
+  container: {
+    flex: 1,
+    backgroundColor: colors.white,
+  },
+  nav: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    backgroundColor: 'rgba(255,255,255,0.95)',
-    borderBottomWidth: 1,
-    borderBottomColor: colors.resedaGreen + '30',
+    padding: 20,
   },
-  logoContainer: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  logoBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+  logoContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 10,
   },
-  logoText: { color: colors.white, fontWeight: '600', fontSize: 20 },
-  logoTitle: { fontSize: 18, fontWeight: '700', color: colors.pakistanGreen },
-  logoAccent: { color: colors.resedaGreen },
-  headerButtons: { flexDirection: 'row', gap: 16, alignItems: 'center' },
-  loginBtn: { color: colors.pakistanGreen, fontWeight: '500' },
-  signupBtn: {
-    backgroundColor: colors.pakistanGreen,
-    paddingHorizontal: 18,
-    paddingVertical: 8,
+  logoBadge: {
+    width: 35,
+    height: 35,
     borderRadius: 8,
-  },
-  signupBtnText: { color: colors.white, fontWeight: '600' },
-  banner: {
-    margin: 20,
-    padding: 24,
-    borderRadius: 20,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  bannerTitle: { color: colors.white, fontSize: 20, fontWeight: '700', marginBottom: 8 },
-  bannerSubtitle: { color: colors.gray, fontSize: 14, textAlign: 'center', opacity: 0.9 },
-  hero: { paddingHorizontal: 20, marginBottom: 40 },
-  heroLeft: { marginBottom: 24 },
-  badge: {
-    backgroundColor: colors.white,
-    alignSelf: 'flex-start',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 50,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: colors.resedaGreen + '30',
+  logoChar: {
+    color: colors.white,
+    fontWeight: 'bold',
+    fontSize: 18,
   },
-  badgeText: { color: colors.fernGreen, fontWeight: '600', fontSize: 12 },
-  heroTitle: { fontSize: 28, fontWeight: '800', color: colors.pakistanGreen, marginBottom: 12 },
-  heroTitleAccent: { color: colors.resedaGreen },
-  heroDesc: { fontSize: 14, color: colors.darkMoss, lineHeight: 22, marginBottom: 24 },
+  logoText: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: colors.pakistanGreen,
+  },
+  heroBanner: {
+    padding: 30,
+    paddingTop: 40,
+    paddingBottom: 60,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+  },
+  trustedBadge: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+    marginBottom: 15,
+  },
+  trustedText: {
+    color: colors.white,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  heroTitle: {
+    fontSize: 32,
+    fontWeight: '900',
+    color: colors.white,
+    lineHeight: 38,
+  },
+  heroSubtitle: {
+    color: colors.gray,
+    fontSize: 16,
+    marginTop: 10,
+    opacity: 0.9,
+  },
+  searchSection: {
+    marginTop: -30,
+    paddingHorizontal: 20,
+  },
   searchBar: {
     flexDirection: 'row',
     backgroundColor: colors.white,
+    borderRadius: 15,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    padding: 5,
+  },
+  searchInput: {
+    flex: 1,
+    paddingHorizontal: 15,
+    height: 50,
+    color: colors.text,
+  },
+  searchBtn: {
+    backgroundColor: colors.pakistanGreen,
+    padding: 12,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.resedaGreen + '30',
-    marginBottom: 20,
-    overflow: 'hidden',
   },
-  searchInput: { flex: 1, padding: 12, fontSize: 14 },
-  searchButton: {
+  actionGrid: {
+    padding: 20,
+    gap: 12,
+  },
+  primaryAction: {
     backgroundColor: colors.pakistanGreen,
-    paddingHorizontal: 20,
-    justifyContent: 'center',
+    padding: 18,
+    borderRadius: 12,
+    alignItems: 'center',
   },
-  searchButtonText: { color: colors.white, fontWeight: '600' },
-  heroButtons: { flexDirection: 'row', gap: 12 },
-  findRunnerBtn: {
-    backgroundColor: colors.pakistanGreen,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
+  primaryActionText: {
+    color: colors.white,
+    fontWeight: '700',
+    fontSize: 16,
   },
-  findRunnerBtnText: { color: colors.white, fontWeight: '600' },
-  becomeRunnerBtn: {
+  secondaryAction: {
     borderWidth: 2,
     borderColor: colors.pakistanGreen,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-  },
-  becomeRunnerBtnText: { color: colors.pakistanGreen, fontWeight: '600' },
-  statsCard: {
-    backgroundColor: colors.white,
-    borderRadius: 20,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: colors.resedaGreen + '20',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-    elevation: 3,
-  },
-  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-  statItem: {
-    width: '48%',
-    backgroundColor: colors.gray + '40',
-    paddingVertical: 16,
+    padding: 18,
     borderRadius: 12,
     alignItems: 'center',
-    marginBottom: 12,
   },
-  statValue: { fontSize: 24, fontWeight: '700', color: colors.fernGreen },
-  statLabel: { fontSize: 12, color: colors.darkMoss, marginTop: 4 },
-  howItWorks: { backgroundColor: colors.white, paddingVertical: 48, paddingHorizontal: 20 },
-  sectionTitle: { fontSize: 24, fontWeight: '700', color: colors.pakistanGreen, textAlign: 'center', marginBottom: 32 },
-  featuresGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-  featureCard: {
-    width: (width - 56) / 3,
-    backgroundColor: colors.gray + '20',
-    padding: 16,
-    borderRadius: 16,
+  secondaryActionText: {
+    color: colors.pakistanGreen,
+    fontWeight: '700',
+    fontSize: 16,
+  },
+  statsRow: {
+    paddingLeft: 20,
+    paddingVertical: 10,
+    gap: 15,
+  },
+  statCard: {
+    backgroundColor: '#F8F9F8',
+    padding: 20,
+    borderRadius: 15,
+    width: 120,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.resedaGreen + '10',
-    marginBottom: 16,
+    borderColor: '#eee',
   },
-  featureIcon: { marginBottom: 12 },
-  featureTitle: { fontSize: 14, fontWeight: '600', color: colors.pakistanGreen, textAlign: 'center', marginBottom: 6 },
-  featureDesc: { fontSize: 12, color: colors.darkMoss, textAlign: 'center' },
-  cta: { paddingVertical: 48, paddingHorizontal: 20, alignItems: 'center' },
-  ctaTitle: { fontSize: 24, fontWeight: '700', color: colors.white, marginBottom: 8 },
-  ctaSubtitle: { fontSize: 14, color: colors.gray, marginBottom: 24, textAlign: 'center' },
-  ctaButton: { backgroundColor: colors.resedaGreen, paddingHorizontal: 32, paddingVertical: 14, borderRadius: 8 },
-  ctaButtonText: { color: colors.white, fontWeight: '700', fontSize: 16 },
-  footer: { backgroundColor: '#081f09', padding: 20, paddingTop: 32 },
-  footerTop: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 32 },
-  footerBrand: { width: '100%', marginBottom: 24 },
-  footerBrandTitle: { fontSize: 24, fontWeight: '700', color: colors.white, marginBottom: 12 },
-  footerBrandDesc: { color: 'rgba(255,255,255,0.7)', fontSize: 13, lineHeight: 20, marginBottom: 16 },
-  socialIcons: { flexDirection: 'row', gap: 12 },
-  socialIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: colors.resedaGreen,
+  statValue: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: colors.fernGreen,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: colors.darkMoss,
+  },
+  section: {
+    padding: 25,
+  },
+  sectionTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: colors.pakistanGreen,
+    marginBottom: 20,
+  },
+  stepCard: {
+    flexDirection: 'row',
+    gap: 20,
+    marginBottom: 25,
     alignItems: 'center',
+  },
+  stepTextContent: {
+    flex: 1,
+  },
+  stepTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.pakistanGreen,
+  },
+  stepDesc: {
+    color: colors.darkMoss,
+    fontSize: 14,
+    marginTop: 4,
+  },
+  authFooter: {
+    padding: 25,
+    paddingBottom: 40,
+    backgroundColor: '#f9f9f9',
+  },
+  loginBtn: {
+    padding: 10,
+    alignItems: 'center',
+  },
+  loginBtnText: {
+    color: colors.darkMoss,
+    fontWeight: '600',
+  },
+  signUpBtn: {
+    backgroundColor: colors.resedaGreen,
+    padding: 18,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  signUpBtnText: {
+    color: colors.white,
+    fontWeight: '800',
+    fontSize: 16,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center',
+    alignItems: 'center',
   },
-  socialIconText: { color: colors.resedaGreen, fontSize: 12, fontWeight: '600' },
-  footerSection: { width: '48%', marginBottom: 20 },
-  footerSectionTitle: { fontSize: 16, fontWeight: '600', color: colors.resedaGreen, marginBottom: 16 },
-  footerLink: { color: 'rgba(255,255,255,0.7)', fontSize: 13, marginBottom: 12 },
-  footerBottom: { borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)', paddingTop: 20, alignItems: 'center' },
-  copyright: { color: 'rgba(255,255,255,0.5)', fontSize: 12 },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center' },
-  modalContent: { backgroundColor: colors.white, borderRadius: 20, padding: 24, width: '80%', maxWidth: 400, position: 'relative' },
-  modalClose: { position: 'absolute', top: 12, right: 16 },
-  modalTitle: { fontSize: 22, fontWeight: '700', color: colors.pakistanGreen, textAlign: 'center', marginBottom: 12 },
-  modalText: { color: colors.darkMoss, lineHeight: 22, textAlign: 'center', marginBottom: 24 },
-  modalButton: { backgroundColor: colors.pakistanGreen, paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
-  modalButtonText: { color: colors.white, fontWeight: '600' },
+  modalContent: {
+    backgroundColor: 'white',
+    padding: 30,
+    borderRadius: 25,
+    width: '85%',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: colors.pakistanGreen,
+    marginBottom: 15,
+  },
+  modalDesc: {
+    textAlign: 'center',
+    color: colors.darkMoss,
+    lineHeight: 22,
+  },
+  modalClose: {
+    marginTop: 20,
+    backgroundColor: colors.pakistanGreen,
+    paddingHorizontal: 30,
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+  modalCloseText: {
+    color: 'white',
+    fontWeight: '700',
+  },
 });

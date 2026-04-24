@@ -1,4 +1,5 @@
 import api, { getCurrentUser, getUserId } from './api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface Booking {
   booking_id: number;
@@ -23,7 +24,7 @@ export interface Booking {
 }
 
 export interface CreateBookingData {
-  runner_id?: number; // ✅ Made optional
+  runner_id?: number;
   product_description: string;
   delivery_location: string;
   budget: number;
@@ -55,25 +56,17 @@ export const calculateFees = (
 
 // Create a new booking
 export const createBooking = async (bookingData: CreateBookingData): Promise<Booking> => {
-  // Get the current user from AsyncStorage
   const user = await getCurrentUser();
-  console.log('[createBooking] Retrieved user:', user);
   
   if (!user) {
-    console.error('[createBooking] No user found – user not logged in');
     throw new Error('You must be logged in to create a booking');
   }
 
-  // Use user.id (your User interface has 'id')
-  const userId = user.id;
+  const userId = user.id || user.user_id;
   if (!userId) {
-    console.error('[createBooking] User object has no id', user);
     throw new Error('Invalid user data – missing user id');
   }
 
-  console.log('[createBooking] Using userId:', userId);
-
-  // ✅ runner_id is optional - send null if not provided
   const payload = {
     user_id: userId,
     runner_id: bookingData.runner_id || null,
@@ -86,35 +79,88 @@ export const createBooking = async (bookingData: CreateBookingData): Promise<Boo
     status: 'CREATED'
   };
 
-  console.log('[createBooking] Sending payload:', payload);
+  console.log('📝 Creating booking with payload:', payload);
 
-  try {
-    const response = await api.post('/bookings', payload);
-    console.log('[createBooking] API response:', response.data);
-    const booking = response.data?.data || response.data;
-    if (!booking || !booking.booking_id) {
-      throw new Error('Invalid response from server – missing booking_id');
-    }
-    return booking;
-  } catch (error: any) {
-    console.error('[createBooking] Error details:', error.response?.data || error.message);
-    const errorMessage = error.response?.data?.message || error.message || 'Failed to create booking';
-    throw new Error(errorMessage);
+  const response = await api.post('/bookings', payload);
+  const booking = response.data?.data || response.data;
+  if (!booking || !booking.booking_id) {
+    throw new Error('Invalid response from server – missing booking_id');
   }
+  console.log('✅ Booking created:', booking.booking_id);
+  return booking;
 };
 
-// Get user's bookings
-export const getUserBookings = async (): Promise<Booking[]> => {
-  const userId = await getUserId();
+// Get user's bookings - with support for userId parameter (number | undefined)
+export const getUserBookings = async (userIdParam?: number): Promise<Booking[]> => {
+  console.log('🔍 getUserBookings - Starting...');
+  console.log('🔍 userIdParam passed:', userIdParam);
+  
+  let userId: number | undefined = userIdParam;
+  
+  // If userId not provided, try to get from storage
   if (!userId) {
+    try {
+      const userIdStr = await AsyncStorage.getItem('userId');
+      console.log('📦 userId from AsyncStorage:', userIdStr);
+      if (userIdStr) {
+        userId = parseInt(userIdStr);
+      }
+    } catch (err) {
+      console.error('Error reading userId from storage:', err);
+    }
+  }
+  
+  // If still no userId, try getUserId()
+  if (!userId) {
+    const storedUserId = await getUserId();
+    if (storedUserId) {
+      userId = storedUserId;
+    }
+    console.log('📦 userId from getUserId():', userId);
+  }
+  
+  if (!userId) {
+    console.log('❌ getUserBookings - No userId found, returning empty array');
     return [];
   }
+  
+  console.log(`✅ Using userId: ${userId}`);
+  
   try {
-    const response = await api.get(`/users/${userId}/bookings`);
-    const bookings = response.data?.data || response.data || [];
-    return Array.isArray(bookings) ? bookings : [];
+    const url = `/users/${userId}/bookings`;
+    console.log(`📡 Fetching from URL: ${url}`);
+    
+    const response = await api.get(url);
+    console.log('📡 Response status:', response.status);
+    
+    // Try different response structures
+    let bookings: Booking[] = [];
+    if (response.data?.data) {
+      bookings = response.data.data;
+      console.log('📦 Got bookings from response.data.data');
+    } else if (Array.isArray(response.data)) {
+      bookings = response.data;
+      console.log('📦 Got bookings from response.data (array)');
+    } else if (response.data?.bookings) {
+      bookings = response.data.bookings;
+      console.log('📦 Got bookings from response.data.bookings');
+    } else {
+      console.log('📦 No bookings found in response');
+    }
+    
+    console.log(`✅ Found ${bookings.length} bookings for user ${userId}`);
+    
+    if (bookings.length > 0) {
+      console.log('📦 First booking sample:', JSON.stringify(bookings[0], null, 2));
+    }
+    
+    return bookings;
   } catch (error: any) {
-    console.error('Error fetching bookings:', error.message);
+    console.error('❌ Error fetching bookings:', error.message);
+    if (error.response) {
+      console.error('❌ Response status:', error.response.status);
+      console.error('❌ Response data:', error.response.data);
+    }
     return [];
   }
 };
@@ -132,10 +178,5 @@ export const getBookingById = async (bookingId: number): Promise<Booking | null>
 
 // Update booking status
 export const updateBookingStatus = async (bookingId: number, status: string): Promise<void> => {
-  try {
-    await api.patch(`/bookings/${bookingId}/status`, { status });
-  } catch (error: any) {
-    console.error(`Error updating booking ${bookingId} status:`, error.message);
-    throw new Error(error.response?.data?.message || 'Failed to update booking status');
-  }
+  await api.patch(`/bookings/${bookingId}/status`, { status });
 };

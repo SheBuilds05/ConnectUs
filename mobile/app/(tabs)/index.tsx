@@ -44,6 +44,7 @@ export default function HomeScreen() {
   const [userName, setUserName] = useState('User');
   const [userEmail, setUserEmail] = useState('');
   const [userInitials, setUserInitials] = useState('U');
+  const [currentUserId, setCurrentUserId] = useState<number | undefined>();
   const [location, setLocation] = useState<Location>({
     lat: -26.1076,
     lng: 28.0547,
@@ -76,33 +77,39 @@ export default function HomeScreen() {
     }, [])
   );
 
-const loadUserData = async () => {
-  try {
-    const user = await getCurrentUser();
-    console.log('Loaded user:', user); // Debug log
-    
-    if (user) {
-      // Try different possible field names from your backend
-      const name = user.full_name || user.email?.split('@')[0] || 'User';
-      console.log('Display name:', name); // Debug log
-      setUserName(name);
-      setUserEmail(user.email || '');
+  const loadUserData = async () => {
+    try {
+      const user = await getCurrentUser();
+      console.log('Loaded user:', user);
       
-      // Generate initials from the display name
-      const initials = name
-        .split(' ')
-        .map((n: string) => n[0])
-        .join('')
-        .toUpperCase()
-        .substring(0, 2);
-      setUserInitials(initials);
-    } else {
-      console.log('No user found in storage');
+      if (user) {
+        const name = user.full_name || user.email?.split('@')[0] || 'User';
+        console.log('Display name:', name);
+        setUserName(name);
+        setUserEmail(user.email || '');
+        
+        // Set the userId
+        const userId = user.user_id || user.id;
+        if (userId) {
+          setCurrentUserId(userId);
+          console.log('Set currentUserId:', userId);
+        }
+        
+        const initials = name
+          .split(' ')
+          .map((n: string) => n[0])
+          .join('')
+          .toUpperCase()
+          .substring(0, 2);
+        setUserInitials(initials);
+      } else {
+        console.log('No user found in storage');
+      }
+    } catch (error) {
+      console.error('Error loading user:', error);
     }
-  } catch (error) {
-    console.error('Error loading user:', error);
-  }
-};
+  };
+
   const getUserLocation = () => {
     setIsLoadingLocation(true);
     setTimeout(() => {
@@ -168,14 +175,14 @@ const loadUserData = async () => {
     router.push(`/runner/${runner.runner_id}`);
   };
 
-  // ✅ Fixed logout function
- const handleLogout = async () => {
-  console.log('Logging out...');
-  await logoutUser();
-  setTimeout(() => {
-    router.replace('/landing');
-  }, 100);
-};
+  const handleLogout = async () => {
+    console.log('Logging out...');
+    await logoutUser();
+    setTimeout(() => {
+      router.replace('/landing');
+    }, 100);
+  };
+
   const SidebarContent = () => (
     <LinearGradient
       colors={['#2D531A', '#1A3A1A']}
@@ -215,7 +222,15 @@ const loadUserData = async () => {
             style={styles.navItem}
             onPress={() => {
               setIsSidebarOpen(false);
-              router.push(item.route as any);
+              // Pass userId to track-order screen
+              if (item.id === 'track-order') {
+                router.push({
+                  pathname: '/order/track',
+                  params: { userId: currentUserId?.toString() }
+                });
+              } else {
+                router.push(item.route as any);
+              }
             }}
           >
             <View style={[styles.navIconContainer, { backgroundColor: `${item.color}20` }]}>
