@@ -34,7 +34,7 @@ const RunnerDashboard = () => {
         setRunnerName(user.full_name || user.name || "Runner");
 
         if (user.user_id) {
-          const response = await axios.get(`https://connectus-backend-wx08.onrender.com/api/runners/dashboard/${user.user_id}`);
+          const response = await axios.get(`https://connectus-tpyp.onrender.com/api/runners/dashboard/${user.user_id}`);
           setDashboardData(response.data);
         }
       } catch (error) {

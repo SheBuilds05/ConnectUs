@@ -20,6 +20,7 @@ import RunnerProfile from './pages/RunnerProfile';
 import "./App.css";
 import SettingsPage from './pages/SettingsPage';
 import RunnerDetailsPage from './pages/RunnerDetailsPage';
+import RunnerActivities from './pages/RunnerActivities';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode, allowedRoles: string[] }) => {
@@ -86,7 +87,7 @@ function App() {
 
       {/* FIXED: Move RunnerDetailsPage to a separate route outside the nested structure */}
       <Route
-        path="/runner/:runnerId"
+        path="/view-runner/:runnerId"
         element={
           <ProtectedRoute allowedRoles={['customer']}>
             <RunnerDetailsPage />
@@ -158,22 +159,23 @@ function App() {
         }
       />
 
-      {/* Runner Routes */}
-      <Route
-        path="/runner/*"
-        element={
-          <ProtectedRoute allowedRoles={['runner']}>
-            <Routes>
-              <Route index element={<RunnerDashboard />} />
-              <Route path="dashboard" element={<RunnerDashboard />} />
-              <Route path="profile" element={<RunnerProfile />} />
-              <Route path="wallet" element={<RunnerWallet />} />
-              <Route path="Settings" element={<SettingsPage />} />
-              <Route path="*" element={<Navigate to="/runner" replace />} />
-            </Routes>
-          </ProtectedRoute>
-        }
-      />
+       {/* Runner Routes */}
+<Route
+  path="/runner/*"
+  element={
+    <ProtectedRoute allowedRoles={['runner']}>
+      <Routes>
+        <Route index element={<RunnerDashboard />} />
+        <Route path="dashboard" element={<RunnerDashboard />} />
+        <Route path="profile" element={<RunnerProfile />} />
+        <Route path="wallet" element={<RunnerWallet />} />
+        <Route path="settings" element={<SettingsPage />} />
+        <Route path="activities" element={<RunnerActivities />} />
+        <Route path="*" element={<Navigate to="/runner" replace />} />
+      </Routes>
+    </ProtectedRoute>
+  }
+/>
 
       <Route path="/admin/*" element={
         <ProtectedRoute allowedRoles={['admin']}>

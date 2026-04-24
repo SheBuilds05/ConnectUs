@@ -33,7 +33,7 @@ const UserSettings = () => {
     const fetchProfile = async () => {
       try {
         // Replace '1' with actual logged-in user ID
-        const response = await fetch('http://localhost:5000/api/users/1/profile');
+        const response = await fetch('https://connectus-tpyp.onrender.com/api/users/1/profile');
         if (response.ok) {
           const data = await response.json();
           setFormData({
@@ -85,7 +85,7 @@ const UserSettings = () => {
   const handleSaveChanges = async () => {
     setIsSaving(true);
     try {
-      const response = await fetch('http://localhost:5000/api/users/1/profile', {
+      const response = await fetch('https://connectus-tpyp.onrender.com/api/users/1/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
