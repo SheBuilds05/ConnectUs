@@ -20,6 +20,7 @@ import RunnerProfile from './pages/RunnerProfile';
 import "./App.css";
 import SettingsPage from './pages/SettingsPage';
 import RunnerDetailsPage from './pages/RunnerDetailsPage';
+import RunnerActivities from './pages/RunnerActivities';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode, allowedRoles: string[] }) => {
